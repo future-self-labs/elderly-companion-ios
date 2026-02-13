@@ -3,23 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun",
-    "start": "bun run dist/index.js",
+    "dev": "npx tsx --watch src/index.ts",
+    "build": "echo 'no build needed'",
+    "start": "npx tsx src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@getzep/zep-cloud": "^2.10.0",
     "@hono/node-server": "^1.13.0",
     "@livekit/protocol": "^1.39.0",
+    "dotenv": "^17.3.1",
     "hono": "^4.6.0",
     "livekit-server-sdk": "^2.13.0",
+    "tsx": "^4.21.0",
     "twilio": "^5.7.0",
+    "typescript": "^5.8.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.0",
-    "@types/uuid": "^10.0.0",
-    "typescript": "^5.8.0"
+    "@types/uuid": "^10.0.0"
   }
 }
