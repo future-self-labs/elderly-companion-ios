@@ -94,33 +94,45 @@ struct ProfileCreationView: View {
 // MARK: - Custom Text Field
 
 struct CompanionTextField: View {
-    let placeholder: String
+    let label: String
     @Binding var text: String
     let icon: String
 
-    init(_ placeholder: String, text: Binding<String>, icon: String) {
-        self.placeholder = placeholder
+    init(_ label: String, text: Binding<String>, icon: String) {
+        self.label = label
         self._text = text
         self.icon = icon
     }
 
     var body: some View {
-        HStack(spacing: CompanionTheme.Spacing.md) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(Color.companionTextTertiary)
-                .frame(width: 24)
+        VStack(alignment: .leading, spacing: CompanionTheme.Spacing.xs) {
+            // Always-visible label above the field
+            Text(label)
+                .font(.companionLabel)
+                .foregroundStyle(Color.companionTextSecondary)
 
-            TextField(placeholder, text: $text)
-                .font(.companionBody)
-                .foregroundStyle(Color.companionTextPrimary)
+            HStack(spacing: CompanionTheme.Spacing.md) {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.companionPrimary.opacity(0.6))
+                    .frame(width: 24)
+
+                TextField("", text: $text, prompt: Text(label).foregroundStyle(Color.companionTextTertiary))
+                    .font(.companionBody)
+                    .foregroundStyle(Color.companionTextPrimary)
+            }
+            .padding(CompanionTheme.Spacing.md)
+            .background(Color.companionSurface)
+            .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: CompanionTheme.Radius.md)
+                    .stroke(
+                        text.isEmpty
+                            ? Color.companionTextTertiary.opacity(0.3)
+                            : Color.companionPrimary.opacity(0.5),
+                        lineWidth: 1
+                    )
+            )
         }
-        .padding(CompanionTheme.Spacing.md)
-        .background(Color.companionSurface)
-        .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CompanionTheme.Radius.md)
-                .stroke(Color.companionTextTertiary.opacity(0.3), lineWidth: 1)
-        )
     }
 }

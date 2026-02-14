@@ -5,6 +5,8 @@ struct OnboardingContainerView: View {
     @State private var currentStep: OnboardingStep = .welcome
     @State private var profile = UserProfile()
     @State private var authService = AuthService()
+    @State private var onboardingError: String?
+    @State private var showError = false
 
     enum OnboardingStep: Int, CaseIterable {
         case welcome
@@ -74,6 +76,16 @@ struct OnboardingContainerView: View {
         }
         .background(Color.companionBackground)
         .animation(.easeInOut(duration: 0.3), value: currentStep)
+        .alert("Setup Error", isPresented: $showError) {
+            Button("Continue Anyway") {
+                appState.completeOnboarding()
+            }
+            Button("Retry") {
+                completeOnboarding()
+            }
+        } message: {
+            Text(onboardingError ?? "Could not create your profile. You can retry or continue and set up later.")
+        }
     }
 
     private var progressValue: Double {
@@ -93,6 +105,11 @@ struct OnboardingContainerView: View {
     }
 
     private func completeOnboarding() {
+        // Store phone number locally for call feature
+        if !profile.phoneNumber.isEmpty {
+            UserDefaults.standard.set(profile.phoneNumber, forKey: "userPhoneNumber")
+        }
+
         // Create user on backend
         Task {
             do {
@@ -110,10 +127,9 @@ struct OnboardingContainerView: View {
                     appState.completeOnboarding()
                 }
             } catch {
-                // If user creation fails, still complete onboarding for now
-                // The user can be created later
                 await MainActor.run {
-                    appState.completeOnboarding()
+                    onboardingError = error.localizedDescription
+                    showError = true
                 }
             }
         }

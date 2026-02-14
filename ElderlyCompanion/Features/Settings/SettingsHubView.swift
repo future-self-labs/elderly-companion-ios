@@ -35,8 +35,18 @@ struct SettingsHubView: View {
                     }
                 }
 
+                // Appearance
+                SettingsSection(title: "Appearance") {
+                    SettingsRow(title: "Theme", icon: "paintbrush.fill", color: .companionSecondary) {
+                        ThemePickerView()
+                    }
+                }
+
                 // Main features
                 SettingsSection(title: "Features") {
+                    SettingsRow(title: "Scheduled Calls", icon: "phone.arrow.up.right.fill", color: .companionSuccess) {
+                        ScheduledCallsView()
+                    }
                     SettingsRow(title: "Call History", icon: "phone.fill", color: .companionPrimary) {
                         CallHistoryView()
                     }

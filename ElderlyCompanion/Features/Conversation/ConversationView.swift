@@ -120,8 +120,8 @@ struct ConversationView: View {
             Circle()
                 .fill(
                     viewModel.isConnected
-                        ? Color.companionVoiceActive
-                        : Color.companionVoiceIdle
+                        ? AnyShapeStyle(LinearGradient.aiGradient)
+                        : AnyShapeStyle(Color.companionVoiceIdle)
                 )
                 .frame(width: 120, height: 120)
                 .shadow(
@@ -149,6 +149,21 @@ struct ConversationView: View {
                     .font(.companionBodySecondary)
                     .foregroundStyle(Color.companionPrimary)
             }
+
+            if let error = viewModel.errorDetail {
+                Text(error)
+                    .font(.companionCaption)
+                    .foregroundStyle(Color.companionDanger)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, CompanionTheme.Spacing.xl)
+
+                Button("Retry") {
+                    viewModel.retry()
+                }
+                .font(.companionBody)
+                .foregroundStyle(Color.companionPrimary)
+                .padding(.top, CompanionTheme.Spacing.sm)
+            }
         }
         .padding(.top, CompanionTheme.Spacing.xl)
     }
@@ -157,16 +172,38 @@ struct ConversationView: View {
 
     private var transcriptionArea: some View {
         Group {
-            if let transcription = viewModel.lastTranscription {
+            if !viewModel.transcriptMessages.isEmpty {
                 ScrollView {
-                    Text(transcription)
-                        .font(.companionBody)
-                        .foregroundStyle(Color.companionTextSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, CompanionTheme.Spacing.xl)
+                    VStack(alignment: .leading, spacing: CompanionTheme.Spacing.sm) {
+                        ForEach(Array(viewModel.transcriptMessages.suffix(5).enumerated()), id: \.offset) { _, msg in
+                            HStack {
+                                if msg.role == "user" { Spacer() }
+                                Text(msg.content)
+                                    .font(.companionCaption)
+                                    .foregroundStyle(msg.role == "user" ? Color.companionPrimary : Color.companionTextSecondary)
+                                    .padding(.horizontal, CompanionTheme.Spacing.md)
+                                    .padding(.vertical, CompanionTheme.Spacing.xs)
+                                    .background(
+                                        msg.role == "user"
+                                            ? Color.companionPrimaryLight
+                                            : Color.companionSurfaceSecondary
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
+                                if msg.role != "user" { Spacer() }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, CompanionTheme.Spacing.lg)
                 }
-                .frame(maxHeight: 100)
-                .padding(.bottom, CompanionTheme.Spacing.md)
+                .frame(maxHeight: 140)
+                .padding(.bottom, CompanionTheme.Spacing.sm)
+            } else if let last = viewModel.lastTranscription {
+                Text(last)
+                    .font(.companionCaption)
+                    .foregroundStyle(Color.companionTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, CompanionTheme.Spacing.xl)
+                    .padding(.bottom, CompanionTheme.Spacing.md)
             }
         }
     }

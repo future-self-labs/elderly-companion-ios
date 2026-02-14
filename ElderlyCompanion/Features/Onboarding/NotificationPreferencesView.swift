@@ -24,24 +24,39 @@ struct NotificationPreferencesView: View {
                 VStack(spacing: CompanionTheme.Spacing.md) {
                     CalmCard {
                         Toggle(isOn: $preferences.callEnabled) {
-                            Label("Phone calls", systemImage: "phone.fill")
-                                .font(.companionBody)
+                            HStack(spacing: CompanionTheme.Spacing.sm) {
+                                Image(systemName: "phone.fill")
+                                    .foregroundStyle(Color.companionPrimary)
+                                Text("Phone calls")
+                                    .font(.companionBody)
+                                    .foregroundStyle(Color.companionTextPrimary)
+                            }
                         }
                         .tint(Color.companionPrimary)
                     }
 
                     CalmCard {
                         Toggle(isOn: $preferences.pushEnabled) {
-                            Label("Push notifications", systemImage: "bell.fill")
-                                .font(.companionBody)
+                            HStack(spacing: CompanionTheme.Spacing.sm) {
+                                Image(systemName: "bell.fill")
+                                    .foregroundStyle(Color.companionPrimary)
+                                Text("Push notifications")
+                                    .font(.companionBody)
+                                    .foregroundStyle(Color.companionTextPrimary)
+                            }
                         }
                         .tint(Color.companionPrimary)
                     }
 
                     CalmCard {
                         Toggle(isOn: $preferences.smsEnabled) {
-                            Label("SMS messages", systemImage: "message.fill")
-                                .font(.companionBody)
+                            HStack(spacing: CompanionTheme.Spacing.sm) {
+                                Image(systemName: "message.fill")
+                                    .foregroundStyle(Color.companionPrimary)
+                                Text("SMS messages")
+                                    .font(.companionBody)
+                                    .foregroundStyle(Color.companionTextPrimary)
+                            }
                         }
                         .tint(Color.companionPrimary)
                     }

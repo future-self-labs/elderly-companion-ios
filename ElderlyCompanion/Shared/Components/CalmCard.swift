@@ -11,9 +11,7 @@ struct CalmCard<Content: View>: View {
         content()
             .padding(CompanionTheme.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.companionSurface)
-            .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.lg))
-            .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+            .glassCard()
     }
 }
 
@@ -66,27 +64,4 @@ struct TagBadge: View {
             .foregroundStyle(color)
             .clipShape(Capsule())
     }
-}
-
-#Preview {
-    VStack(spacing: 16) {
-        CalmCard {
-            VStack(alignment: .leading, spacing: 12) {
-                CalmCardHeader("Next Event", icon: "calendar", subtitle: "Today")
-                Text("Doctor's appointment at 2:00 PM")
-                    .font(.companionBody)
-                    .foregroundStyle(Color.companionTextSecondary)
-            }
-        }
-
-        CalmCard {
-            HStack {
-                TagBadge(text: "Companion", color: .companionPrimary)
-                TagBadge(text: "Memory", color: .companionInfo)
-                TagBadge(text: "Concern", color: .companionDanger)
-            }
-        }
-    }
-    .padding()
-    .background(Color.companionBackground)
 }

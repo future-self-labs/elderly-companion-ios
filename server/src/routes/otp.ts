@@ -1,5 +1,9 @@
 import { Hono } from "hono";
+import { eq } from "drizzle-orm";
 import { getTwilioClient } from "../lib/twilio";
+import { db } from "../db";
+import { users } from "../db/schema";
+import { signToken } from "../middleware/auth";
 
 const app = new Hono();
 
@@ -44,7 +48,7 @@ app.post("/create", async (c) => {
 /**
  * POST /otp/validate
  * Validate the OTP code for a given phone number.
- * Returns the user ID on success.
+ * Returns user ID and JWT token on success.
  */
 app.post("/validate", async (c) => {
   const { phoneNumber, code } = await c.req.json<{
@@ -73,12 +77,29 @@ app.post("/validate", async (c) => {
     }
 
     // Look up or create user by phone number
-    // TODO: Replace with actual database lookup
-    const userId = `user_${phoneNumber.replace(/\+/g, "")}`;
+    let [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.phoneNumber, phoneNumber))
+      .limit(1);
+
+    if (!user) {
+      [user] = await db
+        .insert(users)
+        .values({ name: "User", phoneNumber })
+        .returning();
+    }
+
+    // Sign JWT
+    const token = signToken({
+      userId: user.id,
+      phoneNumber: user.phoneNumber,
+    });
 
     return c.json({
       message: "OTP validated successfully",
-      userId,
+      userId: user.id,
+      token,
     });
   } catch (error) {
     console.error("Error validating OTP:", error);

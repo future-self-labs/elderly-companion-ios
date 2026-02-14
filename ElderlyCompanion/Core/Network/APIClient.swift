@@ -44,15 +44,27 @@ actor APIClient {
 
         self.encoder = JSONEncoder()
         self.encoder.dateEncodingStrategy = .iso8601
-        self.encoder.keyEncodingStrategy = .convertToSnakeCase
+        // Do NOT convert to snake_case — our backend expects camelCase
     }
 
+    // MARK: - API URL Configuration
+    static let deployedURL: String? = "https://elderly-companion-api-production.up.railway.app/api/v1"
+
     private static var resolvedBaseURL: String {
-        // Use the configured API URL, fallback to localhost for development
+        // 1. Use deployed URL if set
+        if let url = deployedURL {
+            return url
+        }
+        // 2. Use Info.plist override
         if let url = Bundle.main.infoDictionary?["API_BASE_URL"] as? String, !url.isEmpty {
             return url
         }
+        // 3. Fallback to local development
+        #if targetEnvironment(simulator)
         return "http://localhost:3000/api/v1"
+        #else
+        return "http://192.168.178.178:3000/api/v1"
+        #endif
     }
 
     // MARK: - Generic request methods
@@ -92,6 +104,7 @@ actor APIClient {
     struct OTPValidateResponse: Decodable {
         let message: String
         let userId: String
+        let token: String? // JWT auth token
     }
 
     func sendOTP(phoneNumber: String) async throws -> OTPCreateResponse {
@@ -123,8 +136,21 @@ actor APIClient {
         try await post("/livekit/get-token", body: TokenRequest(userId: userId))
     }
 
-    func initiateCall(phoneNumber: String, userId: String, message: String? = nil) async throws -> TokenResponse {
-        try await post("/livekit/call", body: CallRequest(phoneNumber: phoneNumber, userId: userId, message: message))
+    struct CallResponse: Decodable {
+        // The server returns { participant: { ... } } - we just need to know it succeeded
+        let participant: AnyCodable?
+    }
+
+    // Wrapper to accept any JSON value we don't need to inspect
+    struct AnyCodable: Decodable {
+        init(from decoder: Decoder) throws {
+            // Accept any value - we don't need the participant details
+            _ = try? decoder.singleValueContainer()
+        }
+    }
+
+    func initiateCall(phoneNumber: String, userId: String, message: String? = nil) async throws {
+        let _: CallResponse = try await post("/livekit/call", body: CallRequest(phoneNumber: phoneNumber, userId: userId, message: message))
     }
 
     // MARK: - Users
@@ -157,6 +183,94 @@ actor APIClient {
         let context: String?
     }
 
+    // MARK: - Transcripts
+
+    struct TranscriptMessage: Codable {
+        let role: String
+        let content: String
+        let timestamp: String
+    }
+
+    struct SaveTranscriptRequest: Encodable {
+        let userId: String
+        let duration: Int
+        let messages: [TranscriptMessage]
+        let tags: [String]
+        let summary: String?
+    }
+
+    struct TranscriptRecord: Decodable, Identifiable {
+        let id: String
+        let userId: String
+        let duration: Int
+        let messages: [TranscriptMessage]
+        let tags: [String]
+        let summary: String?
+        let createdAt: String
+    }
+
+    struct TranscriptsResponse: Decodable {
+        let transcripts: [TranscriptRecord]
+    }
+
+    func saveTranscript(_ request: SaveTranscriptRequest) async throws -> TranscriptRecord {
+        try await post("/transcripts", body: request)
+    }
+
+    func getTranscripts(userId: String) async throws -> [TranscriptRecord] {
+        let response: TranscriptsResponse = try await get("/transcripts/\(userId)")
+        return response.transcripts
+    }
+
+    // MARK: - Scheduled Calls
+
+    struct ScheduledCallRequest: Encodable {
+        let userId: String
+        let phoneNumber: String
+        let type: String
+        let title: String
+        let message: String?
+        let time: String
+        let days: [Int]
+        let enabled: Bool
+    }
+
+    struct ScheduledCallRecord: Decodable, Identifiable {
+        let id: String
+        let userId: String
+        let phoneNumber: String
+        let type: String
+        let title: String
+        let message: String?
+        let time: String
+        let days: [Int]
+        let enabled: Bool
+        let createdAt: String
+    }
+
+    struct ScheduledCallsResponse: Decodable {
+        let scheduledCalls: [ScheduledCallRecord]
+    }
+
+    struct ScheduledCallUpdateRequest: Encodable {
+        let enabled: Bool?
+        let time: String?
+        let days: [Int]?
+    }
+
+    func createScheduledCall(_ request: ScheduledCallRequest) async throws -> ScheduledCallRecord {
+        try await post("/scheduled-calls", body: request)
+    }
+
+    func getScheduledCalls(userId: String) async throws -> [ScheduledCallRecord] {
+        let response: ScheduledCallsResponse = try await get("/scheduled-calls/\(userId)")
+        return response.scheduledCalls
+    }
+
+    func updateScheduledCall(id: String, update: ScheduledCallUpdateRequest) async throws {
+        let _: ScheduledCallRecord = try await post("/scheduled-calls/\(id)", body: update)
+    }
+
     // MARK: - Private helpers
 
     private func buildRequest(path: String, method: String, queryItems: [URLQueryItem]? = nil) throws -> URLRequest {
@@ -173,7 +287,7 @@ actor APIClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let token = UserDefaults.standard.string(forKey: "authToken") {
+        if let token = KeychainService.authToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 

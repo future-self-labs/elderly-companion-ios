@@ -24,7 +24,7 @@ final class AuthService {
         isVerifying = false
     }
 
-    /// Validate the OTP code and return the user ID
+    /// Validate the OTP code, store JWT token, and return the user ID
     @discardableResult
     func validateOTP(phoneNumber: String, code: String) async throws -> String {
         isVerifying = true
@@ -32,7 +32,15 @@ final class AuthService {
 
         do {
             let response = try await api.validateOTP(phoneNumber: phoneNumber, code: code)
+
+            // Store user ID
             UserDefaults.standard.set(response.userId, forKey: "userId")
+
+            // Store JWT in Keychain
+            if let token = response.token {
+                KeychainService.authToken = token
+            }
+
             isVerifying = false
             return response.userId
         } catch {
@@ -47,9 +55,21 @@ final class AuthService {
         UserDefaults.standard.string(forKey: "userId")
     }
 
+    /// Check if user has a valid auth token
+    var isAuthenticated: Bool {
+        KeychainService.authToken != nil
+    }
+
     func reset() {
         isVerifying = false
         verificationSent = false
         error = nil
+    }
+
+    func signOut() {
+        KeychainService.authToken = nil
+        UserDefaults.standard.removeObject(forKey: "userId")
+        UserDefaults.standard.removeObject(forKey: "userPhoneNumber")
+        UserDefaults.standard.set(false, forKey: "onboardingComplete")
     }
 }

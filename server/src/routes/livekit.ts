@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { generateToken, initiateOutboundCall } from "../lib/livekit";
+import { generateTokenAndDispatch, initiateOutboundCall } from "../lib/livekit";
 
 const app = new Hono();
 
@@ -15,7 +15,7 @@ app.post("/get-token", async (c) => {
   }
 
   try {
-    const token = await generateToken(userId);
+    const { token } = await generateTokenAndDispatch(userId);
     return c.json({ token, userId });
   } catch (error) {
     console.error("Error generating token:", error);

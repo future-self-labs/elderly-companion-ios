@@ -8,13 +8,25 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function getAgentName(): string {
+  return process.env.AGENT_NAME || "noah";
+}
+
+function getSipTrunkId(): string {
+  return process.env.SIP_TRUNK_ID || "ST_FsnpUMR6sYFp";
+}
+
 /**
- * Generate a LiveKit access token for in-app voice sessions.
- * The token grants room join permission and dispatches the "noah" agent.
+ * Generate a LiveKit access token for in-app voice sessions
+ * and explicitly dispatch the agent to the room.
  */
-export async function generateToken(userId: string): Promise<string> {
+export async function generateTokenAndDispatch(userId: string): Promise<{ token: string; roomName: string }> {
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
+  const livekitUrl = requireEnv("LIVEKIT_URL");
+  const agentName = getAgentName();
+
+  const roomName = uuidv4();
 
   const at = new AccessToken(apiKey, apiSecret, {
     identity: userId,
@@ -22,24 +34,32 @@ export async function generateToken(userId: string): Promise<string> {
   });
 
   at.addGrant({
-    room: uuidv4(),
+    room: roomName,
     roomJoin: true,
   });
 
   at.roomConfig = new RoomConfiguration({
     agents: [
-      new RoomAgentDispatch({
-        agentName: "noah",
-      }),
+      new RoomAgentDispatch({ agentName }),
     ],
   });
 
-  return at.toJwt();
+  const token = await at.toJwt();
+
+  // Also explicitly dispatch the agent
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+
+  agentDispatchClient.createDispatch(roomName, agentName, {
+    metadata: "in_app_voice",
+  }).catch((err) => {
+    console.log("Agent dispatch (will retry via roomConfig):", err.message);
+  });
+
+  return { token, roomName };
 }
 
 /**
- * Initiate an outbound phone call via LiveKit SIP trunk.
- * Uses the existing Twilio SIP trunk (ST_FsnpUMR6sYFp) to call the user.
+ * Initiate an outbound phone call via SIP trunk.
  */
 export async function initiateOutboundCall(
   phoneNumber: string,
@@ -49,11 +69,10 @@ export async function initiateOutboundCall(
   const livekitUrl = requireEnv("LIVEKIT_URL");
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
+  const trunkId = getSipTrunkId();
+  const agentName = getAgentName();
 
   const sipClient = new SipClient(livekitUrl, apiKey, apiSecret);
-
-  // Outbound SIP trunk ID (Twilio <-> LiveKit Cloud)
-  const trunkId = "ST_FsnpUMR6sYFp";
   const roomName = userId;
 
   const participant = await sipClient.createSipParticipant(
@@ -62,7 +81,7 @@ export async function initiateOutboundCall(
     roomName,
     {
       participantIdentity: userId,
-      participantName: "Unknown Caller",
+      participantName: "Caller",
       krispEnabled: true,
       participantAttributes: initialRequest
         ? { initialRequest }
@@ -70,14 +89,8 @@ export async function initiateOutboundCall(
     }
   );
 
-  // Dispatch the noah agent to the room
-  const agentDispatchClient = new AgentDispatchClient(
-    livekitUrl,
-    apiKey,
-    apiSecret
-  );
-
-  await agentDispatchClient.createDispatch(roomName, "noah", {
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+  await agentDispatchClient.createDispatch(roomName, agentName, {
     metadata: "outbound_call",
   });
 

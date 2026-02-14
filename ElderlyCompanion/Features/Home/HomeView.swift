@@ -42,6 +42,22 @@ struct HomeView: View {
             ConversationView()
                 .environment(appState)
         }
+        .alert("Call Failed", isPresented: $showCallAlert) {
+            Button("OK") {}
+        } message: {
+            Text(callError ?? "An unknown error occurred.")
+        }
+        .alert("Enter your phone number", isPresented: $showPhoneInput) {
+            TextField("+31...", text: $phoneInputNumber)
+                .keyboardType(.phonePad)
+            Button("Call") {
+                guard let userId = UserDefaults.standard.string(forKey: "userId") else { return }
+                executeCall(phone: phoneInputNumber, userId: userId)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Noah will call this number. Include country code (e.g. +31).")
+        }
         .onAppear {
             calendarService.fetchTodayEvents()
         }
@@ -94,7 +110,7 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 100)
-                .background(Color.companionPrimary)
+                .background(LinearGradient.aiGradient)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.xl))
                 .shadow(color: Color.companionPrimary.opacity(0.3), radius: 12, y: 4)
@@ -153,15 +169,45 @@ struct HomeView: View {
 
     // MARK: - Actions
 
+    @State private var callError: String?
+    @State private var showCallAlert = false
+    @State private var showPhoneInput = false
+    @State private var phoneInputNumber = ""
+
     private func requestPhoneCall() {
-        guard let userId = UserDefaults.standard.string(forKey: "userId"),
-              let user = appState.currentUser else { return }
+        guard let userId = UserDefaults.standard.string(forKey: "userId") else {
+            callError = "No user ID found. Please complete onboarding."
+            showCallAlert = true
+            return
+        }
+
+        let phoneNumber = appState.currentUser?.phoneNumber
+            ?? UserDefaults.standard.string(forKey: "userPhoneNumber")
+
+        if let phone = phoneNumber, !phone.isEmpty {
+            executeCall(phone: phone, userId: userId)
+        } else {
+            // No phone stored -- ask for it
+            showPhoneInput = true
+        }
+    }
+
+    private func executeCall(phone: String, userId: String) {
+        // Save for next time
+        UserDefaults.standard.set(phone, forKey: "userPhoneNumber")
 
         Task {
-            try? await APIClient.shared.initiateCall(
-                phoneNumber: user.phoneNumber,
-                userId: userId
-            )
+            do {
+                try await APIClient.shared.initiateCall(
+                    phoneNumber: phone,
+                    userId: userId
+                )
+            } catch {
+                await MainActor.run {
+                    callError = error.localizedDescription
+                    showCallAlert = true
+                }
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import LiveKit
 
 @Observable
 final class ConversationViewModel {
@@ -14,6 +15,10 @@ final class ConversationViewModel {
     var lastTranscription: String?
     var isMarkedImportant: Bool = false
     var statusMessage: String = "Connecting..."
+    var errorDetail: String?
+
+    // Transcript collection
+    private(set) var transcriptMessages: [APIClient.TranscriptMessage] = []
 
     var isConnected: Bool {
         liveKitService.voiceState == .connected
@@ -26,41 +31,62 @@ final class ConversationViewModel {
     }
 
     func startSession(userId: String) {
-        Task {
+        guard !userId.isEmpty else {
+            statusMessage = "No user ID"
+            errorDetail = "Please complete onboarding first."
+            return
+        }
+
+        statusMessage = "Connecting..."
+        errorDetail = nil
+        transcriptMessages = []
+
+        Task { @MainActor in
             do {
                 try await liveKitService.connect(userId: userId)
-                await MainActor.run {
-                    isListening = true
-                    statusMessage = "Connected"
-                    sessionStartTime = Date()
-                    startTimer()
+
+                // Listen for transcription data from the agent
+                liveKitService.onTranscription = { [weak self] text, role in
+                    Task { @MainActor in
+                        self?.handleTranscription(text: text, role: role)
+                    }
                 }
+
+                isListening = true
+                statusMessage = "Connected"
+                sessionStartTime = Date()
+                startTimer()
             } catch {
-                await MainActor.run {
-                    statusMessage = "Connection failed"
-                }
+                statusMessage = "Connection failed"
+                errorDetail = error.localizedDescription
+                print("[ConversationVM] Connection error: \(error)")
             }
         }
     }
 
     func endSession() {
         stopTimer()
-        Task {
+        let duration = Int(sessionDuration)
+        let messages = transcriptMessages
+        let userId = UserDefaults.standard.string(forKey: "userId") ?? ""
+
+        Task { @MainActor in
             await liveKitService.disconnect()
-            await MainActor.run {
-                isListening = false
-                statusMessage = "Disconnected"
+            isListening = false
+            statusMessage = "Disconnected"
+
+            // Save transcript if we have messages
+            if !messages.isEmpty && !userId.isEmpty {
+                await saveTranscript(userId: userId, duration: duration, messages: messages)
             }
         }
     }
 
     func toggleMicrophone() {
-        Task {
+        Task { @MainActor in
             try? await liveKitService.toggleMicrophone()
-            await MainActor.run {
-                isMicEnabled = liveKitService.isMicrophoneEnabled
-                isListening = isMicEnabled
-            }
+            isMicEnabled = liveKitService.isMicrophoneEnabled
+            isListening = isMicEnabled
         }
     }
 
@@ -69,9 +95,46 @@ final class ConversationViewModel {
     }
 
     func markAsMemory() {
-        // Save current conversation as a memory
-        // This will be sent to the backend when the session ends
+        // Will be handled when saving transcript
     }
+
+    func retry() {
+        let userId = UserDefaults.standard.string(forKey: "userId") ?? ""
+        liveKitService = LiveKitService()
+        startSession(userId: userId)
+    }
+
+    // MARK: - Transcription handling
+
+    private func handleTranscription(text: String, role: String) {
+        lastTranscription = text
+
+        let message = APIClient.TranscriptMessage(
+            role: role,
+            content: text,
+            timestamp: ISO8601DateFormatter().string(from: Date())
+        )
+        transcriptMessages.append(message)
+    }
+
+    // MARK: - Save transcript to backend
+
+    private func saveTranscript(userId: String, duration: Int, messages: [APIClient.TranscriptMessage]) async {
+        do {
+            _ = try await APIClient.shared.saveTranscript(.init(
+                userId: userId,
+                duration: duration,
+                messages: messages,
+                tags: isMarkedImportant ? ["companion", "important"] : ["companion"],
+                summary: nil
+            ))
+            print("[ConversationVM] Transcript saved (\(messages.count) messages)")
+        } catch {
+            print("[ConversationVM] Failed to save transcript: \(error)")
+        }
+    }
+
+    // MARK: - Timer
 
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in

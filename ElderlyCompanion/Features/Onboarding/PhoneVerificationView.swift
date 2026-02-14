@@ -77,6 +77,13 @@ struct PhoneVerificationView: View {
         }
         .padding(CompanionTheme.Spacing.lg)
         .background(Color.companionBackground)
+        .alert("Verification Failed", isPresented: $showError) {
+            Button("Try Again") {
+                otpCode = ""
+            }
+        } message: {
+            Text(authService.error ?? "The code you entered is incorrect. Please try again.")
+        }
         .onAppear {
             // Auto-send OTP when view appears
             sendCode()
