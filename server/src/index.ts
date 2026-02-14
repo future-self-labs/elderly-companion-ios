@@ -13,6 +13,7 @@ import { userRoutes } from "./routes/users";
 import { memoryRoutes } from "./routes/memory";
 import { transcriptRoutes } from "./routes/transcripts";
 import { scheduledCallRoutes, startScheduler } from "./routes/scheduled-calls";
+import { familyRoutes } from "./routes/family";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -40,6 +41,7 @@ app.use("/scheduled-calls/*", authMiddleware);
 app.route("/livekit", livekitRoutes);
 app.route("/transcripts", transcriptRoutes);
 app.route("/scheduled-calls", scheduledCallRoutes);
+app.route("/family", familyRoutes);
 
 // Start server
 const port = Number(process.env.PORT) || 3000;

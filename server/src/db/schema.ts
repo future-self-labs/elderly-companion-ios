@@ -43,6 +43,16 @@ export const scheduledCalls = pgTable("scheduled_calls", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const familyContacts = pgTable("family_contacts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  relationship: text("relationship").notNull().default("family"),
+  whatsappUpdatesEnabled: boolean("whatsapp_updates_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Type exports for use in routes
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -50,3 +60,5 @@ export type Transcript = typeof transcripts.$inferSelect;
 export type NewTranscript = typeof transcripts.$inferInsert;
 export type ScheduledCall = typeof scheduledCalls.$inferSelect;
 export type NewScheduledCall = typeof scheduledCalls.$inferInsert;
+export type FamilyContact = typeof familyContacts.$inferSelect;
+export type NewFamilyContact = typeof familyContacts.$inferInsert;

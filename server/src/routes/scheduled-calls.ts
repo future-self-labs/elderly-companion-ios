@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { eq, and } from "drizzle-orm";
 import { db } from "../db";
-import { scheduledCalls } from "../db/schema";
+import { scheduledCalls, users, familyContacts } from "../db/schema";
 import { initiateOutboundCall } from "../lib/livekit";
+import { sendDailyFamilyUpdate } from "./family";
 
 const app = new Hono();
 
@@ -128,17 +129,34 @@ function getCallMessage(call: { type: string; title: string; message: string | n
 }
 
 /**
+ * Get the current time in the user's timezone (Europe/Amsterdam).
+ * Railway servers run in UTC, but users are in CET/CEST.
+ */
+function getAmsterdamTime(): { day: number; time: string } {
+  const now = new Date();
+  const amsterdamStr = now.toLocaleString("en-US", { timeZone: "Europe/Amsterdam" });
+  const amsterdam = new Date(amsterdamStr);
+  return {
+    day: amsterdam.getDay(),
+    time: `${String(amsterdam.getHours()).padStart(2, "0")}:${String(amsterdam.getMinutes()).padStart(2, "0")}`,
+  };
+}
+
+/**
  * Start the persistent scheduler.
  * Runs every 60 seconds, queries the DB for calls matching the current time/day.
+ * Uses Europe/Amsterdam timezone to match user's local time.
  */
 export function startScheduler() {
-  console.log("[Scheduler] Starting DB-driven scheduler (checks every 60s)");
+  console.log("[Scheduler] Starting DB-driven scheduler (checks every 60s, timezone: Europe/Amsterdam)");
+
+  // Log initial check to confirm scheduler is alive
+  const { day, time } = getAmsterdamTime();
+  console.log(`[Scheduler] Current Amsterdam time: ${time}, day: ${day}`);
 
   setInterval(async () => {
     try {
-      const now = new Date();
-      const currentDay = now.getDay();
-      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const { day: currentDay, time: currentTime } = getAmsterdamTime();
 
       // Get all enabled calls for the current time
       const calls = await db
@@ -151,12 +169,19 @@ export function startScheduler() {
           )
         );
 
+      if (calls.length > 0) {
+        console.log(`[Scheduler] ${currentTime} Amsterdam - Found ${calls.length} call(s) matching this minute`);
+      }
+
       for (const call of calls) {
         // Check if today is one of the scheduled days
         const days = call.days as number[];
-        if (!days.includes(currentDay)) continue;
+        if (!days.includes(currentDay)) {
+          console.log(`[Scheduler] Skipping "${call.title}" - day ${currentDay} not in [${days}]`);
+          continue;
+        }
 
-        console.log(`[Scheduler] Triggering: "${call.title}" for user ${call.userId}`);
+        console.log(`[Scheduler] Triggering: "${call.title}" for ${call.phoneNumber}`);
 
         try {
           await initiateOutboundCall(
@@ -166,6 +191,33 @@ export function startScheduler() {
           );
         } catch (err: any) {
           console.error(`[Scheduler] Call failed for ${call.title}:`, err.message);
+        }
+      }
+      // Daily WhatsApp update - send at 20:00 Amsterdam time
+      if (currentTime === "20:00") {
+        console.log("[Scheduler] 20:00 - Running daily WhatsApp family updates");
+        try {
+          // Get all users who have family contacts
+          const allUsers = await db.select().from(users);
+          for (const user of allUsers) {
+            const contacts = await db
+              .select()
+              .from(familyContacts)
+              .where(eq(familyContacts.userId, user.id));
+
+            if (contacts.some((c) => c.whatsappUpdatesEnabled)) {
+              try {
+                const count = await sendDailyFamilyUpdate(user.id);
+                if (count > 0) {
+                  console.log(`[Scheduler] Sent daily update for ${user.name} to ${count} contact(s)`);
+                }
+              } catch (err: any) {
+                console.error(`[Scheduler] Daily update failed for ${user.name}:`, err.message);
+              }
+            }
+          }
+        } catch (err: any) {
+          console.error("[Scheduler] Error running daily WhatsApp updates:", err.message);
         }
       }
     } catch (error) {

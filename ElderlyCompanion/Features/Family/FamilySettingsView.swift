@@ -5,6 +5,7 @@ struct FamilyMember: Codable, Identifiable {
     var name: String
     var phoneNumber: String
     var relationship: String
+    var whatsappUpdatesEnabled: Bool = true
 
     static let relationships = ["Son", "Daughter", "Spouse", "Grandchild", "Sibling", "Friend", "Caregiver", "Other"]
 }
@@ -13,34 +14,92 @@ struct FamilyMember: Codable, Identifiable {
 final class FamilyViewModel {
     var members: [FamilyMember] = []
     var showAddSheet = false
+    var isLoading = false
+    var errorMessage: String?
+    var showError = false
 
-    init() { load() }
+    func loadFromServer() async {
+        guard let userId = UserDefaults.standard.string(forKey: "userId") else { return }
+        isLoading = true
 
-    func load() {
-        guard let data = UserDefaults.standard.data(forKey: "familyMembers"),
-              let decoded = try? JSONDecoder().decode([FamilyMember].self, from: data) else { return }
-        members = decoded
-    }
-
-    func save() {
-        if let data = try? JSONEncoder().encode(members) {
-            UserDefaults.standard.set(data, forKey: "familyMembers")
+        do {
+            let contacts = try await APIClient.shared.getFamilyContacts(userId: userId)
+            await MainActor.run {
+                members = contacts.map { contact in
+                    FamilyMember(
+                        id: contact.id,
+                        name: contact.name,
+                        phoneNumber: contact.phoneNumber,
+                        relationship: contact.relationship,
+                        whatsappUpdatesEnabled: contact.whatsappUpdatesEnabled
+                    )
+                }
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                isLoading = false
+                // Fallback to local storage
+                if let data = UserDefaults.standard.data(forKey: "familyMembers"),
+                   let decoded = try? JSONDecoder().decode([FamilyMember].self, from: data) {
+                    members = decoded
+                }
+            }
         }
     }
 
     func add(_ member: FamilyMember) {
-        members.append(member)
-        save()
-    }
+        guard let userId = UserDefaults.standard.string(forKey: "userId") else { return }
 
-    func remove(at offsets: IndexSet) {
-        members.remove(atOffsets: offsets)
-        save()
+        Task {
+            do {
+                let contact = try await APIClient.shared.createFamilyContact(.init(
+                    userId: userId,
+                    name: member.name,
+                    phoneNumber: member.phoneNumber,
+                    relationship: member.relationship,
+                    whatsappUpdatesEnabled: member.whatsappUpdatesEnabled
+                ))
+                await MainActor.run {
+                    members.append(FamilyMember(
+                        id: contact.id,
+                        name: contact.name,
+                        phoneNumber: contact.phoneNumber,
+                        relationship: contact.relationship,
+                        whatsappUpdatesEnabled: contact.whatsappUpdatesEnabled
+                    ))
+                    saveLocally()
+                }
+            } catch {
+                await MainActor.run {
+                    // Save locally as fallback
+                    members.append(member)
+                    saveLocally()
+                    errorMessage = "Saved locally. Will sync when online."
+                    showError = true
+                }
+            }
+        }
     }
 
     func remove(id: String) {
-        members.removeAll { $0.id == id }
-        save()
+        Task {
+            do {
+                try await APIClient.shared.deleteFamilyContact(id: id)
+            } catch {
+                print("[Family] Server delete failed, removing locally: \(error)")
+            }
+            await MainActor.run {
+                members.removeAll { $0.id == id }
+                saveLocally()
+            }
+        }
+    }
+
+    private func saveLocally() {
+        if let data = try? JSONEncoder().encode(members) {
+            UserDefaults.standard.set(data, forKey: "familyMembers")
+        }
     }
 }
 
@@ -61,7 +120,7 @@ struct FamilySettingsView: View {
                             .font(.companionHeadline)
                             .foregroundStyle(Color.companionTextPrimary)
 
-                        Text("Add family members to share memories, receive activity updates, and stay connected.")
+                        Text("Add family members to receive daily WhatsApp updates about how your loved one is doing.")
                             .font(.companionBodySecondary)
                             .foregroundStyle(Color.companionTextSecondary)
                             .multilineTextAlignment(.center)
@@ -97,6 +156,17 @@ struct FamilySettingsView: View {
                                             Text(member.phoneNumber)
                                                 .font(.companionCaption)
                                                 .foregroundStyle(Color.companionTextTertiary)
+                                        }
+
+                                        if member.whatsappUpdatesEnabled {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "message.fill")
+                                                    .font(.system(size: 10))
+                                                Text("WhatsApp daily update")
+                                                    .font(.system(size: 11, weight: .medium))
+                                            }
+                                            .foregroundStyle(Color.companionSuccess)
+                                            .padding(.top, 2)
                                         }
                                     }
 
@@ -144,6 +214,14 @@ struct FamilySettingsView: View {
         .background(Color.companionBackground)
         .navigationTitle("Family")
         .navigationBarTitleDisplayMode(.large)
+        .alert("Notice", isPresented: $viewModel.showError) {
+            Button("OK") {}
+        } message: {
+            Text(viewModel.errorMessage ?? "Something went wrong.")
+        }
+        .task {
+            await viewModel.loadFromServer()
+        }
         .sheet(isPresented: $viewModel.showAddSheet) {
             AddFamilyMemberView { member in
                 viewModel.add(member)
@@ -161,6 +239,7 @@ struct AddFamilyMemberView: View {
     @State private var name = ""
     @State private var phoneNumber = ""
     @State private var relationship = "Son"
+    @State private var whatsappEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -199,6 +278,24 @@ struct AddFamilyMemberView: View {
                             }
                         }
                     }
+                    // WhatsApp toggle
+                    CalmCard {
+                        Toggle(isOn: $whatsappEnabled) {
+                            HStack(spacing: CompanionTheme.Spacing.md) {
+                                Image(systemName: "message.fill")
+                                    .foregroundStyle(Color.companionSuccess)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("WhatsApp Daily Update")
+                                        .font(.companionBody)
+                                        .foregroundStyle(Color.companionTextPrimary)
+                                    Text("Receive a daily summary at 20:00")
+                                        .font(.companionCaption)
+                                        .foregroundStyle(Color.companionTextSecondary)
+                                }
+                            }
+                        }
+                        .tint(Color.companionPrimary)
+                    }
                 }
                 .padding(CompanionTheme.Spacing.lg)
             }
@@ -211,7 +308,7 @@ struct AddFamilyMemberView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        onSave(FamilyMember(name: name, phoneNumber: phoneNumber, relationship: relationship))
+                        onSave(FamilyMember(name: name, phoneNumber: phoneNumber, relationship: relationship, whatsappUpdatesEnabled: whatsappEnabled))
                         dismiss()
                     }
                     .disabled(name.isEmpty)

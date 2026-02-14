@@ -286,6 +286,43 @@ actor APIClient {
         try await delete("/scheduled-calls/\(id)")
     }
 
+    // MARK: - Family Contacts
+
+    struct FamilyContactRequest: Encodable {
+        let userId: String
+        let name: String
+        let phoneNumber: String
+        let relationship: String
+        let whatsappUpdatesEnabled: Bool
+    }
+
+    struct FamilyContactRecord: Decodable, Identifiable {
+        let id: String
+        let userId: String
+        let name: String
+        let phoneNumber: String
+        let relationship: String
+        let whatsappUpdatesEnabled: Bool
+        let createdAt: String
+    }
+
+    struct FamilyContactsResponse: Decodable {
+        let familyContacts: [FamilyContactRecord]
+    }
+
+    func createFamilyContact(_ request: FamilyContactRequest) async throws -> FamilyContactRecord {
+        try await post("/family", body: request)
+    }
+
+    func getFamilyContacts(userId: String) async throws -> [FamilyContactRecord] {
+        let response: FamilyContactsResponse = try await get("/family/\(userId)")
+        return response.familyContacts
+    }
+
+    func deleteFamilyContact(id: String) async throws {
+        try await delete("/family/\(id)")
+    }
+
     // MARK: - Private helpers
 
     private func buildRequest(path: String, method: String, queryItems: [URLQueryItem]? = nil) throws -> URLRequest {
