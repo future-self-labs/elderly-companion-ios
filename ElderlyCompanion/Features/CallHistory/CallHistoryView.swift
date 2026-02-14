@@ -5,7 +5,18 @@ struct CallHistoryView: View {
 
     var body: some View {
         Group {
-            if viewModel.calls.isEmpty && !viewModel.isLoading {
+            if viewModel.isLoading {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                        .tint(Color.companionPrimary)
+                    Text("Loading calls...")
+                        .font(.companionCaption)
+                        .foregroundStyle(Color.companionTextSecondary)
+                        .padding(.top, CompanionTheme.Spacing.sm)
+                    Spacer()
+                }
+            } else if viewModel.calls.isEmpty {
                 emptyState
             } else {
                 callList
@@ -71,44 +82,58 @@ struct CallRow: View {
 
     var body: some View {
         CalmCard {
-            VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {
-                // Header
-                HStack {
-                    Image(systemName: call.direction == .inbound ? "phone.arrow.down.left.fill" : "phone.arrow.up.right.fill")
-                        .foregroundStyle(call.direction == .inbound ? Color.companionPrimary : Color.companionSecondary)
+            HStack(spacing: CompanionTheme.Spacing.md) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.companionPrimaryLight)
+                        .frame(width: 44, height: 44)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(call.direction == .inbound ? "Incoming call" : "Outgoing call")
-                            .font(.companionBody)
-                            .foregroundStyle(Color.companionTextPrimary)
+                    Image(systemName: "waveform")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Color.companionPrimary)
+                }
 
-                        Text(call.startedAt.formatted(.dateTime.month().day().hour().minute()))
+                // Info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Conversation with Noah")
+                        .font(.companionBody)
+                        .foregroundStyle(Color.companionTextPrimary)
+
+                    Text(call.startedAt.formatted(.dateTime.weekday(.wide).month().day().hour().minute()))
+                        .font(.companionCaption)
+                        .foregroundStyle(Color.companionTextSecondary)
+
+                    if let summary = call.summary, !summary.isEmpty {
+                        Text(summary)
                             .font(.companionCaption)
-                            .foregroundStyle(Color.companionTextSecondary)
+                            .foregroundStyle(Color.companionTextTertiary)
+                            .lineLimit(2)
+                            .padding(.top, 2)
                     }
+                }
 
-                    Spacer()
+                Spacer()
 
+                // Duration
+                VStack(alignment: .trailing, spacing: 4) {
                     Text(formatDuration(call.duration))
                         .font(.companionLabel)
                         .foregroundStyle(Color.companionTextSecondary)
-                }
 
-                // Tags
-                if !call.tags.isEmpty {
-                    HStack(spacing: CompanionTheme.Spacing.sm) {
-                        ForEach(call.tags, id: \.self) { tag in
-                            TagBadge(text: tag.label, color: tagColor(for: tag))
+                    if !call.tags.isEmpty {
+                        HStack(spacing: 4) {
+                            ForEach(call.tags.prefix(2), id: \.self) { tag in
+                                Text(tag.label)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(tagColor(for: tag).opacity(0.15))
+                                    .foregroundStyle(tagColor(for: tag))
+                                    .clipShape(Capsule())
+                            }
                         }
                     }
-                }
-
-                // Summary
-                if let summary = call.summary {
-                    Text(summary)
-                        .font(.companionCaption)
-                        .foregroundStyle(Color.companionTextSecondary)
-                        .lineLimit(2)
                 }
             }
         }

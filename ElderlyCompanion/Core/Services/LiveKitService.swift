@@ -118,19 +118,45 @@ private class RoomDelegateHandler: RoomDelegate {
     }
 
     nonisolated func room(_ room: Room, participant: Participant, didReceiveData data: Data, forTopic topic: String) {
+        let localIdentity = room.localParticipant.identity?.stringValue ?? ""
+
         // LiveKit agents send transcription data on the "lk-transcription" topic
         if topic == "lk-transcription" || topic == "transcription" {
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let text = json["text"] as? String {
-                let role = json["participant_identity"] as? String ?? "assistant"
-                let isUser = role.contains("test_") || role == (room.localParticipant.identity?.stringValue ?? "")
-                Task { @MainActor in
-                    service?.handleTranscription(text, role: isUser ? "user" : "assistant")
+            // Try parsing as structured transcription (segments array format)
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Format 1: Direct text field
+                if let text = json["text"] as? String, !text.isEmpty {
+                    let isFinal = json["is_final"] as? Bool ?? json["final"] as? Bool ?? true
+                    guard isFinal else { return } // Skip interim results
+
+                    let role = json["participant_identity"] as? String ?? participant.identity?.stringValue ?? "assistant"
+                    let isUser = role == localIdentity || role.contains("sip_")
+                    Task { @MainActor in
+                        service?.handleTranscription(text, role: isUser ? "user" : "assistant")
+                    }
+                    return
+                }
+
+                // Format 2: Segments array (OpenAI Realtime format)
+                if let segments = json["segments"] as? [[String: Any]] {
+                    for segment in segments {
+                        if let text = segment["text"] as? String, !text.isEmpty {
+                            let isFinal = segment["final"] as? Bool ?? segment["is_final"] as? Bool ?? true
+                            guard isFinal else { continue }
+
+                            let segmentId = segment["id"] as? String ?? ""
+                            let isUser = segmentId.contains("user") || (segment["language"] as? String) != nil
+                            Task { @MainActor in
+                                service?.handleTranscription(text, role: isUser ? "user" : "assistant")
+                            }
+                        }
+                    }
+                    return
                 }
             }
         }
 
-        // Also try parsing as plain text
+        // Also try parsing as plain text for custom agent topics
         if topic == "agent-text" || topic == "lk-agent-text" {
             if let text = String(data: data, encoding: .utf8), !text.isEmpty {
                 Task { @MainActor in

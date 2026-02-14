@@ -66,7 +66,13 @@ final class ConversationViewModel {
         }
     }
 
+    private var hasEndedSession = false
+
     func endSession() {
+        // Prevent double-save when both button press and onDisappear trigger this
+        guard !hasEndedSession else { return }
+        hasEndedSession = true
+
         stopTimer()
         let duration = Int(sessionDuration)
         let messages = transcriptMessages
