@@ -286,6 +286,26 @@ actor APIClient {
         try await delete("/scheduled-calls/\(id)")
     }
 
+    // MARK: - Health Data
+
+    struct HealthSnapshotRequest: Encodable {
+        let userId: String
+        let stepCount: Int
+        let heartRate: Int
+        let bloodOxygen: Int
+        let bloodPressureSystolic: Int
+        let bloodPressureDiastolic: Int
+        let sleepHours: String
+    }
+
+    struct HealthSnapshotResponse: Decodable {
+        let id: String?
+    }
+
+    func sendHealthSnapshot(_ request: HealthSnapshotRequest) async throws {
+        let _: HealthSnapshotResponse = try await post("/health-data", body: request)
+    }
+
     // MARK: - Family Contacts
 
     struct FamilyContactRequest: Encodable {

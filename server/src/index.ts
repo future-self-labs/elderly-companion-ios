@@ -14,6 +14,7 @@ import { memoryRoutes } from "./routes/memory";
 import { transcriptRoutes } from "./routes/transcripts";
 import { scheduledCallRoutes, startScheduler } from "./routes/scheduled-calls";
 import { familyRoutes } from "./routes/family";
+import { healthRoutes } from "./routes/health";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -42,6 +43,7 @@ app.route("/livekit", livekitRoutes);
 app.route("/transcripts", transcriptRoutes);
 app.route("/scheduled-calls", scheduledCallRoutes);
 app.route("/family", familyRoutes);
+app.route("/health-data", healthRoutes);
 
 // Start server
 const port = Number(process.env.PORT) || 3000;

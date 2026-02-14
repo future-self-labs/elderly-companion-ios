@@ -43,6 +43,18 @@ export const scheduledCalls = pgTable("scheduled_calls", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const healthSnapshots = pgTable("health_snapshots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  stepCount: integer("step_count").default(0),
+  heartRate: integer("heart_rate").default(0),
+  bloodOxygen: integer("blood_oxygen").default(0),
+  bloodPressureSystolic: integer("blood_pressure_systolic").default(0),
+  bloodPressureDiastolic: integer("blood_pressure_diastolic").default(0),
+  sleepHours: text("sleep_hours").default("0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const familyContacts = pgTable("family_contacts", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id),
@@ -62,3 +74,5 @@ export type ScheduledCall = typeof scheduledCalls.$inferSelect;
 export type NewScheduledCall = typeof scheduledCalls.$inferInsert;
 export type FamilyContact = typeof familyContacts.$inferSelect;
 export type NewFamilyContact = typeof familyContacts.$inferInsert;
+export type HealthSnapshot = typeof healthSnapshots.$inferSelect;
+export type NewHealthSnapshot = typeof healthSnapshots.$inferInsert;

@@ -30,6 +30,10 @@
 	<string>Noah can access your contacts to help manage your trusted circle.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Noah needs access to your microphone so you can talk with your companion.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Noah reads your health data to monitor your wellbeing and share important updates with your family circle.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Noah does not write health data, only reads it.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

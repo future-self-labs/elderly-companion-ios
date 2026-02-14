@@ -68,6 +68,13 @@ struct SettingsHubView: View {
                     }
                 }
 
+                // Health
+                SettingsSection(title: "Health") {
+                    SettingsRow(title: "Health & Peripherals", icon: "heart.text.clipboard.fill", color: .companionDanger) {
+                        HealthSettingsView()
+                    }
+                }
+
                 // AI Configuration
                 SettingsSection(title: "Noah") {
                     SettingsRow(title: "Personality", icon: "sparkles", color: .companionSecondary) {

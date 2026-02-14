@@ -4,6 +4,7 @@ import { db } from "../db";
 import { familyContacts, users, transcripts } from "../db/schema";
 import { getTwilioClient } from "../lib/twilio";
 import { getZepClient } from "../lib/zep";
+import { getHealthSummary } from "./health";
 
 const app = new Hono();
 
@@ -181,6 +182,16 @@ async function buildDailySummary(userId: string, userName: string): Promise<stri
   }
 
   summary += `\n`;
+
+  // Add health stats if available
+  try {
+    const healthSummary = await getHealthSummary(userId);
+    if (healthSummary) {
+      summary += `${healthSummary}\n\n`;
+    }
+  } catch (e) {
+    console.error("[DailyUpdate] Error fetching health summary:", e);
+  }
 
   // Add mood/context from Zep if available
   if (memoryContext) {
