@@ -86,6 +86,17 @@ actor APIClient {
         let _: EmptyResponse = try await perform(request)
     }
 
+    func put<T: Decodable>(_ path: String, body: some Encodable) async throws -> T {
+        var request = try buildRequest(path: path, method: "PUT")
+        request.httpBody = try encoder.encode(body)
+        return try await perform(request)
+    }
+
+    func delete(_ path: String) async throws {
+        var request = try buildRequest(path: path, method: "DELETE")
+        let _: EmptyResponse = try await perform(request)
+    }
+
     // MARK: - OTP
 
     struct OTPCreateRequest: Encodable {
@@ -268,7 +279,11 @@ actor APIClient {
     }
 
     func updateScheduledCall(id: String, update: ScheduledCallUpdateRequest) async throws {
-        let _: ScheduledCallRecord = try await post("/scheduled-calls/\(id)", body: update)
+        let _: ScheduledCallRecord = try await put("/scheduled-calls/\(id)", body: update)
+    }
+
+    func deleteScheduledCall(id: String) async throws {
+        try await delete("/scheduled-calls/\(id)")
     }
 
     // MARK: - Private helpers

@@ -16,6 +16,8 @@ final class ConversationViewModel {
     var isMarkedImportant: Bool = false
     var statusMessage: String = "Connecting..."
     var errorDetail: String?
+    var transcriptSaveError: String?
+    var showTranscriptSaveError: Bool = false
 
     // Transcript collection
     private(set) var transcriptMessages: [APIClient.TranscriptMessage] = []
@@ -131,6 +133,10 @@ final class ConversationViewModel {
             print("[ConversationVM] Transcript saved (\(messages.count) messages)")
         } catch {
             print("[ConversationVM] Failed to save transcript: \(error)")
+            await MainActor.run {
+                transcriptSaveError = "Your conversation was not saved: \(error.localizedDescription)"
+                showTranscriptSaveError = true
+            }
         }
     }
 

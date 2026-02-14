@@ -14,6 +14,11 @@ struct CallHistoryView: View {
         .background(Color.companionBackground)
         .navigationTitle("Call History")
         .navigationBarTitleDisplayMode(.large)
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK") {}
+        } message: {
+            Text(viewModel.errorMessage ?? "Could not load call history.")
+        }
         .task {
             await viewModel.loadCalls()
         }

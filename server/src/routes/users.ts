@@ -22,7 +22,23 @@ app.post("/", async (c) => {
       .limit(1);
 
     if (existing.length > 0) {
-      return c.json(existing[0]);
+      // Update the existing user with the full profile data.
+      // This handles the case where OTP validation created a stub user
+      // and onboarding now sends the complete profile.
+      const [updated] = await db
+        .update(users)
+        .set({
+          name: body.name || existing[0].name,
+          nickname: body.nickname || existing[0].nickname,
+          birthYear: body.birthYear || existing[0].birthYear,
+          city: body.city || existing[0].city,
+          type: body.type || existing[0].type,
+          proactiveCallsEnabled: body.proactiveCallsEnabled ?? existing[0].proactiveCallsEnabled,
+        })
+        .where(eq(users.id, existing[0].id))
+        .returning();
+
+      return c.json(updated);
     }
 
     const [user] = await db

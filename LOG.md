@@ -349,11 +349,15 @@ iOS App                          Backend API                    Twilio
 - Matches current time + day, triggers outbound calls via LiveKit SIP
 - Survives server restarts (schedule lives in DB)
 
-### Phase 4: Cleanup & Hardening -- IN PROGRESS
+### Phase 4: Cleanup & Hardening -- MOSTLY DONE
+Items completed (2026-02-14):
+- [x] Fix OTP validation bug -- separate Twilio/DB/JWT errors
+- [x] Fix duplicate user bug -- POST /users now updates existing stub
+- [x] Fix HTTP method mismatch -- updateScheduledCall uses PUT
+- [x] Surface transcript save failure in ConversationViewModel
+- [x] CallHistoryView wired to real transcript data from backend
+- [x] Error alerts on CallHistoryView
 Items remaining:
-- [ ] Fix OTP validation bug (see Known Bugs below)
-- [ ] Surface transcript save failure in ConversationViewModel
-- [ ] CallHistoryView: fetch from backend (currently empty state)
 - [ ] FamilySettingsView: implement add family member
 - [ ] ActivityOverviewView: real data instead of placeholders
 
@@ -362,20 +366,35 @@ Items remaining:
 ## Known Bugs
 
 ### BUG: "Failed to validate OTP" during onboarding
-- **File**: `server/src/routes/otp.ts` line 106
-- **Symptom**: User enters correct OTP code, gets "Failed to validate OTP" (HTTP 500)
-- **Root cause**: The catch block at line 104-106 catches ALL errors (Twilio AND database) with one generic message. The Twilio verification SUCCEEDS (code is correct), but the subsequent database lookup/create (lines 80-91) fails because `DATABASE_URL` is not configured in the local `.env` file. On Railway, `DATABASE_URL` is auto-provided — verify the Postgres addon is attached and tables are migrated (`npm run db:push`).
-- **Fix needed**:
-  1. Add `DATABASE_URL` and `JWT_SECRET` to `server/.env`
-  2. Run `npm run db:push` to create tables
-  3. Improve error handling: separate Twilio errors from DB errors in the catch block
-- **Status**: NOT FIXED (crash interrupted work)
+- **Status**: FIXED (2026-02-14)
+- **File**: `server/src/routes/otp.ts`
+- **What was wrong**: Single catch block caught ALL errors (Twilio, database, JWT) with one generic "Failed to validate OTP" message. Twilio verification succeeded but the DB lookup failed because `DATABASE_URL` was not configured.
+- **What was fixed**: Split into 3 separate try/catch blocks (Twilio, database, JWT) with specific error messages. Added `DATABASE_URL` and `JWT_SECRET` to `server/.env`.
+- **Remaining**: You still need to set a real `DATABASE_URL` in `.env` (see "What YOU need to do" section).
 
 ### BUG: Onboarding creates duplicate/stub user
-- **File**: `server/src/routes/otp.ts` lines 86-91 + `server/src/routes/users.ts` lines 13-53
-- **Symptom**: OTP validation creates a stub user (`name: "User"`, phone only). Then onboarding completion calls `POST /users` to create the full profile, but `users.ts` finds the existing stub by phone number and returns it without updating. Profile data (name, nickname, city, etc.) is lost.
-- **Fix needed**: Either (a) update the existing user in `POST /users` when phone matches, or (b) don't create a user during OTP validation — just verify the phone and return a temporary token, then create the real user at onboarding completion.
-- **Status**: NOT FIXED
+- **Status**: FIXED (2026-02-14)
+- **File**: `server/src/routes/users.ts`
+- **What was wrong**: OTP validation created a stub user (`name: "User"`). Then onboarding's `POST /users` found the stub by phone number and returned it as-is. Profile data (name, nickname, city, etc.) was silently discarded.
+- **What was fixed**: `POST /users` now UPDATES the existing user with the full profile data when a matching phone number is found, instead of returning the stub.
+
+### BUG: HTTP method mismatch for scheduled call updates
+- **Status**: FIXED (2026-02-14)
+- **File**: `APIClient.swift`
+- **What was wrong**: iOS `updateScheduledCall` used POST, but server expects PUT. Updates silently failed.
+- **What was fixed**: Added `put()` and `delete()` methods to APIClient. `updateScheduledCall` now uses PUT. Added `deleteScheduledCall` method.
+
+### BUG: Transcript save failure was silent
+- **Status**: FIXED (2026-02-14)
+- **Files**: `ConversationViewModel.swift`, `ConversationView.swift`
+- **What was wrong**: If saving a transcript after a conversation failed, the error was only logged to console. User had no idea their conversation wasn't saved.
+- **What was fixed**: Added `transcriptSaveError` / `showTranscriptSaveError` state + alert in ConversationView.
+
+### BUG: Call history was empty placeholder
+- **Status**: FIXED (2026-02-14)
+- **Files**: `CallHistoryViewModel.swift`, `CallHistoryView.swift`
+- **What was wrong**: `loadCalls()` was a TODO stub returning empty. No error handling.
+- **What was fixed**: Now fetches transcripts from backend and converts them to CallRecords. Added error state + alert.
 
 ---
 
@@ -396,6 +415,32 @@ Items remaining:
 - **Bundle ID**: `com.futureselflabs.elderlycompanion`
 - **API URL**: Hardcoded in `APIClient.swift` (`deployedURL` property)
 - **Build**: XcodeGen (`project.yml`) -> Xcode -> App Store / TestFlight
+
+---
+
+## What YOU Need To Do (Manual Steps)
+
+### Before the app works end-to-end:
+1. **Set `DATABASE_URL` in `server/.env`** -- Point to a real PostgreSQL instance. Options:
+   - Local: `postgresql://localhost:5432/noah_dev`
+   - Railway: Copy the `DATABASE_URL` from your Railway Postgres addon dashboard
+2. **Run database migrations**: `cd server && npm run db:push` (creates the tables)
+3. **Set `JWT_SECRET` in Railway env vars** -- Use a strong random string (e.g., `openssl rand -hex 32`)
+4. **Verify Railway deployment**: Push server changes and confirm the Railway build succeeds
+5. **Test the full onboarding flow** on a real device with a real phone number
+
+### Before payment / subscription / distribution:
+6. **Implement StoreKit 2 subscription** -- In-app purchase for monthly/yearly plans
+7. **Server-side receipt validation** -- Verify App Store receipts on the backend
+8. **Add subscription status to user model** -- New DB column: `subscriptionStatus`, `subscriptionExpiresAt`
+9. **Gate features behind subscription** -- Decide which features are free vs. paid
+10. **App Store compliance**:
+    - Privacy policy URL in app (required by Apple)
+    - Data collection disclosures in App Store Connect
+    - Review `NSUserTrackingUsageDescription` if using analytics
+11. **Localization** -- Currently English UI + Dutch voice agent. For worldwide distribution, localize the iOS app
+12. **App Store Connect setup** -- Screenshots, description, keywords, age rating, pricing
+13. **TestFlight beta testing** -- Internal + external beta before public release
 
 ---
 

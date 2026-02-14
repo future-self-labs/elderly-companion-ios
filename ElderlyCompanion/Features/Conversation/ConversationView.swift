@@ -38,6 +38,11 @@ struct ConversationView: View {
         .onDisappear {
             viewModel.endSession()
         }
+        .alert("Save Failed", isPresented: $viewModel.showTranscriptSaveError) {
+            Button("OK") {}
+        } message: {
+            Text(viewModel.transcriptSaveError ?? "Your conversation could not be saved.")
+        }
     }
 
     // MARK: - Top Bar

@@ -65,19 +65,26 @@ app.post("/validate", async (c) => {
     return c.json({ error: "Twilio Verify service not configured" }, 500);
   }
 
+  // Step 1: Verify the OTP code with Twilio
+  let check;
   try {
     const twilio = getTwilioClient();
-
-    const check = await twilio.verify.v2
+    check = await twilio.verify.v2
       .services(verifyServiceSid)
       .verificationChecks.create({ code, to: phoneNumber });
+  } catch (error: any) {
+    console.error("Twilio verification error:", error);
+    return c.json({ error: "SMS verification failed. Please request a new code." }, 500);
+  }
 
-    if (check.status !== "approved") {
-      return c.json({ error: "Invalid OTP" }, 400);
-    }
+  if (check.status !== "approved") {
+    return c.json({ error: "Invalid OTP code. Please try again." }, 400);
+  }
 
-    // Look up or create user by phone number
-    let [user] = await db
+  // Step 2: Look up or create user in the database
+  let user;
+  try {
+    [user] = await db
       .select()
       .from(users)
       .where(eq(users.phoneNumber, phoneNumber))
@@ -89,8 +96,13 @@ app.post("/validate", async (c) => {
         .values({ name: "User", phoneNumber })
         .returning();
     }
+  } catch (error: any) {
+    console.error("Database error during OTP validation:", error);
+    return c.json({ error: "Phone verified but account setup failed. Please try again." }, 500);
+  }
 
-    // Sign JWT
+  // Step 3: Sign JWT
+  try {
     const token = signToken({
       userId: user.id,
       phoneNumber: user.phoneNumber,
@@ -101,9 +113,9 @@ app.post("/validate", async (c) => {
       userId: user.id,
       token,
     });
-  } catch (error) {
-    console.error("Error validating OTP:", error);
-    return c.json({ error: "Failed to validate OTP" }, 500);
+  } catch (error: any) {
+    console.error("JWT signing error:", error);
+    return c.json({ error: "Phone verified but login failed. Please try again." }, 500);
   }
 });
 
