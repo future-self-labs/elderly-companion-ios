@@ -61,11 +61,13 @@ Last updated: 2026-02-14
 
 ```
 ElderlyCompanion/
+  ElderlyCompanion.entitlements       # HealthKit entitlement
   App/
     ElderlyCompanionApp.swift        # @main entry point
     AppState.swift                    # @Observable: isOnboardingComplete, currentUser, isAuthenticated
     RootView.swift                    # Routes to MainTabView or OnboardingContainerView
     MainTabView.swift                 # 4 tabs: Home, Calendar, Memories, Settings
+    Info.plist                        # Includes HealthKit, Mic, Calendar, Contacts usage descriptions
   Core/
     Models/
       User.swift                      # User, UserProfile, CalendarAccessLevel, NotificationPreferences
@@ -80,6 +82,7 @@ ElderlyCompanion/
       LiveKitService.swift            # @Observable, LiveKit room connection, mic, transcription
       CalendarService.swift           # EKEventStore wrapper
       NotificationService.swift       # UNUserNotificationCenter wrapper
+      HealthKitService.swift          # @Observable, reads steps/HR/BP/SpO2/sleep from Apple Health
   Features/
     Home/
       HomeView.swift                  # Main screen: Talk Now, Call Noah, mood, reminders
@@ -103,14 +106,16 @@ ElderlyCompanion/
     Calendar/
       CompanionCalendarView.swift     # Month/Agenda views, add events
     CallHistory/
-      CallHistoryView.swift           # Empty state (TODO: fetch from backend)
-      CallHistoryViewModel.swift
+      CallHistoryView.swift           # Fetches transcripts from backend, shows as CallRecords
+      CallHistoryViewModel.swift      # Loads from /transcripts/:userId
     Legacy/
       LegacyArchiveView.swift         # Audio/Transcripts/Timeline/Starred
     Activity/
       ActivityOverviewView.swift      # Stats grid + weekly summary placeholder
+    Health/
+      HealthSettingsView.swift        # Apple Health connection, live stats, sharing toggles, peripherals
     Family/
-      FamilySettingsView.swift        # Add family member (TODO)
+      FamilySettingsView.swift        # Full CRUD: add/remove family members, WhatsApp toggle per member
     Safety/
       SafetyView.swift                # Scam protection, escalation rules
       EscalationView.swift            # Trusted contacts, GP/emergency
@@ -120,7 +125,7 @@ ElderlyCompanion/
       AISettingsView.swift            # Tone, proactive level, call frequency
       AIMemoryView.swift              # Download history, clear memory
     Settings/
-      SettingsHubView.swift           # Hub for all settings. Sign out button.
+      SettingsHubView.swift           # Hub for all settings. Health section. Sign out button.
       ThemePickerView.swift           # Calm vs Apple theme selection
   Shared/
     Theme/
@@ -140,7 +145,7 @@ server/
       livekit.ts                      # LiveKit token generation + SIP outbound calls
       zep.ts                          # Zep memory client singleton
     db/
-      schema.ts                       # Drizzle schema: users, transcripts, scheduledCalls
+      schema.ts                       # Drizzle: users, transcripts, scheduledCalls, healthSnapshots, familyContacts
       index.ts                        # PostgreSQL pool + Drizzle instance
     routes/
       otp.ts                          # POST /otp/create (send SMS), POST /otp/validate (verify + JWT)
@@ -148,7 +153,9 @@ server/
       users.ts                        # POST /users (create), GET /users/:id, GET /users/search
       memory.ts                       # GET /memory/:userId (Zep context), POST /memory
       transcripts.ts                  # POST /transcripts, GET /transcripts/:userId
-      scheduled-calls.ts              # Full CRUD + DB-driven 60s scheduler
+      scheduled-calls.ts              # Full CRUD + DB-driven 60s scheduler + 20:00 WhatsApp trigger
+      health.ts                       # POST /health-data, GET /health-data/:userId, getHealthSummary()
+      family.ts                       # CRUD family contacts, buildDailySummary(), sendDailyFamilyUpdate()
   drizzle.config.ts                   # Migration config
   package.json                        # Dependencies: hono, drizzle-orm, pg, twilio, livekit-server-sdk, jsonwebtoken, zep
   Dockerfile                          # Railway deployment
@@ -225,6 +232,30 @@ server/
 | enabled | BOOLEAN | default true |
 | created_at | TIMESTAMP | default now() |
 
+### health_snapshots
+| Column | Type | Notes |
+|--------|------|-------|
+| id | UUID | PK, auto-generated |
+| user_id | UUID | FK -> users.id |
+| step_count | INTEGER | default 0 |
+| heart_rate | INTEGER | default 0 |
+| blood_oxygen | INTEGER | default 0 |
+| blood_pressure_systolic | INTEGER | default 0 |
+| blood_pressure_diastolic | INTEGER | default 0 |
+| sleep_hours | TEXT | default "0" |
+| created_at | TIMESTAMP | default now() |
+
+### family_contacts
+| Column | Type | Notes |
+|--------|------|-------|
+| id | UUID | PK, auto-generated |
+| user_id | UUID | FK -> users.id |
+| name | TEXT | NOT NULL |
+| phone_number | TEXT | NOT NULL |
+| relationship | TEXT | default "family" |
+| whatsapp_updates_enabled | BOOLEAN | default true |
+| created_at | TIMESTAMP | default now() |
+
 ---
 
 ## API Routes
@@ -252,6 +283,12 @@ server/
 | GET | /scheduled-calls/:userId | Get user's scheduled calls |
 | POST | /scheduled-calls/:id | Update scheduled call |
 | DELETE | /scheduled-calls/:id | Delete scheduled call |
+| POST | /health-data | Store health snapshot from iOS |
+| GET | /health-data/:userId | Get latest health snapshot |
+| POST | /family | Add a family contact |
+| GET | /family/:userId | Get all family contacts |
+| DELETE | /family/:id | Remove a family contact |
+| POST | /family/test-update/:userId | Manually trigger daily WhatsApp update (testing) |
 
 ---
 
@@ -272,6 +309,7 @@ LIVEKIT_URL=""
 ZEP_API_KEY=""
 AGENT_NAME="noah"
 SIP_TRUNK_ID=""
+TWILIO_WHATSAPP_NUMBER=""   # Twilio WhatsApp sender (falls back to TWILIO_PHONE_NUMBER)
 ```
 
 ### elderly-livekit-server-python/.env
@@ -358,8 +396,31 @@ Items completed (2026-02-14):
 - [x] CallHistoryView wired to real transcript data from backend
 - [x] Error alerts on CallHistoryView
 Items remaining:
-- [ ] FamilySettingsView: implement add family member
 - [ ] ActivityOverviewView: real data instead of placeholders
+
+### Phase 5: Apple Health Integration -- DONE
+- [x] HealthKitService -- reads steps, heart rate, blood oxygen, blood pressure, sleep
+- [x] HealthSettingsView -- connect Apple Health, live stats grid, sharing toggles, compatible peripherals list
+- [x] Info.plist -- NSHealthShareUsageDescription + NSHealthUpdateUsageDescription
+- [x] ElderlyCompanion.entitlements -- HealthKit capability
+- [x] project.yml -- entitlements path + CODE_SIGN_ENTITLEMENTS
+- [x] SettingsHubView -- Health & Peripherals row in settings
+- [x] Server: health.ts route -- POST /health-data, GET /health-data/:userId
+- [x] Server: healthSnapshots DB table -- stores daily snapshots synced from iOS
+- [x] Server: getHealthSummary() -- formats Dutch health summary for WhatsApp updates
+- [x] APIClient -- sendHealthSnapshot() sends data to server on refresh
+
+### Phase 6: WhatsApp Family Updates -- DONE
+- [x] familyContacts DB table -- name, phone, relationship, whatsappUpdatesEnabled
+- [x] Server: family.ts route -- full CRUD for family contacts
+- [x] Server: buildDailySummary() -- gathers transcripts, Zep memory, health data into Dutch summary
+- [x] Server: sendDailyFamilyUpdate() -- sends WhatsApp via Twilio to all enabled contacts
+- [x] Server: scheduled-calls.ts -- 20:00 Amsterdam time daily trigger for WhatsApp updates
+- [x] Server: test endpoint POST /family/test-update/:userId for manual testing
+- [x] FamilySettingsView -- full UI: add/remove family members, WhatsApp toggle per member
+- [x] AddFamilyMemberView -- name, phone, relationship picker, WhatsApp toggle
+- [x] APIClient -- getFamilyContacts(), createFamilyContact(), deleteFamilyContact()
+- [x] FamilyViewModel -- server-first with local UserDefaults fallback
 
 ---
 

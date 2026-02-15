@@ -23,6 +23,11 @@ targets:
     platform: iOS
     sources:
       - ElderlyCompanion
+    entitlements:
+      path: ElderlyCompanion/ElderlyCompanion.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     settings:
       base:
         INFOPLIST_FILE: ElderlyCompanion/App/Info.plist
@@ -32,6 +37,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_EMIT_LOC_STRINGS: "YES"
         GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: ElderlyCompanion/ElderlyCompanion.entitlements
     dependencies:
       - package: LiveKit
         product: LiveKit
@@ -50,6 +56,8 @@ targets:
         NSCalendarsFullAccessUsageDescription: "Noah uses your calendar to help manage appointments and send you timely reminders."
         NSMicrophoneUsageDescription: "Noah needs access to your microphone so you can talk with your companion."
         NSContactsUsageDescription: "Noah can access your contacts to help manage your trusted circle."
+        NSHealthShareUsageDescription: "Noah reads your health data to monitor your wellbeing and share important updates with your family circle."
+        NSHealthUpdateUsageDescription: "Noah does not write health data, only reads it."
         UIBackgroundModes:
           - audio
           - voip

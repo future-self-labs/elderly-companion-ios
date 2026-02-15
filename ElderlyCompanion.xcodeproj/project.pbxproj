@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,7 @@
 		117C3742CBA02A6482E35893 /* LargeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 591873E7D6A6AB8DCEDACF86 /* LargeButton.swift */; };
 		12D8FD1E3FE9D93945B26577 /* Call.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7D6F926D7BF72AC2F3EACA /* Call.swift */; };
 		19F67C3801230914835A595E /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62D2D6F2E6332AD2281977D /* ThemePickerView.swift */; };
+		20018E0123AA00C333F79816 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0411688A83E67C6DD2187470 /* HealthKitService.swift */; };
 		286920E8AFA35F1F32FC61B3 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23B524EFFC72ED603058A81B /* AppState.swift */; };
 		32A803F0547F8B5EA8EF59A8 /* CallHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA19DBF81FEC42A4F66AEDAC /* CallHistoryView.swift */; };
 		3A2192D78D84ADD52FB3BE41 /* CalmCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54AD485AF2232071D2081D6 /* CalmCard.swift */; };
@@ -53,10 +54,12 @@
 		F575E5CFA67A05C322C31867 /* ScheduledCallsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3182EAAFE70573BA3D2BE9B8 /* ScheduledCallsView.swift */; };
 		F5C496E857D29F33B459AF6F /* FamilySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B1558DA8E62ECEF131DB8 /* FamilySettingsView.swift */; };
 		F6F21BB033788B3A7B049CAE /* CalendarPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83BF4CBE0D4C6A0AE94C61AC /* CalendarPermissionView.swift */; };
+		FBAF0A0F627E7712A70328F6 /* HealthSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35528CA26F7EB6E957FB4215 /* HealthSettingsView.swift */; };
 		FF7AF87EFAF9BC02989DB3EB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A59F29E5235D6E0C4B6E39 /* RootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0411688A83E67C6DD2187470 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		05BB0A4A3A5AB059ED3F44E3 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		0A9A343DA4ECA2210F7B2FA1 /* RoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesView.swift; sourceTree = "<group>"; };
 		1222893A978170637D86D5AD /* CallHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallHistoryViewModel.swift; sourceTree = "<group>"; };
@@ -67,6 +70,7 @@
 		2CDB8C805C1B745608A160D0 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		2E21270D01E8836E04162C10 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		3182EAAFE70573BA3D2BE9B8 /* ScheduledCallsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledCallsView.swift; sourceTree = "<group>"; };
+		35528CA26F7EB6E957FB4215 /* HealthSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSettingsView.swift; sourceTree = "<group>"; };
 		35C02BDA2E3184FDFD406DAE /* SettingsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHubView.swift; sourceTree = "<group>"; };
 		3ADB31B03C222596A4C6A6BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		437FD4E3FE8FD0F605ACD9CC /* ActivityOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityOverviewView.swift; sourceTree = "<group>"; };
@@ -87,11 +91,12 @@
 		9024B16293DA0148D61AF718 /* LegacyArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyArchiveView.swift; sourceTree = "<group>"; };
 		9445CF15D4CBA1E063688A03 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		966D066DBE2492FC99912786 /* EscalationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationView.swift; sourceTree = "<group>"; };
-		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4D7A04953955F5FD168D23C /* MoodSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSelector.swift; sourceTree = "<group>"; };
 		A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPreferencesView.swift; sourceTree = "<group>"; };
 		A91C94C877C30CBE18B0DFC0 /* RoutinesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesViewModel.swift; sourceTree = "<group>"; };
 		AC07A8042E6D168B4581FF91 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B1E8441BAAB6C92A560B9E03 /* ElderlyCompanion.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ElderlyCompanion.entitlements; sourceTree = "<group>"; };
 		B5C1F72958604BB9DFEE3C0D /* CompanionCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionCalendarView.swift; sourceTree = "<group>"; };
 		B87A74B5564279DEBEB52D0D /* PhoneVerificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationView.swift; sourceTree = "<group>"; };
 		C39F61166FBA77A77F2D54F9 /* ConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationView.swift; sourceTree = "<group>"; };
@@ -157,6 +162,7 @@
 				8DFCE1C17CB27119AE98DF7A /* Core */,
 				6551C13664F68E29670C4983 /* Features */,
 				AB9260DAF183EFB447AD5736 /* Shared */,
+				B1E8441BAAB6C92A560B9E03 /* ElderlyCompanion.entitlements */,
 			);
 			path = ElderlyCompanion;
 			sourceTree = "<group>";
@@ -208,6 +214,7 @@
 				2F15F50EAC2189BC9EF1CFA9 /* CallHistory */,
 				BF5FC2BC64452342E11CF2E6 /* Conversation */,
 				9BAD9599DE9714672C101796 /* Family */,
+				C2CD7CB26E53406D6E7BEBCE /* Health */,
 				E8E11B654A00A99040C55BE5 /* Home */,
 				BC9DB4E154842140C7CBCED4 /* Legacy */,
 				29660E8A3E0EEA3993B24EF1 /* Onboarding */,
@@ -331,11 +338,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		C2CD7CB26E53406D6E7BEBCE /* Health */ = {
+			isa = PBXGroup;
+			children = (
+				35528CA26F7EB6E957FB4215 /* HealthSettingsView.swift */,
+			);
+			path = Health;
+			sourceTree = "<group>";
+		};
 		C5EE8097A8397971377718C1 /* Services */ = {
 			isa = PBXGroup;
 			children = (
 				45921715AA6F8E61DE58BCF2 /* AuthService.swift */,
 				2CDB8C805C1B745608A160D0 /* CalendarService.swift */,
+				0411688A83E67C6DD2187470 /* HealthKitService.swift */,
 				867FA11F1B1FD7AEC59F0D7B /* KeychainService.swift */,
 				DEA7FB1AD440FDD4A7D16FEB /* LiveKitService.swift */,
 				9445CF15D4CBA1E063688A03 /* NotificationService.swift */,
@@ -403,6 +419,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F210BA939AC74EED49E427E8 = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = 65CA05CA28D557AD345B5253 /* Build configuration list for PBXProject "ElderlyCompanion" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -417,6 +438,7 @@
 			packageReferences = (
 				C30B90C8995966C56BC8888C /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -448,6 +470,8 @@
 				AA4136779E53254537137E1F /* ElderlyCompanionApp.swift in Sources */,
 				9233BED10965C74738E5AA99 /* EscalationView.swift in Sources */,
 				F5C496E857D29F33B459AF6F /* FamilySettingsView.swift in Sources */,
+				20018E0123AA00C333F79816 /* HealthKitService.swift in Sources */,
+				FBAF0A0F627E7712A70328F6 /* HealthSettingsView.swift in Sources */,
 				7E58E5DC29C22A7CB9EE38B1 /* HomeView.swift in Sources */,
 				95C921C8CB2017C7BF6AE10C /* HomeViewModel.swift in Sources */,
 				AAFDBCAECB90A9A94A1CAA02 /* KeychainService.swift in Sources */,
@@ -543,9 +567,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -564,9 +588,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
