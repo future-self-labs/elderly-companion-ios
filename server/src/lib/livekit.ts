@@ -60,6 +60,10 @@ export async function generateTokenAndDispatch(userId: string): Promise<{ token:
 
 /**
  * Initiate an outbound phone call via SIP trunk.
+ *
+ * Room name MUST start with "call-" to match the LiveKit dispatch rule
+ * (dispatch-rule.json: roomPrefix "call-"). This ensures the "noah" agent
+ * is automatically dispatched when the room is created.
  */
 export async function initiateOutboundCall(
   phoneNumber: string,
@@ -73,14 +77,26 @@ export async function initiateOutboundCall(
   const agentName = getAgentName();
 
   const sipClient = new SipClient(livekitUrl, apiKey, apiSecret);
-  const roomName = userId;
+  // Room name must start with "call-" to trigger auto-dispatch of the agent
+  const roomName = `call-${userId}`;
 
+  console.log(`[LiveKit] Initiating outbound call: room=${roomName}, phone=${phoneNumber}, userId=${userId}`);
+
+  // Dispatch agent FIRST so it's ready when the phone call connects
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+  await agentDispatchClient.createDispatch(roomName, agentName, {
+    metadata: "outbound_call",
+  });
+
+  console.log(`[LiveKit] Agent dispatched to room ${roomName}`);
+
+  // Now create the SIP participant (dials the phone number)
   const participant = await sipClient.createSipParticipant(
     trunkId,
     phoneNumber,
     roomName,
     {
-      participantIdentity: userId,
+      participantIdentity: `sip_${phoneNumber}`,
       participantName: "Caller",
       krispEnabled: true,
       participantAttributes: initialRequest
@@ -89,10 +105,7 @@ export async function initiateOutboundCall(
     }
   );
 
-  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
-  await agentDispatchClient.createDispatch(roomName, agentName, {
-    metadata: "outbound_call",
-  });
+  console.log(`[LiveKit] SIP participant created in room ${roomName}`);
 
   return participant;
 }
