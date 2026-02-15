@@ -457,6 +457,15 @@ Items remaining:
 - **What was wrong**: `loadCalls()` was a TODO stub returning empty. No error handling.
 - **What was fixed**: Now fetches transcripts from backend and converts them to CallRecords. Added error state + alert.
 
+### BUG: Outbound callback calls never connected to the agent
+- **Status**: FIXED (2026-02-15)
+- **File**: `server/src/lib/livekit.ts`
+- **What was wrong**: Three stacked bugs in `initiateOutboundCall()`:
+  1. Room name was `userId` (bare UUID) but dispatch rule requires `call-` prefix — agent was never dispatched to the room
+  2. Agent was dispatched AFTER the SIP call was placed — race condition where phone could answer before agent was ready
+  3. `participantIdentity` was set to `userId` (UUID) instead of `sip_${phoneNumber}` — agent couldn't detect it as a phone caller
+- **What was fixed**: Room name now `call-${userId}`, agent dispatched before SIP call, identity set to `sip_${phoneNumber}`
+
 ---
 
 ## Deployment
