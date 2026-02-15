@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { generateTokenAndDispatch, initiateOutboundCall } from "../lib/livekit";
+import { generateTokenAndDispatch, generatePipelineTokenAndDispatch, initiateOutboundCall } from "../lib/livekit";
 
 const app = new Hono();
 
@@ -20,6 +20,26 @@ app.post("/get-token", async (c) => {
   } catch (error) {
     console.error("Error generating token:", error);
     return c.json({ error: "Failed to generate token" }, 500);
+  }
+});
+
+/**
+ * POST /livekit/get-token-pipeline
+ * Generate a LiveKit access token for the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs).
+ */
+app.post("/get-token-pipeline", async (c) => {
+  const { userId } = await c.req.json<{ userId: string }>();
+
+  if (!userId) {
+    return c.json({ error: "User ID is required" }, 400);
+  }
+
+  try {
+    const { token } = await generatePipelineTokenAndDispatch(userId);
+    return c.json({ token, userId });
+  } catch (error) {
+    console.error("Error generating pipeline token:", error);
+    return c.json({ error: "Failed to generate pipeline token" }, 500);
   }
 });
 

@@ -5,6 +5,7 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var selectedMood: Mood?
     @State private var showConversation = false
+    @State private var showPipelineConversation = false
     @State private var calendarService = CalendarService()
 
     var body: some View {
@@ -40,6 +41,10 @@ struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showConversation) {
             ConversationView()
+                .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showPipelineConversation) {
+            ConversationView(usePipeline: true)
                 .environment(appState)
         }
         .alert("Call Failed", isPresented: $showCallAlert) {
@@ -97,7 +102,7 @@ struct HomeView: View {
 
     private var voiceButtons: some View {
         VStack(spacing: CompanionTheme.Spacing.md) {
-            // Primary: Talk Now (in-app voice)
+            // Primary: Talk Now (in-app voice, OpenAI Realtime)
             Button {
                 showConversation = true
             } label: {
@@ -117,6 +122,27 @@ struct HomeView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Talk to Noah now")
+
+            // Pipeline: Talk Now with Deepgram + GPT-4o-mini + ElevenLabs
+            Button {
+                showPipelineConversation = true
+            } label: {
+                HStack(spacing: CompanionTheme.Spacing.md) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 24, weight: .bold))
+
+                    Text("Talk Now (Pipeline)")
+                        .font(.companionHeadline)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 72)
+                .background(Color.companionSecondary)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.xl))
+                .shadow(color: Color.companionSecondary.opacity(0.3), radius: 8, y: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Talk to Noah using pipeline voice")
 
             // Secondary: Call AI (phone call)
             LargeButton("Call Noah", icon: "phone.fill", style: .secondary) {

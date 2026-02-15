@@ -5,6 +5,9 @@ struct ConversationView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = ConversationViewModel()
 
+    /// Set to true to use the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs)
+    var usePipeline: Bool = false
+
     var body: some View {
         ZStack {
             // Background
@@ -33,6 +36,7 @@ struct ConversationView: View {
             }
         }
         .onAppear {
+            viewModel.usePipeline = usePipeline
             viewModel.startSession(userId: UserDefaults.standard.string(forKey: "userId") ?? "")
         }
         .onDisappear {

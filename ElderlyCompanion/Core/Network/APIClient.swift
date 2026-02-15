@@ -147,6 +147,10 @@ actor APIClient {
         try await post("/livekit/get-token", body: TokenRequest(userId: userId))
     }
 
+    func getLiveKitPipelineToken(userId: String) async throws -> TokenResponse {
+        try await post("/livekit/get-token-pipeline", body: TokenRequest(userId: userId))
+    }
+
     struct CallResponse: Decodable {
         // The server returns { participant: { ... } } - we just need to know it succeeded
         let participant: AnyCodable?

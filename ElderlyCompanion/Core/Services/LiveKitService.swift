@@ -23,14 +23,16 @@ final class LiveKitService {
     private let api = APIClient.shared
     private var roomDelegate: RoomDelegateHandler?
 
-    func connect(userId: String) async throws {
+    func connect(userId: String, usePipeline: Bool = false) async throws {
         guard voiceState == .disconnected else { return }
 
         isConnecting = true
         voiceState = .connecting
 
         do {
-            let tokenResponse = try await api.getLiveKitToken(userId: userId)
+            let tokenResponse = usePipeline
+                ? try await api.getLiveKitPipelineToken(userId: userId)
+                : try await api.getLiveKitToken(userId: userId)
             let livekitURL = Bundle.main.infoDictionary?["LIVEKIT_WS_URL"] as? String
                 ?? "wss://test-7hm3rr9r.livekit.cloud"
 

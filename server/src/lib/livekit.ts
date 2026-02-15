@@ -59,6 +59,48 @@ export async function generateTokenAndDispatch(userId: string): Promise<{ token:
 }
 
 /**
+ * Generate a LiveKit access token for in-app voice sessions
+ * using the pipeline agent (Deepgram STT + GPT-4o-mini + ElevenLabs TTS).
+ */
+export async function generatePipelineTokenAndDispatch(userId: string): Promise<{ token: string; roomName: string }> {
+  const apiKey = requireEnv("LIVEKIT_API_KEY");
+  const apiSecret = requireEnv("LIVEKIT_API_SECRET");
+  const livekitUrl = requireEnv("LIVEKIT_URL");
+  const agentName = "noah-pipeline";
+
+  const roomName = uuidv4();
+
+  const at = new AccessToken(apiKey, apiSecret, {
+    identity: userId,
+    ttl: "2 hours",
+  });
+
+  at.addGrant({
+    room: roomName,
+    roomJoin: true,
+  });
+
+  at.roomConfig = new RoomConfiguration({
+    agents: [
+      new RoomAgentDispatch({ agentName }),
+    ],
+  });
+
+  const token = await at.toJwt();
+
+  // Also explicitly dispatch the pipeline agent
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+
+  agentDispatchClient.createDispatch(roomName, agentName, {
+    metadata: "in_app_voice_pipeline",
+  }).catch((err) => {
+    console.log("Pipeline agent dispatch (will retry via roomConfig):", err.message);
+  });
+
+  return { token, roomName };
+}
+
+/**
  * Initiate an outbound phone call via SIP trunk.
  *
  * Room name MUST start with "call-" to match the LiveKit dispatch rule

@@ -7,6 +7,9 @@ final class ConversationViewModel {
     private var timer: Timer?
     private var sessionStartTime: Date?
 
+    /// When true, connects via the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs)
+    var usePipeline: Bool = false
+
     // State
     var isListening: Bool = false
     var isMicEnabled: Bool = true
@@ -45,7 +48,7 @@ final class ConversationViewModel {
 
         Task { @MainActor in
             do {
-                try await liveKitService.connect(userId: userId)
+                try await liveKitService.connect(userId: userId, usePipeline: usePipeline)
 
                 // Listen for transcription data from the agent
                 liveKitService.onTranscription = { [weak self] text, role in
@@ -108,6 +111,7 @@ final class ConversationViewModel {
 
     func retry() {
         let userId = UserDefaults.standard.string(forKey: "userId") ?? ""
+        hasEndedSession = false
         liveKitService = LiveKitService()
         startSession(userId: userId)
     }
