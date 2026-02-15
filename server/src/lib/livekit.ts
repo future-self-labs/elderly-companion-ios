@@ -66,7 +66,7 @@ export async function generatePipelineTokenAndDispatch(userId: string): Promise<
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
   const livekitUrl = requireEnv("LIVEKIT_URL");
-  const agentName = "noah-pipeline";
+  const agentName = getAgentName(); // Same agent "noah" — routes via metadata
 
   const roomName = uuidv4();
 
@@ -82,17 +82,17 @@ export async function generatePipelineTokenAndDispatch(userId: string): Promise<
 
   at.roomConfig = new RoomConfiguration({
     agents: [
-      new RoomAgentDispatch({ agentName }),
+      new RoomAgentDispatch({ agentName, metadata: "pipeline" }),
     ],
   });
 
   const token = await at.toJwt();
 
-  // Also explicitly dispatch the pipeline agent
+  // Also explicitly dispatch with metadata="pipeline" so the agent knows to use the pipeline session
   const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
 
   agentDispatchClient.createDispatch(roomName, agentName, {
-    metadata: "in_app_voice_pipeline",
+    metadata: "pipeline",
   }).catch((err) => {
     console.log("Pipeline agent dispatch (will retry via roomConfig):", err.message);
   });
