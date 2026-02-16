@@ -492,6 +492,114 @@ actor APIClient {
         return response.summary
     }
 
+    // MARK: - Care Settings
+
+    struct CareSettingsRecord: Codable {
+        let id: String?
+        var careEnabled: Bool
+        var sensitivity: String
+        var silenceWindowHours: Int
+        var cognitiveDriftThreshold: Int
+        var scamThreshold: String
+        var aiFirstContact: Bool
+        var maxOutreachPerWeek: Int
+        var escalationCooldownHours: Int
+    }
+
+    struct CareSettingsResponse: Decodable {
+        let settings: CareSettingsRecord?
+    }
+
+    func getCareSettings(elderlyUserId: String) async throws -> CareSettingsRecord? {
+        let response: CareSettingsResponse = try await get("/care/settings/\(elderlyUserId)")
+        return response.settings
+    }
+
+    func updateCareSettings(elderlyUserId: String, settings: CareSettingsRecord) async throws {
+        let _: CareSettingsResponse = try await put("/care/settings/\(elderlyUserId)", body: settings)
+    }
+
+    // MARK: - Trusted Circle
+
+    struct TrustedContactRecord: Decodable, Identifiable {
+        let id: String
+        let elderlyUserId: String
+        let name: String
+        let phoneNumber: String
+        let role: String
+        let priorityOrder: Int
+        let mayReceiveScamAlerts: Bool
+        let mayReceiveEmotionalAlerts: Bool
+        let mayReceiveSilenceAlerts: Bool
+        let mayReceiveCognitiveAlerts: Bool
+        let mayReceiveRoutineAlerts: Bool
+        let outreachMethods: [String]
+        let isActive: Bool
+        let createdAt: String
+    }
+
+    struct TrustedCircleResponse: Decodable {
+        let contacts: [TrustedContactRecord]
+    }
+
+    struct CreateTrustedContactRequest: Encodable {
+        let name: String
+        let phoneNumber: String
+        let role: String
+        let priorityOrder: Int
+        let mayReceiveScamAlerts: Bool
+        let mayReceiveEmotionalAlerts: Bool
+        let mayReceiveSilenceAlerts: Bool
+        let mayReceiveCognitiveAlerts: Bool
+        let mayReceiveRoutineAlerts: Bool
+    }
+
+    func getTrustedCircle(elderlyUserId: String) async throws -> [TrustedContactRecord] {
+        let response: TrustedCircleResponse = try await get("/care/trusted-circle/\(elderlyUserId)")
+        return response.contacts
+    }
+
+    func addTrustedContact(elderlyUserId: String, request: CreateTrustedContactRequest) async throws -> TrustedContactRecord {
+        try await post("/care/trusted-circle/\(elderlyUserId)", body: request)
+    }
+
+    func deleteTrustedContact(id: String) async throws {
+        try await delete("/care/trusted-circle/\(id)")
+    }
+
+    // MARK: - Care Events (Outreach Log)
+
+    struct CareEventRecord: Decodable, Identifiable {
+        let id: String
+        let elderlyUserId: String
+        let triggerCategory: String
+        let riskScore: Int
+        let escalationLayer: Int
+        let description: String?
+        let aiAction: String?
+        let aiContactedElderly: Bool
+        let elderlyResponded: Bool?
+        let outcome: String
+        let createdAt: String
+    }
+
+    struct CareEventsResponse: Decodable {
+        let events: [CareEventRecord]
+    }
+
+    func getCareEvents(elderlyUserId: String) async throws -> [CareEventRecord] {
+        let response: CareEventsResponse = try await get("/care/events/\(elderlyUserId)")
+        return response.events
+    }
+
+    struct ResolveRequest: Encodable {
+        let outcome: String
+    }
+
+    func resolveCareEvent(id: String, outcome: String) async throws {
+        let _: CareEventRecord = try await post("/care/events/\(id)/resolve", body: ResolveRequest(outcome: outcome))
+    }
+
     // MARK: - Private helpers
 
     private func buildRequest(path: String, method: String, queryItems: [URLQueryItem]? = nil) throws -> URLRequest {

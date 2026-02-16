@@ -163,6 +163,83 @@ export const wellbeingLogs = pgTable("wellbeing_logs", {
 });
 
 // ---------------------------------------------------------------------------
+// Care Settings — per-elderly care configuration (optional feature)
+// ---------------------------------------------------------------------------
+
+export const careSettings = pgTable("care_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id).unique(),
+  careEnabled: boolean("care_enabled").notNull().default(false),
+  sensitivity: text("sensitivity").notNull().default("balanced"), // "conservative" | "balanced" | "protective"
+  silenceWindowHours: integer("silence_window_hours").notNull().default(48),
+  cognitiveDriftThreshold: integer("cognitive_drift_threshold").notNull().default(5),
+  scamThreshold: text("scam_threshold").notNull().default("medium"), // "low" | "medium" | "high"
+  aiFirstContact: boolean("ai_first_contact").notNull().default(true),
+  maxOutreachPerWeek: integer("max_outreach_per_week").notNull().default(3),
+  escalationCooldownHours: integer("escalation_cooldown_hours").notNull().default(24),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Trusted Circle — enhanced contacts with per-category alert permissions
+// ---------------------------------------------------------------------------
+
+export const trustedCircle = pgTable("trusted_circle", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  role: text("role").notNull().default("family"), // "family" | "caretaker" | "neighbor" | "friend"
+  priorityOrder: integer("priority_order").notNull().default(1),
+  mayReceiveScamAlerts: boolean("may_receive_scam_alerts").notNull().default(true),
+  mayReceiveEmotionalAlerts: boolean("may_receive_emotional_alerts").notNull().default(true),
+  mayReceiveSilenceAlerts: boolean("may_receive_silence_alerts").notNull().default(true),
+  mayReceiveCognitiveAlerts: boolean("may_receive_cognitive_alerts").notNull().default(true),
+  mayReceiveRoutineAlerts: boolean("may_receive_routine_alerts").notNull().default(true),
+  outreachMethods: jsonb("outreach_methods").notNull().default(["call", "whatsapp"]),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Care Events — every detection, attempt, and outcome logged
+// ---------------------------------------------------------------------------
+
+export const careEvents = pgTable("care_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id),
+  triggerCategory: text("trigger_category").notNull(), // cognitive_drift | emotional | scam | silence | medication | help_request | environmental
+  riskScore: integer("risk_score").notNull().default(1), // 1-10
+  escalationLayer: integer("escalation_layer").notNull().default(0), // 0-4
+  description: text("description"),
+  aiAction: text("ai_action"),
+  aiContactedElderly: boolean("ai_contacted_elderly").notNull().default(false),
+  elderlyResponded: boolean("elderly_responded"),
+  elderlyResponse: text("elderly_response"),
+  externalContactId: uuid("external_contact_id").references(() => trustedCircle.id),
+  externalContactMethod: text("external_contact_method"), // "call" | "whatsapp" | "sms"
+  outcome: text("outcome").notNull().default("pending"), // "resolved" | "escalated" | "pending" | "false_alarm"
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Behavioral Baseline — rolling behavioral profile for anomaly detection
+// ---------------------------------------------------------------------------
+
+export const behavioralBaseline = pgTable("behavioral_baseline", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id).unique(),
+  avgDailyConversations: integer("avg_daily_conversations").default(0),
+  avgMoodScore: integer("avg_mood_score").default(0), // stored as x10 (e.g. 35 = 3.5)
+  avgConversationMinutes: integer("avg_conversation_minutes").default(0),
+  lastInteraction: timestamp("last_interaction"),
+  typicalActiveHours: jsonb("typical_active_hours").notNull().default([]),
+  knownConcerns: jsonb("known_concerns").notNull().default([]),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Type exports
 // ---------------------------------------------------------------------------
 
@@ -184,3 +261,11 @@ export type LegacyStory = typeof legacyStories.$inferSelect;
 export type NewLegacyStory = typeof legacyStories.$inferInsert;
 export type WellbeingLog = typeof wellbeingLogs.$inferSelect;
 export type NewWellbeingLog = typeof wellbeingLogs.$inferInsert;
+export type CareSetting = typeof careSettings.$inferSelect;
+export type NewCareSetting = typeof careSettings.$inferInsert;
+export type TrustedCircleContact = typeof trustedCircle.$inferSelect;
+export type NewTrustedCircleContact = typeof trustedCircle.$inferInsert;
+export type CareEvent = typeof careEvents.$inferSelect;
+export type NewCareEvent = typeof careEvents.$inferInsert;
+export type BehavioralBaselineRecord = typeof behavioralBaseline.$inferSelect;
+export type NewBehavioralBaselineRecord = typeof behavioralBaseline.$inferInsert;

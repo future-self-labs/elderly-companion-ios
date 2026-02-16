@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -34,6 +34,7 @@
 		9196681E1507E00A46867138 /* LegacyStoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDCF3C24DF466C551FD1BA68 /* LegacyStoriesView.swift */; };
 		9233BED10965C74738E5AA99 /* EscalationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966D066DBE2492FC99912786 /* EscalationView.swift */; };
 		939B4F3B091B4D52F4B0CC3C /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39F61166FBA77A77F2D54F9 /* ConversationView.swift */; };
+		955310547DC734D8311DA3FC /* CareOrchestrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF86DC0C16DDE8D1574D4FAA /* CareOrchestrationView.swift */; };
 		95C921C8CB2017C7BF6AE10C /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55083392E8F58CCC9077B25A /* HomeViewModel.swift */; };
 		9FB2ED0E409BD85ED0E5F609 /* CallHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1222893A978170637D86D5AD /* CallHistoryViewModel.swift */; };
 		9FEA93CA8534FACCAA6AB95B /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDB8C805C1B745608A160D0 /* CalendarService.swift */; };
@@ -44,9 +45,11 @@
 		AD9A3B3ADBB0F86C2180CF89 /* AIMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB24448B452C80FB084663E /* AIMemoryView.swift */; };
 		B4B2FDC216B90CABBB5D5176 /* CompanionCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5C1F72958604BB9DFEE3C0D /* CompanionCalendarView.swift */; };
 		B60C6FF66F1C1AA2E9677A54 /* LegacyPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */; };
+		B6176CEF20D32D78F524B9C5 /* OutreachLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE089D6A67843F61A1E138F /* OutreachLogView.swift */; };
 		B75EFC2E21290C0EF5505BE3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC07A8042E6D168B4581FF91 /* Theme.swift */; };
 		C7F81B615E18E03419EDB621 /* RoutinesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91C94C877C30CBE18B0DFC0 /* RoutinesViewModel.swift */; };
 		C9C9CDC19516EA0830ECE736 /* CaretakerDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F777BC9B625A873F4B7036A1 /* CaretakerDashboardView.swift */; };
+		C9CA256AF70769E314BFA13B /* EscalationRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31929AF4C1AC85B33D2B7083 /* EscalationRulesView.swift */; };
 		CBB5536AE67E77FD6F51FAD2 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26A34D63FB08B84CC10FA20 /* PeopleView.swift */; };
 		CF2DEC1972B733BADB99F7C4 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05BB0A4A3A5AB059ED3F44E3 /* OnboardingContainerView.swift */; };
 		D1756DE2C65537B1D825CAA2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0113277719B788476E18A2 /* MainTabView.swift */; };
@@ -73,6 +76,7 @@
 		2CDB8C805C1B745608A160D0 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		2E21270D01E8836E04162C10 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		3182EAAFE70573BA3D2BE9B8 /* ScheduledCallsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledCallsView.swift; sourceTree = "<group>"; };
+		31929AF4C1AC85B33D2B7083 /* EscalationRulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationRulesView.swift; sourceTree = "<group>"; };
 		35528CA26F7EB6E957FB4215 /* HealthSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSettingsView.swift; sourceTree = "<group>"; };
 		35C02BDA2E3184FDFD406DAE /* SettingsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHubView.swift; sourceTree = "<group>"; };
 		3ADB31B03C222596A4C6A6BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -84,6 +88,7 @@
 		586B1558DA8E62ECEF131DB8 /* FamilySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilySettingsView.swift; sourceTree = "<group>"; };
 		591873E7D6A6AB8DCEDACF86 /* LargeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButton.swift; sourceTree = "<group>"; };
 		6C77B9A3281A5994923870D4 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		6CE089D6A67843F61A1E138F /* OutreachLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutreachLogView.swift; sourceTree = "<group>"; };
 		73A59F29E5235D6E0C4B6E39 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7E0132D1FF95F6F0E82B9F88 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
 		803B123C76E5E8C50BB99B6A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -94,7 +99,7 @@
 		9024B16293DA0148D61AF718 /* LegacyArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyArchiveView.swift; sourceTree = "<group>"; };
 		9445CF15D4CBA1E063688A03 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		966D066DBE2492FC99912786 /* EscalationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationView.swift; sourceTree = "<group>"; };
-		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4D7A04953955F5FD168D23C /* MoodSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSelector.swift; sourceTree = "<group>"; };
 		A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPreferencesView.swift; sourceTree = "<group>"; };
 		A91C94C877C30CBE18B0DFC0 /* RoutinesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesViewModel.swift; sourceTree = "<group>"; };
@@ -111,6 +116,7 @@
 		E30B5005343B45E73606E3F9 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		E42D5EFF09327C0D98FC2805 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		E62D2D6F2E6332AD2281977D /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
+		EF86DC0C16DDE8D1574D4FAA /* CareOrchestrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareOrchestrationView.swift; sourceTree = "<group>"; };
 		F6CF084D0048CC1D183DF6C6 /* Reminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminder.swift; sourceTree = "<group>"; };
 		F777BC9B625A873F4B7036A1 /* CaretakerDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaretakerDashboardView.swift; sourceTree = "<group>"; };
 		F86C851EE6CF74891F426C37 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
@@ -226,6 +232,7 @@
 				B628FF29942909F3735DC04B /* AISettings */,
 				A5B87A4A932D862D9B67461D /* Calendar */,
 				2F15F50EAC2189BC9EF1CFA9 /* CallHistory */,
+				7BB1D685557E43305654097B /* Care */,
 				BF5FC2BC64452342E11CF2E6 /* Conversation */,
 				3E579E3C7841C353BFCED45F /* Dashboard */,
 				9BAD9599DE9714672C101796 /* Family */,
@@ -264,6 +271,16 @@
 				B26A34D63FB08B84CC10FA20 /* PeopleView.swift */,
 			);
 			path = People;
+			sourceTree = "<group>";
+		};
+		7BB1D685557E43305654097B /* Care */ = {
+			isa = PBXGroup;
+			children = (
+				EF86DC0C16DDE8D1574D4FAA /* CareOrchestrationView.swift */,
+				31929AF4C1AC85B33D2B7083 /* EscalationRulesView.swift */,
+				6CE089D6A67843F61A1E138F /* OutreachLogView.swift */,
+			);
+			path = Care;
 			sourceTree = "<group>";
 		};
 		8DFCE1C17CB27119AE98DF7A /* Core */ = {
@@ -444,6 +461,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F210BA939AC74EED49E427E8 = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = 65CA05CA28D557AD345B5253 /* Build configuration list for PBXProject "ElderlyCompanion" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -458,6 +480,7 @@
 			packageReferences = (
 				C30B90C8995966C56BC8888C /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -483,11 +506,13 @@
 				32A803F0547F8B5EA8EF59A8 /* CallHistoryView.swift in Sources */,
 				9FB2ED0E409BD85ED0E5F609 /* CallHistoryViewModel.swift in Sources */,
 				3A2192D78D84ADD52FB3BE41 /* CalmCard.swift in Sources */,
+				955310547DC734D8311DA3FC /* CareOrchestrationView.swift in Sources */,
 				C9C9CDC19516EA0830ECE736 /* CaretakerDashboardView.swift in Sources */,
 				B4B2FDC216B90CABBB5D5176 /* CompanionCalendarView.swift in Sources */,
 				939B4F3B091B4D52F4B0CC3C /* ConversationView.swift in Sources */,
 				8919CCBD4B349F74723A252E /* ConversationViewModel.swift in Sources */,
 				AA4136779E53254537137E1F /* ElderlyCompanionApp.swift in Sources */,
+				C9CA256AF70769E314BFA13B /* EscalationRulesView.swift in Sources */,
 				9233BED10965C74738E5AA99 /* EscalationView.swift in Sources */,
 				F5C496E857D29F33B459AF6F /* FamilySettingsView.swift in Sources */,
 				20018E0123AA00C333F79816 /* HealthKitService.swift in Sources */,
@@ -506,6 +531,7 @@
 				718D1018390F35CE337EB288 /* NotificationPreferencesView.swift in Sources */,
 				49F62AAC869971D0A2BEC84B /* NotificationService.swift in Sources */,
 				CF2DEC1972B733BADB99F7C4 /* OnboardingContainerView.swift in Sources */,
+				B6176CEF20D32D78F524B9C5 /* OutreachLogView.swift in Sources */,
 				CBB5536AE67E77FD6F51FAD2 /* PeopleView.swift in Sources */,
 				05EA875404793F59BFFAE180 /* PhoneVerificationView.swift in Sources */,
 				08CC665941447B33AE7164D9 /* PrivacyView.swift in Sources */,
@@ -592,7 +618,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -614,7 +639,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

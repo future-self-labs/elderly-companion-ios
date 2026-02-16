@@ -19,6 +19,7 @@ import { peopleRoutes } from "./routes/people";
 import { eventRoutes } from "./routes/events";
 import { legacyStoryRoutes } from "./routes/legacy-stories";
 import { wellbeingRoutes } from "./routes/wellbeing";
+import { careRoutes } from "./routes/care";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -55,6 +56,7 @@ app.route("/people", peopleRoutes);
 app.route("/events", eventRoutes);
 app.route("/legacy-stories", legacyStoryRoutes);
 app.route("/wellbeing", wellbeingRoutes);
+app.route("/care", careRoutes);
 
 // Start server
 const port = Number(process.env.PORT) || 3000;

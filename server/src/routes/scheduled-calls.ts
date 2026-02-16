@@ -4,6 +4,7 @@ import { db } from "../db";
 import { scheduledCalls, users, familyContacts } from "../db/schema";
 import { initiateOutboundCall } from "../lib/livekit";
 import { sendDailyFamilyUpdate } from "./family";
+import { runSilenceMonitor, updateAllBaselines } from "../lib/care-engine";
 
 const app = new Hono();
 
@@ -218,6 +219,24 @@ export function startScheduler() {
           }
         } catch (err: any) {
           console.error("[Scheduler] Error running daily WhatsApp updates:", err.message);
+        }
+      }
+
+      // Silence monitor — run every hour (at :00)
+      if (currentTime.endsWith(":00")) {
+        try {
+          await runSilenceMonitor();
+        } catch (err: any) {
+          console.error("[Scheduler] Silence monitor error:", err.message);
+        }
+      }
+
+      // Baseline updater — run once daily at 23:00
+      if (currentTime === "23:00") {
+        try {
+          await updateAllBaselines();
+        } catch (err: any) {
+          console.error("[Scheduler] Baseline update error:", err.message);
         }
       }
     } catch (error) {

@@ -94,8 +94,17 @@ struct SettingsHubView: View {
                     }
                 }
 
-                // Safety & Privacy
-                SettingsSection(title: "Safety & Privacy") {
+                // Care & Safety
+                SettingsSection(title: "Care & Safety") {
+                    SettingsRow(title: "Care Orchestration", icon: "shield.checkered", color: .companionPrimary) {
+                        CareOrchestrationView()
+                    }
+                    SettingsRow(title: "Escalation Rules", icon: "slider.horizontal.3", color: .companionSecondary) {
+                        EscalationRulesView()
+                    }
+                    SettingsRow(title: "Outreach Log", icon: "list.bullet.clipboard.fill", color: .companionInfo) {
+                        OutreachLogView()
+                    }
                     SettingsRow(title: "Safety & Protection", icon: "shield.fill", color: .companionSuccess) {
                         SafetyView()
                     }
