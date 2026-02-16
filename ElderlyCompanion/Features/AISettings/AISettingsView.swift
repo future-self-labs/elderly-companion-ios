@@ -30,6 +30,9 @@ struct AISettingsView: View {
     @State private var selectedVoiceId: String = {
         UserDefaults.standard.string(forKey: "pipelineVoiceId") ?? NoahVoice.available[0].id
     }()
+    @State private var selectedLanguage: String = {
+        UserDefaults.standard.string(forKey: "preferredLanguage") ?? "nl"
+    }()
 
     enum ToneStyle: String, CaseIterable {
         case formal
@@ -86,6 +89,51 @@ struct AISettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: CompanionTheme.Spacing.lg) {
+                // Language
+                CalmCard {
+                    VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {
+                        CalmCardHeader("Language", icon: "globe")
+
+                        VStack(spacing: CompanionTheme.Spacing.sm) {
+                            ForEach(NoahLanguage.available) { lang in
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedLanguage = lang.id
+                                        UserDefaults.standard.set(lang.id, forKey: "preferredLanguage")
+                                    }
+                                } label: {
+                                    HStack(spacing: CompanionTheme.Spacing.md) {
+                                        Text(lang.flag)
+                                            .font(.system(size: 22))
+
+                                        Text(lang.nativeName)
+                                            .font(.companionBody)
+                                            .foregroundStyle(
+                                                selectedLanguage == lang.id ? .white : Color.companionTextPrimary
+                                            )
+
+                                        Spacer()
+
+                                        if selectedLanguage == lang.id {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                    .padding(CompanionTheme.Spacing.md)
+                                    .background(
+                                        selectedLanguage == lang.id
+                                            ? Color.companionPrimary
+                                            : Color.companionSurfaceSecondary
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+
                 // Voice selection (Pipeline mode)
                 CalmCard {
                     VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {

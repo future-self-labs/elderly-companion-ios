@@ -8,6 +8,7 @@ struct User: Codable, Identifiable, Sendable {
     let city: String?
     let phoneNumber: String
     let type: UserType
+    let language: String?
     let proactiveCallsEnabled: Bool
     let createdAt: Date?
 
@@ -17,12 +18,29 @@ struct User: Codable, Identifiable, Sendable {
     }
 }
 
+struct NoahLanguage: Identifiable {
+    let id: String   // ISO code
+    let name: String
+    let flag: String
+    let nativeName: String
+
+    static let available: [NoahLanguage] = [
+        NoahLanguage(id: "nl", name: "Dutch", flag: "🇳🇱", nativeName: "Nederlands"),
+        NoahLanguage(id: "en", name: "English", flag: "🇬🇧", nativeName: "English"),
+        NoahLanguage(id: "de", name: "German", flag: "🇩🇪", nativeName: "Deutsch"),
+        NoahLanguage(id: "fr", name: "French", flag: "🇫🇷", nativeName: "Français"),
+        NoahLanguage(id: "es", name: "Spanish", flag: "🇪🇸", nativeName: "Español"),
+        NoahLanguage(id: "tr", name: "Turkish", flag: "🇹🇷", nativeName: "Türkçe"),
+    ]
+}
+
 struct UserProfile: Codable, Sendable {
     var name: String = ""
     var nickname: String = ""
     var birthYear: Int?
     var city: String = ""
     var phoneNumber: String = ""
+    var language: String = "nl"
     var proactiveCallsEnabled: Bool = true
     var calendarAccess: CalendarAccessLevel = .none
     var notificationPreferences: NotificationPreferences = .init()

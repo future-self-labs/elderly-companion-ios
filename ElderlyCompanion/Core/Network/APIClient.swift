@@ -181,6 +181,7 @@ actor APIClient {
         let birthYear: Int?
         let city: String?
         let phoneNumber: String
+        let language: String?
         let proactiveCallsEnabled: Bool
     }
 

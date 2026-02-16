@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -36,6 +36,7 @@
 		939B4F3B091B4D52F4B0CC3C /* ConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39F61166FBA77A77F2D54F9 /* ConversationView.swift */; };
 		955310547DC734D8311DA3FC /* CareOrchestrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF86DC0C16DDE8D1574D4FAA /* CareOrchestrationView.swift */; };
 		95C921C8CB2017C7BF6AE10C /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55083392E8F58CCC9077B25A /* HomeViewModel.swift */; };
+		96930BB34F0BC7FC9FE3EDA7 /* LanguagePickerOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E5C6C01ABB5CE7A5E007008 /* LanguagePickerOnboardingView.swift */; };
 		9FB2ED0E409BD85ED0E5F609 /* CallHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1222893A978170637D86D5AD /* CallHistoryViewModel.swift */; };
 		9FEA93CA8534FACCAA6AB95B /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CDB8C805C1B745608A160D0 /* CalendarService.swift */; };
 		A7CE4BC4D0C90CFDC6D35146 /* LiveKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA7FB1AD440FDD4A7D16FEB /* LiveKitService.swift */; };
@@ -89,6 +90,7 @@
 		591873E7D6A6AB8DCEDACF86 /* LargeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButton.swift; sourceTree = "<group>"; };
 		6C77B9A3281A5994923870D4 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		6CE089D6A67843F61A1E138F /* OutreachLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutreachLogView.swift; sourceTree = "<group>"; };
+		6E5C6C01ABB5CE7A5E007008 /* LanguagePickerOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePickerOnboardingView.swift; sourceTree = "<group>"; };
 		73A59F29E5235D6E0C4B6E39 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7E0132D1FF95F6F0E82B9F88 /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
 		803B123C76E5E8C50BB99B6A /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
@@ -99,7 +101,7 @@
 		9024B16293DA0148D61AF718 /* LegacyArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyArchiveView.swift; sourceTree = "<group>"; };
 		9445CF15D4CBA1E063688A03 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		966D066DBE2492FC99912786 /* EscalationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationView.swift; sourceTree = "<group>"; };
-		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4D7A04953955F5FD168D23C /* MoodSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSelector.swift; sourceTree = "<group>"; };
 		A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPreferencesView.swift; sourceTree = "<group>"; };
 		A91C94C877C30CBE18B0DFC0 /* RoutinesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesViewModel.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				83BF4CBE0D4C6A0AE94C61AC /* CalendarPermissionView.swift */,
+				6E5C6C01ABB5CE7A5E007008 /* LanguagePickerOnboardingView.swift */,
 				A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */,
 				7E0132D1FF95F6F0E82B9F88 /* NotificationPreferencesView.swift */,
 				05BB0A4A3A5AB059ED3F44E3 /* OnboardingContainerView.swift */,
@@ -461,6 +464,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F210BA939AC74EED49E427E8 = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = 65CA05CA28D557AD345B5253 /* Build configuration list for PBXProject "ElderlyCompanion" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -475,6 +483,7 @@
 			packageReferences = (
 				C30B90C8995966C56BC8888C /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -514,6 +523,7 @@
 				7E58E5DC29C22A7CB9EE38B1 /* HomeView.swift in Sources */,
 				95C921C8CB2017C7BF6AE10C /* HomeViewModel.swift in Sources */,
 				AAFDBCAECB90A9A94A1CAA02 /* KeychainService.swift in Sources */,
+				96930BB34F0BC7FC9FE3EDA7 /* LanguagePickerOnboardingView.swift in Sources */,
 				117C3742CBA02A6482E35893 /* LargeButton.swift in Sources */,
 				E1C25ADC8FD42ACC951FB44A /* LegacyArchiveView.swift in Sources */,
 				B60C6FF66F1C1AA2E9677A54 /* LegacyPreferencesView.swift in Sources */,
@@ -612,7 +622,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -634,7 +643,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

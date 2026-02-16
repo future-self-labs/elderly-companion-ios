@@ -10,6 +10,7 @@ struct OnboardingContainerView: View {
 
     enum OnboardingStep: Int, CaseIterable {
         case welcome
+        case language
         case profile
         case phoneVerification
         case calendarPermission
@@ -33,6 +34,15 @@ struct OnboardingContainerView: View {
                 switch currentStep {
                 case .welcome:
                     WelcomeView(onContinue: { advanceStep() })
+
+                case .language:
+                    LanguagePickerOnboardingView(
+                        selectedLanguage: $profile.language,
+                        onContinue: {
+                            UserDefaults.standard.set(profile.language, forKey: "preferredLanguage")
+                            advanceStep()
+                        }
+                    )
 
                 case .profile:
                     ProfileCreationView(profile: $profile, onContinue: { advanceStep() })
@@ -119,6 +129,7 @@ struct OnboardingContainerView: View {
                     birthYear: profile.birthYear,
                     city: profile.city.isEmpty ? nil : profile.city,
                     phoneNumber: profile.phoneNumber,
+                    language: profile.language,
                     proactiveCallsEnabled: profile.proactiveCallsEnabled
                 ))
                 await MainActor.run {

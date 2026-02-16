@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("elderly"), // "elderly" | "family" | "caretaker"
   linkedElderlyId: uuid("linked_elderly_id"), // FK → users.id (which elderly user this person is connected to)
   accessLevel: text("access_level").notNull().default("full"), // "full" | "stories_only" | "health_only" | "dashboard_only"
+  language: text("language").notNull().default("nl"), // ISO code: nl, en, de, fr, es, tr
   notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
   proactiveCallsEnabled: boolean("proactive_calls_enabled").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
