@@ -37,6 +37,52 @@ app.post("/", async (c) => {
       })
       .returning();
 
+    // Also create/update a user record so this person can call Noah directly.
+    // When they call, the agent looks up by phone number and routes to OnboardingAgent.
+    try {
+      const existing = await db
+        .select()
+        .from(users)
+        .where(eq(users.phoneNumber, body.phoneNumber))
+        .limit(1);
+
+      if (existing.length === 0) {
+        const [familyUser] = await db
+          .insert(users)
+          .values({
+            name: body.name,
+            phoneNumber: body.phoneNumber,
+            type: "family_member",
+            role: "family",
+            linkedElderlyId: body.userId,
+          })
+          .returning();
+
+        // Create Zep user for memory
+        try {
+          const zep = getZepClient();
+          await zep.user.add({ userId: familyUser.id });
+        } catch {}
+
+        console.log(`[Family] Created user record for ${body.name} (${body.phoneNumber}) linked to ${body.userId}`);
+      } else if (existing[0].type !== "family_member") {
+        // Update existing user to be linked as family member
+        await db
+          .update(users)
+          .set({
+            type: "family_member",
+            role: "family",
+            linkedElderlyId: body.userId,
+          })
+          .where(eq(users.id, existing[0].id));
+
+        console.log(`[Family] Linked existing user ${body.name} as family member of ${body.userId}`);
+      }
+    } catch (err) {
+      console.error("[Family] Error creating user record for family member:", err);
+      // Non-fatal — the contact was still added
+    }
+
     return c.json(contact, 201);
   } catch (error) {
     console.error("Error adding family contact:", error);
