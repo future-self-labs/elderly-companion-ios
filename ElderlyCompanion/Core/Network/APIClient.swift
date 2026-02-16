@@ -226,6 +226,7 @@ actor APIClient {
         let messages: [TranscriptMessage]
         let tags: [String]
         let summary: String?
+        let audioUrl: String?
         let createdAt: String
     }
 

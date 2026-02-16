@@ -119,17 +119,38 @@ private class RoomDelegateHandler: RoomDelegate {
         }
     }
 
+    // MARK: - Pipeline transcriptions (TranscriptionSegments — new LiveKit streaming API)
+
+    nonisolated func room(_ room: Room, participant: RemoteParticipant, trackPublication: RemoteTrackPublication, didReceiveTranscriptionSegments segments: [TranscriptionSegment]) {
+        let localIdentity = room.localParticipant.identity?.stringValue ?? ""
+
+        for segment in segments {
+            guard segment.isFinal else { continue }
+            let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty else { continue }
+
+            // Determine role: if the segment's track belongs to the local participant, it's "user"
+            let participantId = participant.identity?.stringValue ?? ""
+            let isUser = participantId == localIdentity
+
+            Task { @MainActor in
+                service?.handleTranscription(text, role: isUser ? "user" : "assistant")
+            }
+        }
+    }
+
+    // MARK: - Realtime transcriptions (data channels — old format for OpenAI Realtime API)
+
     nonisolated func room(_ room: Room, participant: Participant, didReceiveData data: Data, forTopic topic: String) {
         let localIdentity = room.localParticipant.identity?.stringValue ?? ""
 
-        // LiveKit agents send transcription data on the "lk-transcription" topic
+        // LiveKit Realtime agents send transcription data on the "lk-transcription" topic
         if topic == "lk-transcription" || topic == "transcription" {
-            // Try parsing as structured transcription (segments array format)
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 // Format 1: Direct text field
                 if let text = json["text"] as? String, !text.isEmpty {
                     let isFinal = json["is_final"] as? Bool ?? json["final"] as? Bool ?? true
-                    guard isFinal else { return } // Skip interim results
+                    guard isFinal else { return }
 
                     let role = json["participant_identity"] as? String ?? participant.identity?.stringValue ?? "assistant"
                     let isUser = role == localIdentity || role.contains("sip_")
