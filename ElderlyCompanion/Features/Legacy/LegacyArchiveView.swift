@@ -327,25 +327,62 @@ struct TranscriptCard: View {
                     .buttonStyle(.plain)
                 }
 
-                // Expand/collapse button
+                // Action buttons
                 if !transcript.messages.isEmpty {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isExpanded.toggle()
+                    HStack(spacing: CompanionTheme.Spacing.md) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                isExpanded.toggle()
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                    .font(.system(size: 10, weight: .semibold))
+                                Text(isExpanded ? "Hide" : "Show")
+                                    .font(.companionLabel)
+                            }
+                            .foregroundStyle(Color.companionPrimary)
                         }
-                    } label: {
-                        HStack {
-                            Text(isExpanded ? "Hide transcript" : "Show transcript")
-                                .font(.companionLabel)
-                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 10, weight: .semibold))
+                        .buttonStyle(.plain)
+
+                        Spacer()
+
+                        ShareLink(
+                            item: formatTranscriptForExport(),
+                            subject: Text("Noah Conversation"),
+                            message: Text("Transcript from \(date.formatted(.dateTime.weekday(.wide).month().day()))")
+                        ) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("Export")
+                                    .font(.companionLabel)
+                            }
+                            .foregroundStyle(Color.companionPrimary)
                         }
-                        .foregroundStyle(Color.companionPrimary)
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    private func formatTranscriptForExport() -> String {
+        var text = "Noah — Conversation Transcript\n"
+        text += "Date: \(date.formatted(.dateTime.weekday(.wide).month(.wide).day().year().hour().minute()))\n"
+        text += "Duration: \(durationText)\n"
+        if let summary = transcript.summary, !summary.isEmpty {
+            text += "Summary: \(summary)\n"
+        }
+        text += "\n" + String(repeating: "—", count: 40) + "\n\n"
+
+        for message in transcript.messages {
+            let role = message.role == "user" ? "You" : "Noah"
+            text += "\(role): \(message.content)\n\n"
+        }
+
+        text += String(repeating: "—", count: 40) + "\n"
+        text += "Exported from Noah AI Companion"
+        return text
     }
 
     private func tagColor(_ tag: String) -> Color {
