@@ -28,14 +28,14 @@ app.post("/get-token", async (c) => {
  * Generate a LiveKit access token for the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs).
  */
 app.post("/get-token-pipeline", async (c) => {
-  const { userId } = await c.req.json<{ userId: string }>();
+  const { userId, voiceId } = await c.req.json<{ userId: string; voiceId?: string }>();
 
   if (!userId) {
     return c.json({ error: "User ID is required" }, 400);
   }
 
   try {
-    const { token } = await generatePipelineTokenAndDispatch(userId);
+    const { token } = await generatePipelineTokenAndDispatch(userId, voiceId);
     return c.json({ token, userId });
   } catch (error) {
     console.error("Error generating pipeline token:", error);

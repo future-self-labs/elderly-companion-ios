@@ -147,8 +147,13 @@ actor APIClient {
         try await post("/livekit/get-token", body: TokenRequest(userId: userId))
     }
 
-    func getLiveKitPipelineToken(userId: String) async throws -> TokenResponse {
-        try await post("/livekit/get-token-pipeline", body: TokenRequest(userId: userId))
+    struct PipelineTokenRequest: Encodable {
+        let userId: String
+        let voiceId: String?
+    }
+
+    func getLiveKitPipelineToken(userId: String, voiceId: String? = nil) async throws -> TokenResponse {
+        try await post("/livekit/get-token-pipeline", body: PipelineTokenRequest(userId: userId, voiceId: voiceId))
     }
 
     struct CallResponse: Decodable {

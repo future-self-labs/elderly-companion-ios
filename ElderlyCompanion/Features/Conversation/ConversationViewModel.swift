@@ -9,6 +9,8 @@ final class ConversationViewModel {
 
     /// When true, connects via the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs)
     var usePipeline: Bool = false
+    /// ElevenLabs voice ID for pipeline mode (nil = default voice)
+    var voiceId: String?
 
     // State
     var isListening: Bool = false
@@ -48,7 +50,7 @@ final class ConversationViewModel {
 
         Task { @MainActor in
             do {
-                try await liveKitService.connect(userId: userId, usePipeline: usePipeline)
+                try await liveKitService.connect(userId: userId, usePipeline: usePipeline, voiceId: voiceId)
 
                 // Listen for transcription data from the agent
                 liveKitService.onTranscription = { [weak self] text, role in

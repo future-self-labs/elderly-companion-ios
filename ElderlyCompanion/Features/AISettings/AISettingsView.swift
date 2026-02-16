@@ -1,5 +1,21 @@
 import SwiftUI
 
+struct NoahVoice: Identifiable {
+    let id: String // ElevenLabs voice_id
+    let name: String
+    let description: String
+    let icon: String
+
+    static let available: [NoahVoice] = [
+        NoahVoice(id: "bIHbv24MWmeRgasZH58o", name: "Will", description: "Warm, friendly male voice", icon: "person.wave.2.fill"),
+        NoahVoice(id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah", description: "Clear, calm female voice", icon: "person.wave.2.fill"),
+        NoahVoice(id: "nPczCjzI2devNBz1zQrb", name: "Brian", description: "Deep, reassuring male voice", icon: "person.wave.2.fill"),
+        NoahVoice(id: "cgSgspJ2msm6clMCkdW9", name: "Jessica", description: "Warm, expressive female voice", icon: "person.wave.2.fill"),
+        NoahVoice(id: "cjVigY5qzO86Huf0OWal", name: "Eric", description: "Gentle, mature male voice", icon: "person.wave.2.fill"),
+        NoahVoice(id: "XB0fDUnXU5powFXDhCwa", name: "Charlotte", description: "Soft, soothing female voice", icon: "person.wave.2.fill"),
+    ]
+}
+
 struct AISettingsView: View {
     @State private var toneStyle: ToneStyle = {
         ToneStyle(rawValue: UserDefaults.standard.string(forKey: "aiToneStyle") ?? "balanced") ?? .balanced
@@ -10,6 +26,9 @@ struct AISettingsView: View {
     @State private var callFrequencyLimit: Int = {
         let stored = UserDefaults.standard.integer(forKey: "aiCallFrequencyLimit")
         return stored > 0 ? stored : 3
+    }()
+    @State private var selectedVoiceId: String = {
+        UserDefaults.standard.string(forKey: "pipelineVoiceId") ?? NoahVoice.available[0].id
     }()
 
     enum ToneStyle: String, CaseIterable {
@@ -67,6 +86,62 @@ struct AISettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: CompanionTheme.Spacing.lg) {
+                // Voice selection (Pipeline mode)
+                CalmCard {
+                    VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {
+                        CalmCardHeader("Noah's Voice", icon: "waveform", subtitle: "Used in Pipeline mode")
+
+                        VStack(spacing: CompanionTheme.Spacing.sm) {
+                            ForEach(NoahVoice.available) { voice in
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        selectedVoiceId = voice.id
+                                        UserDefaults.standard.set(voice.id, forKey: "pipelineVoiceId")
+                                    }
+                                } label: {
+                                    HStack(spacing: CompanionTheme.Spacing.md) {
+                                        Image(systemName: voice.icon)
+                                            .font(.system(size: 18))
+                                            .frame(width: 28)
+                                            .foregroundStyle(
+                                                selectedVoiceId == voice.id ? .white : Color.companionSecondary
+                                            )
+
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(voice.name)
+                                                .font(.companionBody)
+                                                .foregroundStyle(
+                                                    selectedVoiceId == voice.id ? .white : Color.companionTextPrimary
+                                                )
+                                            Text(voice.description)
+                                                .font(.companionCaption)
+                                                .foregroundStyle(
+                                                    selectedVoiceId == voice.id ? .white.opacity(0.8) : Color.companionTextSecondary
+                                                )
+                                        }
+
+                                        Spacer()
+
+                                        if selectedVoiceId == voice.id {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundStyle(.white)
+                                        }
+                                    }
+                                    .padding(CompanionTheme.Spacing.md)
+                                    .background(
+                                        selectedVoiceId == voice.id
+                                            ? Color.companionSecondary
+                                            : Color.companionSurfaceSecondary
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+
                 // Tone - high contrast custom selector
                 CalmCard {
                     VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {

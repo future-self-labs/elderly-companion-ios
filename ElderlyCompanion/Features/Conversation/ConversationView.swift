@@ -37,6 +37,9 @@ struct ConversationView: View {
         }
         .onAppear {
             viewModel.usePipeline = usePipeline
+            if usePipeline {
+                viewModel.voiceId = UserDefaults.standard.string(forKey: "pipelineVoiceId")
+            }
             viewModel.startSession(userId: UserDefaults.standard.string(forKey: "userId") ?? "")
         }
         .onDisappear {
