@@ -47,18 +47,30 @@ final class LiveKitService {
 
             // Register text stream handler for pipeline transcriptions
             if usePipeline {
-                try await newRoom.registerTextStreamHandler(for: "lk.transcription") { [weak self] reader, participantIdentity in
-                    // Read the full transcription text when the stream closes
-                    let text = try await reader.readAll()
-                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
+                do {
+                    try await newRoom.registerTextStreamHandler(for: "lk.transcription") { [weak self] reader, participantIdentity in
+                        do {
+                            let localIdentity = newRoom.localParticipant.identity?.stringValue ?? ""
+                            let isUser = participantIdentity.stringValue == localIdentity
+                            var accumulated = ""
 
-                    let localIdentity = newRoom.localParticipant.identity?.stringValue ?? ""
-                    let isUser = participantIdentity.stringValue == localIdentity
+                            for try await chunk in reader {
+                                accumulated += chunk
+                            }
 
-                    await MainActor.run {
-                        self?.handleTranscription(trimmed, role: isUser ? "user" : "assistant")
+                            // Stream closed — process the full text
+                            let trimmed = accumulated.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+
+                            await MainActor.run {
+                                self?.handleTranscription(trimmed, role: isUser ? "user" : "assistant")
+                            }
+                        } catch {
+                            print("[LiveKit] Transcription stream error: \(error)")
+                        }
                     }
+                } catch {
+                    print("[LiveKit] Failed to register transcription handler: \(error)")
                 }
             }
 
