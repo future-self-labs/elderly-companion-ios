@@ -165,49 +165,60 @@ struct AddPersonView: View {
     @State private var nickname = ""
     @State private var relationship = "Son"
     @State private var phoneNumber = ""
-    @State private var birthDate = ""
+    @State private var birthDate = Date()
+    @State private var hasBirthDate = false
     @State private var notes = ""
 
     static let relationships = ["Son", "Daughter", "Spouse", "Grandchild", "Sibling", "Friend", "Caregiver", "Neighbor", "Doctor", "Other"]
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: CompanionTheme.Spacing.lg) {
-                    CompanionTextField("Full name", text: $name, icon: "person.fill")
-                    CompanionTextField("Nickname (optional)", text: $nickname, icon: "tag.fill")
-                    CompanionTextField("Phone number (optional)", text: $phoneNumber, icon: "phone.fill")
-                    CompanionTextField("Birthday (yyyy-mm-dd)", text: $birthDate, icon: "gift.fill")
-                    CompanionTextField("Notes (interests, details...)", text: $notes, icon: "note.text")
+            Form {
+                Section("Details") {
+                    TextField("Full name", text: $name)
+                    TextField("Nickname (optional)", text: $nickname)
+                    TextField("Phone number (optional)", text: $phoneNumber)
+                        .keyboardType(.phonePad)
+                }
 
-                    CalmCard {
-                        VStack(alignment: .leading, spacing: CompanionTheme.Spacing.md) {
-                            Text("Relationship")
-                                .font(.companionBody)
-                                .foregroundStyle(Color.companionTextPrimary)
-
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: CompanionTheme.Spacing.sm) {
-                                ForEach(Self.relationships, id: \.self) { rel in
-                                    Button {
-                                        relationship = rel
-                                    } label: {
-                                        Text(rel)
-                                            .font(.companionLabel)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, CompanionTheme.Spacing.sm)
-                                            .background(relationship == rel ? Color.companionPrimary : Color.companionSurfaceSecondary)
-                                            .foregroundStyle(relationship == rel ? .white : Color.companionTextSecondary)
-                                            .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.sm))
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
+                Section("Birthday") {
+                    Toggle("Has birthday", isOn: $hasBirthDate)
+                    if hasBirthDate {
+                        DatePicker("Date", selection: $birthDate, displayedComponents: .date)
                     }
                 }
-                .padding(CompanionTheme.Spacing.lg)
+
+                Section("Relationship") {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                        ForEach(Self.relationships, id: \.self) { rel in
+                            Button {
+                                relationship = rel
+                            } label: {
+                                Text(rel)
+                                    .font(.subheadline.weight(.medium))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(relationship == rel ? Color.accentColor : Color(.systemGray5))
+                                    .foregroundStyle(relationship == rel ? .white : .primary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section("Notes") {
+                    TextField("Interests, details...", text: $notes, axis: .vertical)
+                        .lineLimit(3...6)
+                }
             }
-            .background(Color.companionBackground)
             .navigationTitle("Add Person")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -225,7 +236,7 @@ struct AddPersonView: View {
                             relationship: relationship,
                             phoneNumber: phoneNumber.isEmpty ? nil : phoneNumber,
                             email: nil,
-                            birthDate: birthDate.isEmpty ? nil : birthDate,
+                            birthDate: hasBirthDate ? Self.dateFormatter.string(from: birthDate) : nil,
                             notes: notes.isEmpty ? nil : notes
                         ))
                         dismiss()
@@ -235,6 +246,6 @@ struct AddPersonView: View {
                 }
             }
         }
-        .tint(Color.companionPrimary)
+        .tint(Color.accentColor)
     }
 }

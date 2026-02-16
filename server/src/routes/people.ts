@@ -28,6 +28,11 @@ app.post("/", async (c) => {
   }
 
   try {
+    // Validate birthDate format if provided (must be YYYY-MM-DD or null)
+    const birthDate = body.birthDate && /^\d{4}-\d{2}-\d{2}$/.test(body.birthDate)
+      ? body.birthDate
+      : null;
+
     const [person] = await db
       .insert(people)
       .values({
@@ -38,7 +43,7 @@ app.post("/", async (c) => {
         relationship: body.relationship || "family",
         phoneNumber: body.phoneNumber || null,
         email: body.email || null,
-        birthDate: body.birthDate || null,
+        birthDate,
         notes: body.notes || null,
         photoUrl: body.photoUrl || null,
       })
