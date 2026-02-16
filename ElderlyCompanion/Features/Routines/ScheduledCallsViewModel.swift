@@ -44,6 +44,22 @@ final class ScheduledCallsViewModel {
         }
     }
 
+    func deleteCall(_ call: APIClient.ScheduledCallRecord) {
+        Task {
+            do {
+                try await APIClient.shared.deleteScheduledCall(id: call.id)
+                await MainActor.run {
+                    scheduledCalls.removeAll { $0.id == call.id }
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to delete: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
+    }
+
     func toggleCall(_ call: APIClient.ScheduledCallRecord, enabled: Bool) {
         Task {
             do {

@@ -21,9 +21,11 @@ struct ScheduledCallsView: View {
                 if !viewModel.scheduledCalls.isEmpty {
                     VStack(spacing: CompanionTheme.Spacing.md) {
                         ForEach(viewModel.scheduledCalls) { call in
-                            ScheduledCallRow(call: call, onToggle: { enabled in
-                                viewModel.toggleCall(call, enabled: enabled)
-                            })
+                            ScheduledCallRow(
+                                call: call,
+                                onToggle: { enabled in viewModel.toggleCall(call, enabled: enabled) },
+                                onDelete: { viewModel.deleteCall(call) }
+                            )
                         }
                     }
                 }
@@ -75,12 +77,15 @@ struct ScheduledCallsView: View {
 struct ScheduledCallRow: View {
     let call: APIClient.ScheduledCallRecord
     let onToggle: (Bool) -> Void
+    let onDelete: () -> Void
 
     @State private var isEnabled: Bool
+    @State private var showDeleteConfirm = false
 
-    init(call: APIClient.ScheduledCallRecord, onToggle: @escaping (Bool) -> Void) {
+    init(call: APIClient.ScheduledCallRecord, onToggle: @escaping (Bool) -> Void, onDelete: @escaping () -> Void) {
         self.call = call
         self.onToggle = onToggle
+        self.onDelete = onDelete
         self._isEnabled = State(initialValue: call.enabled)
     }
 
@@ -109,6 +114,16 @@ struct ScheduledCallRow: View {
 
                 Spacer()
 
+                Button {
+                    showDeleteConfirm = true
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.companionDanger)
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.plain)
+
                 Toggle("", isOn: $isEnabled)
                     .labelsHidden()
                     .tint(Color.companionPrimary)
@@ -116,6 +131,10 @@ struct ScheduledCallRow: View {
                         onToggle(newValue)
                     }
             }
+        }
+        .confirmationDialog("Delete this scheduled call?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { onDelete() }
+            Button("Cancel", role: .cancel) {}
         }
     }
 
