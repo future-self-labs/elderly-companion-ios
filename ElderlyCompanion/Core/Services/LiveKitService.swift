@@ -12,6 +12,9 @@ final class LiveKitService {
     /// Callback for transcriptions: (text, role)
     var onTranscription: ((String, String) -> Void)?
 
+    /// Track seen transcription stream IDs to deduplicate interim results
+    private var seenTranscriptionIds: Set<String> = []
+
     enum VoiceConnectionState: Equatable {
         case disconnected
         case connecting
@@ -50,20 +53,25 @@ final class LiveKitService {
                 do {
                     try await newRoom.registerTextStreamHandler(for: "lk.transcription") { [weak self] reader, participantIdentity in
                         do {
+                            let streamId = reader.info.id
                             let localIdentity = newRoom.localParticipant.identity?.stringValue ?? ""
                             let isUser = participantIdentity.stringValue == localIdentity
-                            var accumulated = ""
 
+                            // Read all chunks until stream closes
+                            var accumulated = ""
                             for try await chunk in reader {
                                 accumulated += chunk
                             }
 
-                            // Stream closed — process the full text
                             let trimmed = accumulated.trimmingCharacters(in: .whitespacesAndNewlines)
                             guard !trimmed.isEmpty else { return }
 
                             await MainActor.run {
-                                self?.handleTranscription(trimmed, role: isUser ? "user" : "assistant")
+                                guard let self else { return }
+                                // Deduplicate: only process each stream ID once (skip interim updates)
+                                guard !self.seenTranscriptionIds.contains(streamId) else { return }
+                                self.seenTranscriptionIds.insert(streamId)
+                                self.handleTranscription(trimmed, role: isUser ? "user" : "assistant")
                             }
                         } catch {
                             print("[LiveKit] Transcription stream error: \(error)")
@@ -98,6 +106,7 @@ final class LiveKitService {
         voiceState = .disconnected
         audioLevel = 0.0
         onTranscription = nil
+        seenTranscriptionIds.removeAll()
     }
 
     func toggleMicrophone() async throws {
