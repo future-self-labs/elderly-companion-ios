@@ -156,6 +156,14 @@ struct SettingsSection<Content: View>: View {
     }
 }
 
+// MARK: - Lazy View (prevents eager destination creation)
+
+private struct LazyView<Content: View>: View {
+    let build: () -> Content
+    init(_ build: @autoclosure @escaping () -> Content) { self.build = build }
+    var body: Content { build() }
+}
+
 // MARK: - Settings Row
 
 struct SettingsRow<Destination: View>: View {
@@ -173,7 +181,7 @@ struct SettingsRow<Destination: View>: View {
 
     var body: some View {
         NavigationLink {
-            destination()
+            LazyView(destination())
         } label: {
             HStack(spacing: CompanionTheme.Spacing.md) {
                 Image(systemName: icon)
