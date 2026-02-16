@@ -11,83 +11,64 @@ struct ProfileCreationView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: CompanionTheme.Spacing.xl) {
-                // Header
-                VStack(alignment: .leading, spacing: CompanionTheme.Spacing.sm) {
-                    Text("Tell us about yourself")
-                        .font(.companionTitle)
-                        .foregroundStyle(Color.companionTextPrimary)
+        VStack(spacing: 0) {
+            // Header
+            VStack(alignment: .leading, spacing: CompanionTheme.Spacing.sm) {
+                Text("Tell us about yourself")
+                    .font(.companionTitle)
+                    .foregroundStyle(Color.companionTextPrimary)
 
-                    Text("This helps Noah get to know you better.")
-                        .font(.companionBody)
-                        .foregroundStyle(Color.companionTextSecondary)
+                Text("This helps Noah get to know you better.")
+                    .font(.companionBody)
+                    .foregroundStyle(Color.companionTextSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(CompanionTheme.Spacing.lg)
+
+            Form {
+                Section {
+                    TextField("Full name", text: $profile.name)
+                        .focused($focusedField, equals: .name)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .nickname }
+
+                    TextField("Preferred nickname (optional)", text: $profile.nickname)
+                        .focused($focusedField, equals: .nickname)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .city }
+
+                    TextField("City", text: $profile.city)
+                        .focused($focusedField, equals: .city)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .phoneNumber }
+
+                    TextField("Phone number", text: $profile.phoneNumber)
+                        .focused($focusedField, equals: .phoneNumber)
+                        .keyboardType(.phonePad)
                 }
 
-                // Form fields
-                VStack(spacing: CompanionTheme.Spacing.lg) {
-                    CompanionTextField(
-                        "Full name",
-                        text: $profile.name,
-                        icon: "person.fill"
-                    )
-                    .focused($focusedField, equals: .name)
-                    .submitLabel(.next)
-                    .onSubmit { focusedField = .nickname }
-
-                    CompanionTextField(
-                        "Preferred nickname (optional)",
-                        text: $profile.nickname,
-                        icon: "face.smiling"
-                    )
-                    .focused($focusedField, equals: .nickname)
-                    .submitLabel(.next)
-                    .onSubmit { focusedField = .city }
-
-                    CompanionTextField(
-                        "City",
-                        text: $profile.city,
-                        icon: "mappin.and.ellipse"
-                    )
-                    .focused($focusedField, equals: .city)
-                    .submitLabel(.next)
-                    .onSubmit { focusedField = .phoneNumber }
-
-                    CompanionTextField(
-                        "Phone number",
-                        text: $profile.phoneNumber,
-                        icon: "phone.fill"
-                    )
-                    .focused($focusedField, equals: .phoneNumber)
-                    .keyboardType(.phonePad)
-
-                    // Proactive calls toggle
-                    CalmCard {
-                        Toggle(isOn: $profile.proactiveCallsEnabled) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Proactive check-in calls")
-                                    .font(.companionBody)
-                                    .foregroundStyle(Color.companionTextPrimary)
-
-                                Text("Noah may call to check in on you")
-                                    .font(.companionCaption)
-                                    .foregroundStyle(Color.companionTextSecondary)
-                            }
+                Section {
+                    Toggle(isOn: $profile.proactiveCallsEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Proactive check-in calls")
+                            Text("Noah may call to check in on you")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                        .tint(Color.companionPrimary)
                     }
                 }
-
-                // Continue button
-                LargeButton("Continue", icon: "arrow.right") {
-                    onContinue()
-                }
-                .disabled(profile.name.isEmpty || profile.phoneNumber.isEmpty)
-                .opacity(profile.name.isEmpty || profile.phoneNumber.isEmpty ? 0.5 : 1.0)
             }
-            .padding(CompanionTheme.Spacing.lg)
+
+            // Continue button
+            LargeButton("Continue", icon: "arrow.right") {
+                onContinue()
+            }
+            .disabled(profile.name.isEmpty || profile.phoneNumber.isEmpty)
+            .opacity(profile.name.isEmpty || profile.phoneNumber.isEmpty ? 0.5 : 1.0)
+            .padding(.horizontal, CompanionTheme.Spacing.lg)
+            .padding(.bottom, CompanionTheme.Spacing.xxl)
         }
-        .background(Color.companionBackground)
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
 

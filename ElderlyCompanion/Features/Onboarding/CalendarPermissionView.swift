@@ -67,12 +67,16 @@ struct CalendarPermissionView: View {
             Spacer()
 
             LargeButton("Continue", icon: "arrow.right") {
-                if selectedAccess != .none {
+                if selectedAccess == .full || selectedAccess == .readOnly {
+                    // iOS EventKit requires full access for reading events too
+                    // The "Read only" distinction is enforced in-app, not at OS level
                     Task {
                         _ = await calendarService.requestFullAccess()
+                        UserDefaults.standard.set(selectedAccess.rawValue, forKey: "calendarAccessLevel")
                         await MainActor.run { onContinue() }
                     }
                 } else {
+                    UserDefaults.standard.set("none", forKey: "calendarAccessLevel")
                     onContinue()
                 }
             }

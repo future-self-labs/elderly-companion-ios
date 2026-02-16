@@ -492,6 +492,16 @@ actor APIClient {
         return response.summary
     }
 
+    struct MoodRequest: Encodable {
+        let elderlyUserId: String
+        let date: String
+        let moodScore: Int
+    }
+
+    func saveMood(elderlyUserId: String, date: String, moodScore: Int) async throws {
+        try await post("/wellbeing", body: MoodRequest(elderlyUserId: elderlyUserId, date: date, moodScore: moodScore))
+    }
+
     // MARK: - Care Settings
 
     struct CareSettingsRecord: Codable {

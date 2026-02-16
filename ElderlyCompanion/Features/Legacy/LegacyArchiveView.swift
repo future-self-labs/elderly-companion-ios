@@ -236,6 +236,7 @@ struct TranscriptCard: View {
     let transcript: APIClient.TranscriptRecord
 
     @State private var isExpanded = false
+    @State private var isPlayingAudio = false
 
     private var date: Date {
         LegacyDateParser.parse(transcript.createdAt)
@@ -299,6 +300,31 @@ struct TranscriptCard: View {
                             MessageBubble(message: message)
                         }
                     }
+                }
+
+                // Audio playback button
+                if let audioUrl = transcript.audioUrl, !audioUrl.isEmpty {
+                    Button {
+                        isPlayingAudio.toggle()
+                    } label: {
+                        HStack(spacing: CompanionTheme.Spacing.sm) {
+                            Image(systemName: isPlayingAudio ? "stop.circle.fill" : "play.circle.fill")
+                                .font(.system(size: 28))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(isPlayingAudio ? "Playing..." : "Play recording")
+                                    .font(.companionLabel)
+                                Text(durationText)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.companionTextTertiary)
+                            }
+                            Spacer()
+                        }
+                        .foregroundStyle(Color.companionPrimary)
+                        .padding(CompanionTheme.Spacing.sm)
+                        .background(Color.companionPrimaryLight)
+                        .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.md))
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // Expand/collapse button

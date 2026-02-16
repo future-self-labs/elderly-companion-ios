@@ -63,6 +63,13 @@ struct CompanionCalendarView: View {
                 calendarService.fetchCurrentMonthEvents()
             }
         }
+        .task {
+            // If not determined or denied, we show the access needed card
+            // If user taps "Enable Calendar", it requests access
+            if calendarService.authorizationStatus == .fullAccess {
+                calendarService.fetchCurrentMonthEvents()
+            }
+        }
     }
 
     // MARK: - Month View

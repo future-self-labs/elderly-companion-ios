@@ -121,7 +121,7 @@ extension Color {
     static var companionSurfaceSecondary: Color {
         theme == .apple
             ? Color(uiColor: .tertiarySystemGroupedBackground)
-            : Color(red: 0.96, green: 0.95, blue: 0.93)
+            : Color(red: 0.91, green: 0.89, blue: 0.86)
     }
 
     // Text
@@ -138,7 +138,7 @@ extension Color {
     static var companionTextTertiary: Color {
         theme == .apple
             ? Color(uiColor: .tertiaryLabel)
-            : Color(red: 0.65, green: 0.63, blue: 0.60)
+            : Color(red: 0.55, green: 0.53, blue: 0.50)
     }
 
     // Accent colors

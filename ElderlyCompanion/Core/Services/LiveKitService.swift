@@ -45,6 +45,22 @@ final class LiveKitService {
 
             try await newRoom.connect(url: livekitURL, token: tokenResponse.token)
 
+            // Register text stream handler for pipeline transcriptions
+            if usePipeline {
+                newRoom.registerTextStreamHandler(for: "lk.transcription") { [weak self] reader, participantIdentity in
+                    Task { @MainActor in
+                        let localIdentity = newRoom.localParticipant.identity?.stringValue ?? ""
+                        for try await message in reader.messages() {
+                            let text = message.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !text.isEmpty else { continue }
+                            // If the stream comes with participant identity matching the local user, it's user speech
+                            let isUser = participantIdentity == localIdentity
+                            self?.handleTranscription(text, role: isUser ? "user" : "assistant")
+                        }
+                    }
+                }
+            }
+
             do {
                 try await newRoom.localParticipant.setMicrophone(enabled: true)
                 isMicrophoneEnabled = true

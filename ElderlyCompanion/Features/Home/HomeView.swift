@@ -21,6 +21,29 @@ struct HomeView: View {
                 CalmCard {
                     MoodSelector(selectedMood: $selectedMood)
                 }
+                .onChange(of: selectedMood) { _, newMood in
+                    guard let mood = newMood,
+                          let userId = UserDefaults.standard.string(forKey: "userId") else { return }
+                    let score: Int = {
+                        switch mood {
+                        case .great: return 5
+                        case .good: return 4
+                        case .okay: return 3
+                        case .notGreat: return 2
+                        case .bad: return 1
+                        }
+                    }()
+                    let dateStr = {
+                        let f = DateFormatter()
+                        f.dateFormat = "yyyy-MM-dd"
+                        return f.string(from: Date())
+                    }()
+                    Task {
+                        do {
+                            try await APIClient.shared.saveMood(elderlyUserId: userId, date: dateStr, moodScore: score)
+                        } catch { print("[Mood] Save error: \(error)") }
+                    }
+                }
 
                 // Today's reminders
                 remindersCard
