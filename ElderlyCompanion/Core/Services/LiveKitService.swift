@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import LiveKit
 
@@ -8,6 +9,16 @@ final class LiveKitService {
     private(set) var isConnecting: Bool = false
     private(set) var isMicrophoneEnabled: Bool = true
     private(set) var audioLevel: Float = 0.0
+
+    init() {
+        // Use .voiceChat mode with speaker output for optimal echo cancellation.
+        // The default .videoChat mode has weaker AEC, causing the agent to hear its own audio.
+        AudioManager.shared.sessionConfiguration = AudioSessionConfiguration(
+            category: .playAndRecord,
+            categoryOptions: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP, .allowAirPlay],
+            mode: .voiceChat
+        )
+    }
 
     /// Callback for transcriptions: (text, role)
     var onTranscription: ((String, String) -> Void)?
