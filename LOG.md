@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-02-16
+Last updated: 2026-02-16 (evening)
 
 ---
 
@@ -62,28 +62,28 @@ ElderlyCompanion/
   App/
     ElderlyCompanionApp.swift, AppState.swift, RootView.swift, MainTabView.swift, Info.plist
   Core/
-    Models/        User.swift, Call.swift, Reminder.swift, Memory.swift
+    Models/        User.swift, Call.swift, Reminder.swift, Memory.swift, NoahLanguage.swift
     Network/       APIClient.swift (all endpoints, JWT auth, care/people/events/stories/wellbeing)
-    Services/      AuthService, KeychainService, LiveKitService (Realtime + Pipeline transcription),
+    Services/      AuthService, KeychainService, LiveKitService (Realtime + Pipeline transcription, stream dedup),
                    CalendarService, NotificationService, HealthKitService
   Features/
     Home/          HomeView (Talk Now, Talk Now Pipeline, Call Noah), HomeViewModel
     Conversation/  ConversationView (usePipeline flag, voiceId), ConversationViewModel
-    Onboarding/    OnboardingContainerView, Welcome, Profile, Phone, Calendar, Notifs, Legacy
-    Routines/      ScheduledCallsView, RoutinesView
+    Onboarding/    OnboardingContainerView, Welcome, LanguagePicker, Profile, Phone, Calendar, Notifs, Legacy
+    Routines/      ScheduledCallsView (delete w/ trash icon), RoutinesView
     Calendar/      CompanionCalendarView
     CallHistory/   CallHistoryView (fetches real transcripts)
-    Legacy/        LegacyArchiveView (Transcripts/Timeline/Starred tabs), LegacyStoriesView
+    Legacy/        LegacyArchiveView (Transcripts/Timeline/Starred tabs, export button), LegacyStoriesView
     Activity/      ActivityOverviewView
     Health/        HealthSettingsView (Apple Health, live stats, sharing toggles)
     People/        PeopleView (Memory Vault — add/view/remove people with birthdays)
-    Family/        FamilySettingsView (WhatsApp toggles per member)
+    Family/        FamilySettingsView (WhatsApp toggles per member, auto-creates user record for inbound calls)
     Dashboard/     CaretakerDashboardView (mood, activity, concerns, topics)
     Care/          CareOrchestrationView, EscalationRulesView, OutreachLogView
     Safety/        SafetyView, EscalationView
     Privacy/       PrivacyView
-    AISettings/    AISettingsView (voice picker, tone, proactive level), AIMemoryView
-    Settings/      SettingsHubView, ThemePickerView
+    AISettings/    AISettingsView (language picker, voice picker, tone, proactive level), AIMemoryView
+    Settings/      SettingsHubView (LazyView navigation), ThemePickerView
   Shared/
     Theme/         Theme.swift (design tokens, colors, typography)
     Components/    CalmCard, MoodSelector, LargeButton, TagBadge
@@ -104,7 +104,7 @@ server/src/
     index.ts                  # PostgreSQL pool + Drizzle
   routes/
     otp.ts, livekit.ts, users.ts, memory.ts, transcripts.ts, scheduled-calls.ts,
-    health.ts, family.ts, people.ts, events.ts, legacy-stories.ts, wellbeing.ts, care.ts
+    health.ts, family.ts (auto-creates user on add), people.ts, events.ts, legacy-stories.ts, wellbeing.ts, care.ts
 
 elderly-livekit-server-python/
   main.py                     # Entrypoint: routes Realtime vs Pipeline via dispatch metadata
@@ -162,6 +162,7 @@ elderly-livekit-server-python/
 | role | TEXT | "elderly" / "family" / "caretaker" |
 | linked_elderly_id | UUID | FK -> users.id (for family/caretaker) |
 | access_level | TEXT | "full" / "stories_only" / "health_only" / "dashboard_only" |
+| language | TEXT | default "nl" (ISO code: nl, en, de, fr, es, tr) |
 | notifications_enabled | BOOLEAN | default true |
 | proactive_calls_enabled | BOOLEAN | default true |
 
@@ -359,3 +360,83 @@ ZEP_API_KEY, N8N_API_KEY, N8N_URL, PERPLEXITY_API_KEY, TMDB_API_KEY
 | Supabase Audio Storage | DONE (wiring) |
 | Latency Optimizations | DONE |
 | Outbound Callback Fix | DONE |
+| Transcript Deduplication (stream ID-based) | DONE |
+| Transcript Export (ShareLink on cards) | DONE |
+| Delete Scheduled Calls (trash icon + confirm) | DONE |
+| Settings Navigation Lag Fix (LazyView) | DONE |
+| Family Member Inbound Calls (auto-create user) | DONE |
+| Language Preference (6 languages, onboarding + settings + agent) | DONE |
+| Realtime + Phone Callback Audio Fix | DONE |
+| VAD Self-Interruption Fix | DONE |
+| Outbound Call User Identification | DONE |
+
+---
+
+## Known Issues (2026-02-16)
+
+### RESOLVED: All Voice Modes Were Silent
+- **Root cause**: `_create_zep_session` crashed with Zep 404 (API key changed) and had no try/except. Error propagated through `asyncio.gather` and killed the entire entrypoint before any voice session started.
+- **Fix**: Wrapped `_create_zep_session` in try/except (non-fatal). Updated Zep API key on Railway.
+- **Additional fixes**: SIP phone number lookup also wrapped in try/except; outbound calls now extract userId from room name (`call-{userId}`) instead of searching by phone number.
+
+### Realtime VAD Self-Interruption
+- **Symptom**: Noah interrupts itself when speaking (picks up its own audio as user speech)
+- **Fix**: Raised `threshold` from 0.5→0.7 and `prefix_padding_ms` from 200→300ms
+
+### Pipeline Mode Not Working
+- **Likely cause**: Missing `DEEPGRAM_API_KEY` and/or `ELEVEN_API_KEY` on Railway
+- **Status**: Added validation logging. User needs to add both keys to Railway env vars.
+
+---
+
+## Recent Changes (2026-02-16 session)
+
+### Transcript Deduplication
+- Pipeline transcriptions were showing 2-4x duplicate messages (interim STT results treated as final)
+- Fix: Track `TextStreamInfo.id` in a `Set<String>`, skip streams with already-seen IDs
+- Clear set on disconnect
+
+### Transcript Export
+- Each transcript card in Memories now has an **Export** button (share icon)
+- Opens iOS share sheet with formatted text: date, duration, summary, full conversation
+- Can save to Files, share via Messages/WhatsApp/Email, AirDrop, etc.
+
+### Delete Scheduled Calls
+- Red trash icon on each scheduled call row
+- Confirmation dialog before deletion
+- Calls `DELETE /scheduled-calls/:id` API endpoint
+
+### Settings Navigation Lag Fix
+- `NavigationLink` was eagerly creating ALL destination views on settings screen load
+- Added `LazyView` wrapper to defer creation until user actually taps the row
+- Settings screen now feels instant
+
+### Family Member Inbound Calls
+- When a family member is added via the app, a `users` record is now auto-created with `type: "family_member"` and `linkedElderlyId`
+- When that person calls the Twilio number, the agent finds them via phone number lookup and routes to `OnboardingAgent`
+- No app needed on the family member's end — just the phone number
+
+### Language Preference
+- New `NoahLanguage` model with 6 options: Nederlands, English, Deutsch, Français, Español, Türkçe
+- Language picker in onboarding (right after welcome, before profile)
+- Language picker in Settings > Personality (above voice selector)
+- Stored in UserDefaults + `language` column on `users` table (defaults to `"nl"`)
+- Agent reads user's language → sets system prompt `{language}` placeholder, STT language (Deepgram/Whisper), TTS language (ElevenLabs)
+
+### Railway Instance Cleanup
+- Had two `elderly-livekit-server-python` instances on Railway (caused random routing between potentially different versions)
+- Deleted both instances, recreated fresh from Git with correct env vars
+
+### Zep Crash Fix (all modes silent)
+- `_create_zep_session` had no try/except — Zep 404 error killed entire entrypoint via `asyncio.gather`
+- Wrapped in try/except so agent works even if Zep is down (just without cross-session memory)
+- Updated Zep API key (old one was expired)
+
+### VAD Self-Interruption Fix
+- Realtime mode: `threshold` 0.5→0.7, `prefix_padding_ms` 200→300, `silence_duration_ms` 350→400
+- Prevents Noah from interrupting itself when its own audio bleeds into the mic
+
+### Outbound Call User Identification Fix
+- "Call Noah" and scheduled calls create room `call-{userId}` — agent now extracts userId from room name directly
+- Previously relied on phone number search which was 404ing (phone format mismatch)
+- Noah now correctly loads the user's name, language, memory, and context on outbound calls
