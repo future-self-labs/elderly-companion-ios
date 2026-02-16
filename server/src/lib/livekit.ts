@@ -23,6 +23,7 @@ function getSipTrunkId(): string {
 export async function generateTokenAndDispatch(userId: string): Promise<{ token: string; roomName: string }> {
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
+  const livekitUrl = requireEnv("LIVEKIT_URL");
   const agentName = getAgentName();
 
   const roomName = uuidv4();
@@ -37,15 +38,12 @@ export async function generateTokenAndDispatch(userId: string): Promise<{ token:
     roomJoin: true,
   });
 
-  // Single dispatch via roomConfig — do NOT also call createDispatch
-  // or two agents will join the same room and talk over each other
-  at.roomConfig = new RoomConfiguration({
-    agents: [
-      new RoomAgentDispatch({ agentName }),
-    ],
-  });
-
   const token = await at.toJwt();
+
+  // Single explicit dispatch only (no roomConfig — it caused double agents)
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+  await agentDispatchClient.createDispatch(roomName, agentName);
+
   return { token, roomName };
 }
 
@@ -56,6 +54,7 @@ export async function generateTokenAndDispatch(userId: string): Promise<{ token:
 export async function generatePipelineTokenAndDispatch(userId: string, voiceId?: string): Promise<{ token: string; roomName: string }> {
   const apiKey = requireEnv("LIVEKIT_API_KEY");
   const apiSecret = requireEnv("LIVEKIT_API_SECRET");
+  const livekitUrl = requireEnv("LIVEKIT_URL");
   const agentName = getAgentName();
 
   const roomName = uuidv4();
@@ -76,15 +75,12 @@ export async function generatePipelineTokenAndDispatch(userId: string, voiceId?:
     roomJoin: true,
   });
 
-  // Single dispatch via roomConfig — do NOT also call createDispatch
-  // or two agents will join the same room and talk over each other
-  at.roomConfig = new RoomConfiguration({
-    agents: [
-      new RoomAgentDispatch({ agentName, metadata }),
-    ],
-  });
-
   const token = await at.toJwt();
+
+  // Single explicit dispatch only (no roomConfig — it caused double agents)
+  const agentDispatchClient = new AgentDispatchClient(livekitUrl, apiKey, apiSecret);
+  await agentDispatchClient.createDispatch(roomName, agentName, { metadata });
+
   return { token, roomName };
 }
 
