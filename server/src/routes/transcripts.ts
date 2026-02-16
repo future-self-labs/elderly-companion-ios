@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { eq, desc } from "drizzle-orm";
 import { db } from "../db";
 import { transcripts } from "../db/schema";
+import { uploadConversationAudio } from "../lib/supabase";
 
 const app = new Hono();
 
@@ -85,6 +86,51 @@ app.get("/:userId/:transcriptId", async (c) => {
   } catch (error) {
     console.error("Error fetching transcript:", error);
     return c.json({ error: "Failed to fetch transcript" }, 500);
+  }
+});
+
+/**
+ * POST /transcripts/:transcriptId/audio
+ * Upload conversation audio for a transcript.
+ * Body: raw audio bytes (Content-Type: audio/webm)
+ */
+app.post("/:transcriptId/audio", async (c) => {
+  const transcriptId = c.req.param("transcriptId");
+
+  try {
+    // Get the transcript to find the userId
+    const [transcript] = await db
+      .select()
+      .from(transcripts)
+      .where(eq(transcripts.id, transcriptId))
+      .limit(1);
+
+    if (!transcript) {
+      return c.json({ error: "Transcript not found" }, 404);
+    }
+
+    const audioData = await c.req.arrayBuffer();
+    const audioUrl = await uploadConversationAudio(
+      transcript.userId,
+      transcriptId,
+      Buffer.from(audioData)
+    );
+
+    if (!audioUrl) {
+      return c.json({ error: "Failed to upload audio" }, 500);
+    }
+
+    // Update transcript with audio URL
+    const [updated] = await db
+      .update(transcripts)
+      .set({ audioUrl })
+      .where(eq(transcripts.id, transcriptId))
+      .returning();
+
+    return c.json({ audioUrl: updated.audioUrl });
+  } catch (error) {
+    console.error("Error uploading audio:", error);
+    return c.json({ error: "Failed to upload audio" }, 500);
   }
 });
 

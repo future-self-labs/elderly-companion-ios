@@ -15,6 +15,10 @@ import { transcriptRoutes } from "./routes/transcripts";
 import { scheduledCallRoutes, startScheduler } from "./routes/scheduled-calls";
 import { familyRoutes } from "./routes/family";
 import { healthRoutes } from "./routes/health";
+import { peopleRoutes } from "./routes/people";
+import { eventRoutes } from "./routes/events";
+import { legacyStoryRoutes } from "./routes/legacy-stories";
+import { wellbeingRoutes } from "./routes/wellbeing";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -44,6 +48,13 @@ app.route("/transcripts", transcriptRoutes);
 app.route("/scheduled-calls", scheduledCallRoutes);
 app.route("/family", familyRoutes);
 app.route("/health-data", healthRoutes);
+
+// Memory Vault routes (people, events, stories, wellbeing)
+// Accessible by elderly users, family members, and caretakers
+app.route("/people", peopleRoutes);
+app.route("/events", eventRoutes);
+app.route("/legacy-stories", legacyStoryRoutes);
+app.route("/wellbeing", wellbeingRoutes);
 
 // Start server
 const port = Number(process.env.PORT) || 3000;

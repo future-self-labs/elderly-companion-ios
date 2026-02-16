@@ -347,6 +347,145 @@ actor APIClient {
         try await delete("/family/\(id)")
     }
 
+    // MARK: - People (Memory Vault)
+
+    struct PersonRequest: Encodable {
+        let elderlyUserId: String
+        let addedByUserId: String?
+        let name: String
+        let nickname: String?
+        let relationship: String
+        let phoneNumber: String?
+        let email: String?
+        let birthDate: String?
+        let notes: String?
+    }
+
+    struct PersonRecord: Decodable, Identifiable {
+        let id: String
+        let elderlyUserId: String
+        let addedByUserId: String?
+        let name: String
+        let nickname: String?
+        let relationship: String
+        let phoneNumber: String?
+        let email: String?
+        let birthDate: String?
+        let notes: String?
+        let photoUrl: String?
+        let createdAt: String
+    }
+
+    struct PeopleResponse: Decodable {
+        let people: [PersonRecord]
+    }
+
+    func createPerson(_ request: PersonRequest) async throws -> PersonRecord {
+        try await post("/people", body: request)
+    }
+
+    func getPeople(elderlyUserId: String) async throws -> [PersonRecord] {
+        let response: PeopleResponse = try await get("/people/\(elderlyUserId)")
+        return response.people
+    }
+
+    func deletePerson(id: String) async throws {
+        try await delete("/people/\(id)")
+    }
+
+    // MARK: - Events
+
+    struct EventRequest: Encodable {
+        let elderlyUserId: String
+        let personId: String?
+        let type: String
+        let title: String
+        let date: String
+        let recurring: Bool
+        let remindDaysBefore: Int
+    }
+
+    struct EventRecord: Decodable, Identifiable {
+        let id: String
+        let elderlyUserId: String
+        let personId: String?
+        let type: String
+        let title: String
+        let date: String
+        let recurring: Bool
+        let remindDaysBefore: Int
+        let createdAt: String
+        let daysUntil: Int?
+    }
+
+    struct EventsResponse: Decodable {
+        let events: [EventRecord]
+    }
+
+    func createEvent(_ request: EventRequest) async throws -> EventRecord {
+        try await post("/events", body: request)
+    }
+
+    func getEvents(elderlyUserId: String) async throws -> [EventRecord] {
+        let response: EventsResponse = try await get("/events/\(elderlyUserId)")
+        return response.events
+    }
+
+    func getUpcomingEvents(elderlyUserId: String, days: Int = 7) async throws -> [EventRecord] {
+        let response: EventsResponse = try await get("/events/\(elderlyUserId)/upcoming", queryItems: [URLQueryItem(name: "days", value: "\(days)")])
+        return response.events
+    }
+
+    func deleteEvent(id: String) async throws {
+        try await delete("/events/\(id)")
+    }
+
+    // MARK: - Legacy Stories
+
+    struct LegacyStoryRecord: Decodable, Identifiable {
+        let id: String
+        let elderlyUserId: String
+        let transcriptId: String?
+        let title: String
+        let summary: String?
+        let audioUrl: String?
+        let audioDuration: Int?
+        let tags: [String]
+        let peopleMentioned: [String]
+        let isStarred: Bool
+        let createdAt: String
+    }
+
+    struct LegacyStoriesResponse: Decodable {
+        let stories: [LegacyStoryRecord]
+    }
+
+    func getLegacyStories(elderlyUserId: String) async throws -> [LegacyStoryRecord] {
+        let response: LegacyStoriesResponse = try await get("/legacy-stories/\(elderlyUserId)")
+        return response.stories
+    }
+
+    // MARK: - Wellbeing
+
+    struct WellbeingSummaryResponse: Decodable {
+        let summary: WellbeingSummary?
+    }
+
+    struct WellbeingSummary: Decodable {
+        let period: String
+        let averageMoodScore: Double?
+        let totalConversations: Int
+        let totalMinutes: Int
+        let activeDays: Int
+        let concerns: [String]
+        let topTopics: [String]
+    }
+
+    func getWellbeingSummary(elderlyUserId: String) async throws -> WellbeingSummary? {
+        let response: WellbeingSummaryResponse = try await get("/wellbeing/\(elderlyUserId)/summary")
+        return response.summary
+    }
+
     // MARK: - Private helpers
 
     private func buildRequest(path: String, method: String, queryItems: [URLQueryItem]? = nil) throws -> URLRequest {

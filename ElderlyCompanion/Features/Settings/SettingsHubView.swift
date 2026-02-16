@@ -58,10 +58,19 @@ struct SettingsHubView: View {
                     }
                 }
 
-                // People
-                SettingsSection(title: "People") {
-                    SettingsRow(title: "Family Circle", icon: "person.3.fill", color: .companionPrimary) {
+                // People & Memory
+                SettingsSection(title: "People & Memory") {
+                    SettingsRow(title: "Memory Vault — People", icon: "person.text.rectangle.fill", color: .companionPrimary) {
+                        PeopleView()
+                    }
+                    SettingsRow(title: "Family Circle", icon: "person.3.fill", color: .companionSecondary) {
                         FamilySettingsView()
+                    }
+                    SettingsRow(title: "Legacy Stories", icon: "book.fill", color: .companionInfo) {
+                        LegacyStoriesView()
+                    }
+                    SettingsRow(title: "Wellbeing Dashboard", icon: "chart.line.uptrend.xyaxis", color: .companionSuccess) {
+                        CaretakerDashboardView()
                     }
                     SettingsRow(title: "Emergency Contacts", icon: "staroflife.fill", color: .companionDanger) {
                         EscalationView()

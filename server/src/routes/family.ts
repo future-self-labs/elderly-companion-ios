@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "../db";
-import { familyContacts, users, transcripts } from "../db/schema";
+import { familyContacts, users, transcripts, legacyStories, wellbeingLogs } from "../db/schema";
 import { getTwilioClient } from "../lib/twilio";
 import { getZepClient } from "../lib/zep";
 import { getHealthSummary } from "./health";
@@ -199,9 +199,108 @@ async function buildDailySummary(userId: string, userName: string): Promise<stri
     summary += `💭 *Hoe het gaat:*\n${contextSnippet}\n\n`;
   }
 
+  // Add wellbeing trend if available
+  try {
+    const [todayLog] = await db
+      .select()
+      .from(wellbeingLogs)
+      .where(eq(wellbeingLogs.elderlyUserId, userId))
+      .orderBy(desc(wellbeingLogs.date))
+      .limit(1);
+
+    if (todayLog?.moodScore) {
+      const moodEmojis = ["", "😢", "😔", "😐", "🙂", "😊"];
+      summary += `${moodEmojis[todayLog.moodScore] || "🙂"} *Stemming:* ${todayLog.moodScore}/5\n`;
+    }
+
+    if (todayLog?.concerns && (todayLog.concerns as string[]).length > 0) {
+      summary += `⚠️ *Aandachtspunten:* ${(todayLog.concerns as string[]).join(", ")}\n`;
+    }
+  } catch (e) {
+    console.error("[DailyUpdate] Error fetching wellbeing:", e);
+  }
+
+  summary += `\n`;
+
+  // Add new legacy stories from today
+  try {
+    const todayStories = await db
+      .select()
+      .from(legacyStories)
+      .where(eq(legacyStories.elderlyUserId, userId))
+      .orderBy(desc(legacyStories.createdAt))
+      .limit(3);
+
+    const recentStories = todayStories.filter((s) => {
+      const created = new Date(s.createdAt);
+      return created >= today;
+    });
+
+    if (recentStories.length > 0) {
+      summary += `📖 *Nieuwe verhalen vandaag:*\n`;
+      for (const story of recentStories) {
+        summary += `• "${story.title}"`;
+        if (story.summary) {
+          summary += ` — ${story.summary.substring(0, 100)}`;
+        }
+        summary += `\n`;
+      }
+      summary += `\n`;
+    }
+  } catch (e) {
+    console.error("[DailyUpdate] Error fetching stories:", e);
+  }
+
   summary += `_Verstuurd door Noah AI Companion_`;
 
   return summary;
+}
+
+/**
+ * Send a WhatsApp notification when a new legacy story is created.
+ */
+export async function sendStoryNotification(
+  elderlyUserId: string,
+  storyTitle: string,
+  storySummary?: string
+): Promise<number> {
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, elderlyUserId))
+    .limit(1);
+
+  if (!user) return 0;
+
+  const contacts = await db
+    .select()
+    .from(familyContacts)
+    .where(eq(familyContacts.userId, elderlyUserId));
+
+  const whatsappContacts = contacts.filter((c) => c.whatsappUpdatesEnabled);
+  if (whatsappContacts.length === 0) return 0;
+
+  const message = `📖 *Nieuw verhaal van ${user.name}*\n\n"${storyTitle}"${storySummary ? `\n\n${storySummary.substring(0, 200)}` : ""}\n\n_Open de Noah app om het volledige verhaal te lezen of beluisteren._`;
+
+  const twilio = getTwilioClient();
+  const fromNumber = `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_PHONE_NUMBER}`;
+  let sentCount = 0;
+
+  for (const contact of whatsappContacts) {
+    try {
+      await twilio.messages.create({
+        body: message,
+        from: fromNumber,
+        to: `whatsapp:${contact.phoneNumber}`,
+      });
+      console.log(`[StoryNotif] Sent to ${contact.name}`);
+      sentCount++;
+    } catch (error: any) {
+      console.error(`[StoryNotif] Failed for ${contact.name}:`, error.message);
+    }
+  }
+
+  return sentCount;
 }
 
 /**
