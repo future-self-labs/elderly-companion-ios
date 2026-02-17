@@ -484,6 +484,23 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - Removed `roomConfig.agents` entirely — now uses single explicit `createDispatch()` only
 - "Call Noah" was never affected (always used single dispatch)
 
+### Demo Hotfix: In-App Self-Interruption (Talk Now + Pipeline)
+- Added app-side mic gating in `LiveKitService`: while remote participant is speaking, local mic auto-mutes; when remote stops, mic auto-unmutes
+- This prevents speaker-loop acoustic feedback from being interpreted as user speech
+- Manual mute intent is preserved (`userRequestedMicEnabled`)
+- Result: stable half-duplex behavior in app sessions for demo reliability
+
+### Family Member Caller Update Flow
+- For inbound family-member calls (`type == "family_member"`), agent now builds a concise `family_update_brief` from:
+  - `/wellbeing/:elderlyUserId/summary`
+  - `/health-data/:elderlyUserId` (latest snapshot)
+  - `/transcripts/:elderlyUserId` (latest summary if present)
+- `OnboardingAgent` now starts by sharing a brief status update when this context exists, then asks if caller wants more details or to share updates
+
+### Language Robustness Improvements
+- Added language code normalization (`nl/en/de/fr/es/tr`, fallback `nl`) before STT/TTS/system prompt usage
+- Added safer name fallback in agent prompts (prevents awkward "the user"/empty name phrasing)
+
 ### Greeting Language Fix
 - `generate_reply()` instruction changed from English to user's language: `"Greet the user warmly in {language}"`
 - Removed English scaffolding text from ChatContext (skills, people, events) — now bare XML tags only
