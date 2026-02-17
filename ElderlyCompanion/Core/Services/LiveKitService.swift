@@ -9,8 +9,6 @@ final class LiveKitService {
     private(set) var isConnecting: Bool = false
     private(set) var isMicrophoneEnabled: Bool = true
     private(set) var audioLevel: Float = 0.0
-    private var userRequestedMicEnabled: Bool = true
-    private var autoMutedForRemoteSpeech: Bool = false
 
     init() {
         // Use .voiceChat mode with speaker output for optimal echo cancellation.
@@ -98,8 +96,6 @@ final class LiveKitService {
             do {
                 try await newRoom.localParticipant.setMicrophone(enabled: true)
                 isMicrophoneEnabled = true
-                userRequestedMicEnabled = true
-                autoMutedForRemoteSpeech = false
             } catch {
                 print("[LiveKit] Microphone enable failed: \(error)")
                 isMicrophoneEnabled = false
@@ -122,16 +118,13 @@ final class LiveKitService {
         audioLevel = 0.0
         onTranscription = nil
         seenTranscriptionIds.removeAll()
-        userRequestedMicEnabled = true
-        autoMutedForRemoteSpeech = false
     }
 
     func toggleMicrophone() async throws {
         guard let room else { return }
-        userRequestedMicEnabled.toggle()
-        let shouldEnableNow = userRequestedMicEnabled && !autoMutedForRemoteSpeech
-        try await room.localParticipant.setMicrophone(enabled: shouldEnableNow)
-        isMicrophoneEnabled = shouldEnableNow
+        let newState = !isMicrophoneEnabled
+        try await room.localParticipant.setMicrophone(enabled: newState)
+        isMicrophoneEnabled = newState
     }
 
     func requestCall(to phoneNumber: String, userId: String, message: String? = nil) async throws {
@@ -150,34 +143,6 @@ final class LiveKitService {
         onTranscription?(text, role)
     }
 
-    fileprivate func handleSpeakingParticipants(room: Room, participants: [Participant]) {
-        let localIdentity = room.localParticipant.identity?.stringValue ?? ""
-        let hasRemoteSpeaker = participants.contains { participant in
-            (participant.identity?.stringValue ?? "") != localIdentity
-        }
-
-        Task { @MainActor in
-            guard self.userRequestedMicEnabled else { return }
-
-            if hasRemoteSpeaker && !self.autoMutedForRemoteSpeech {
-                do {
-                    try await room.localParticipant.setMicrophone(enabled: false)
-                    self.autoMutedForRemoteSpeech = true
-                    self.isMicrophoneEnabled = false
-                } catch {
-                    print("[LiveKit] Auto-mute failed: \(error)")
-                }
-            } else if !hasRemoteSpeaker && self.autoMutedForRemoteSpeech {
-                do {
-                    try await room.localParticipant.setMicrophone(enabled: true)
-                    self.autoMutedForRemoteSpeech = false
-                    self.isMicrophoneEnabled = true
-                } catch {
-                    print("[LiveKit] Auto-unmute failed: \(error)")
-                }
-            }
-        }
-    }
 }
 
 // MARK: - Room Delegate Handler
@@ -204,9 +169,6 @@ private class RoomDelegateHandler: RoomDelegate {
         }
     }
 
-    nonisolated func room(_ room: Room, didUpdateSpeakingParticipants participants: [Participant]) {
-        service?.handleSpeakingParticipants(room: room, participants: participants)
-    }
 
     // MARK: - Pipeline transcriptions (TranscriptionSegments — new LiveKit streaming API)
 
