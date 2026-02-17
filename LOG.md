@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-02-16 (evening)
+Last updated: 2026-02-16 (late night)
 
 ---
 
@@ -293,9 +293,27 @@ elderly-livekit-server-python/
 
 ## Voice Architecture
 
-### Two Modes (routed via dispatch metadata)
-1. **Realtime** ("Talk Now"): `openai.realtime.RealtimeModel(voice="ash")` — lowest latency
-2. **Pipeline** ("Talk Now Pipeline"): `deepgram.STT` + `openai.LLM(gpt-4o-mini)` + `elevenlabs.TTS` — configurable voice, better transcripts
+### Three Modes
+| Mode | Button | Tech | Interruptions | Echo Handling |
+|------|--------|------|---------------|---------------|
+| **Realtime** | "Talk Now" | OpenAI Realtime API (all-in-one) | Yes | OpenAI built-in + iOS .voiceChat AEC |
+| **Pipeline** | "Talk Now (Pipeline)" | Deepgram STT → GPT-4o-mini → ElevenLabs TTS | Yes (min 0.8s) | iOS .voiceChat AEC + server BVC |
+| **Phone** | "Call Noah" | OpenAI Realtime via Twilio SIP | Yes | Telephony hardware AEC (best) |
+
+### Agent Dispatch (IMPORTANT)
+- In-app modes: Single `createDispatch()` API call per room. Do NOT combine with `roomConfig.agents` in the JWT — that causes double agent dispatch (two agents in one room).
+- Phone mode: Single `createDispatch()` then `createSipParticipant()`. Room name `call-{userId}`.
+- Agent name: `"noah"` — all modes use the same agent, routed via dispatch metadata.
+
+### iOS Audio Configuration
+- `AudioManager.shared.sessionConfiguration` set to `.voiceChat` mode with `.defaultToSpeaker`
+- This activates Apple's aggressive AEC (same as FaceTime/Phone app)
+- Default `.videoChat` mode has weaker echo cancellation — do NOT use it
+
+### Turn Detection
+- **Realtime**: OpenAI server_vad (threshold=0.6, prefix_padding=300ms, silence=500ms)
+- **Pipeline**: Silero VAD (min_silence=0.5s) + min_interruption_duration=0.8s + min_endpointing_delay=0.5s
+- **Phone**: Same as Realtime
 
 ### Voice Selection
 - 6 ElevenLabs voices selectable in Settings > Personality
@@ -303,9 +321,10 @@ elderly-livekit-server-python/
 - Only affects Pipeline mode
 
 ### Prompt Architecture
-- **System prompt** (`system.txt`, ~600 chars): Identity + personality, processed every turn
+- **System prompt** (`system.txt`, ~600 chars): Identity + personality + language, processed every turn
 - **Skills** (13 files in `prompts/skills/`): Loaded once into ChatContext at session start
-- **Memory context**: Zep facts + people network + upcoming events injected at session start
+- **Memory context**: Zep facts + people network + upcoming events injected via XML tags (language-neutral)
+- **Greeting**: `generate_reply()` instruction explicitly in user's language
 
 ---
 
@@ -322,11 +341,13 @@ SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 ### LiveKit Agent (Railway: elderly-livekit-server-python)
 ```
-API_URL, ELDERLY_COMPANION_API
-LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL
+API_URL=https://elderly-companion-api-production.up.railway.app/api/v1
+ELDERLY_COMPANION_API=https://elderly-companion-api-production.up.railway.app/api/v1
+LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL=wss://test-7hm3rr9r.livekit.cloud
 OPENAI_API_KEY, DEEPGRAM_API_KEY, ELEVEN_API_KEY
-ZEP_API_KEY, N8N_API_KEY, N8N_URL, PERPLEXITY_API_KEY, TMDB_API_KEY
+ZEP_API_KEY, PERPLEXITY_API_KEY, TMDB_API_KEY
 ```
+Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are required for Pipeline mode.
 
 ---
 
@@ -367,25 +388,34 @@ ZEP_API_KEY, N8N_API_KEY, N8N_URL, PERPLEXITY_API_KEY, TMDB_API_KEY
 | Family Member Inbound Calls (auto-create user) | DONE |
 | Language Preference (6 languages, onboarding + settings + agent) | DONE |
 | Realtime + Phone Callback Audio Fix | DONE |
-| VAD Self-Interruption Fix | DONE |
+| VAD & Turn Detection Tuning | DONE |
 | Outbound Call User Identification | DONE |
+| iOS Echo Cancellation (.voiceChat mode) | DONE |
+| Double Agent Dispatch Fix | DONE |
+| Greeting Language Fix (per-user language) | DONE |
+| Error Handling Hardening (Zep, SIP, sessions) | DONE |
 
 ---
 
 ## Known Issues (2026-02-16)
 
 ### RESOLVED: All Voice Modes Were Silent
-- **Root cause**: `_create_zep_session` crashed with Zep 404 (API key changed) and had no try/except. Error propagated through `asyncio.gather` and killed the entire entrypoint before any voice session started.
-- **Fix**: Wrapped `_create_zep_session` in try/except (non-fatal). Updated Zep API key on Railway.
-- **Additional fixes**: SIP phone number lookup also wrapped in try/except; outbound calls now extract userId from room name (`call-{userId}`) instead of searching by phone number.
+- **Root cause**: `_create_zep_session` crashed with Zep 404 (API key changed) and had no try/except.
+- **Fix**: Wrapped in try/except (non-fatal). Updated Zep API key on Railway.
 
-### Realtime VAD Self-Interruption
-- **Symptom**: Noah interrupts itself when speaking (picks up its own audio as user speech)
-- **Fix**: Raised `threshold` from 0.5→0.7 and `prefix_padding_ms` from 200→300ms
+### RESOLVED: Double Agent Dispatch (two AIs in same room)
+- **Root cause**: `generateTokenAndDispatch` and `generatePipelineTokenAndDispatch` dispatched agents TWICE — once via `roomConfig.agents` in the JWT token, once via explicit `createDispatch()`. Both succeeded, two agents joined, talked over each other.
+- **Fix**: Removed `roomConfig.agents`, use single explicit `createDispatch()` only. "Call Noah" was never affected (only uses one dispatch).
+- **IMPORTANT**: Never combine `roomConfig.agents` with `createDispatch()` — it causes double agents.
 
-### Pipeline Mode Not Working
-- **Likely cause**: Missing `DEEPGRAM_API_KEY` and/or `ELEVEN_API_KEY` on Railway
-- **Status**: Added validation logging. User needs to add both keys to Railway env vars.
+### RESOLVED: Self-Interruption (echo)
+- **Root cause**: iOS audio session defaulted to `.videoChat` mode with weak echo cancellation.
+- **Fix**: Set `AudioManager.shared.sessionConfiguration` to `.voiceChat` mode with `.defaultToSpeaker`. Plus server-side: Realtime VAD threshold=0.6, Pipeline min_interruption_duration=0.8s.
+
+### OPEN: "Call Noah" sometimes starts in English
+- **Symptom**: Phone calls occasionally greet in English and say "the user" instead of the real name.
+- **Likely cause**: User data lookup returning incomplete data (missing name/language fields). Added logging to diagnose.
+- **Status**: Investigating via Railway logs.
 
 ---
 
@@ -432,11 +462,41 @@ ZEP_API_KEY, N8N_API_KEY, N8N_URL, PERPLEXITY_API_KEY, TMDB_API_KEY
 - Wrapped in try/except so agent works even if Zep is down (just without cross-session memory)
 - Updated Zep API key (old one was expired)
 
-### VAD Self-Interruption Fix
-- Realtime mode: `threshold` 0.5→0.7, `prefix_padding_ms` 200→300, `silence_duration_ms` 350→400
-- Prevents Noah from interrupting itself when its own audio bleeds into the mic
+### VAD & Turn Detection Tuning
+- Realtime mode: server_vad threshold=0.6, prefix_padding=300ms, silence_duration=500ms, min_interruption_duration=0.6s
+- Pipeline mode: Silero VAD (min_silence=0.5s), min_interruption_duration=0.8s, min_endpointing_delay=0.5s
+- Tried EOUPlugin turn detector — doesn't exist in livekit-agents ~1.1.4 (it's `EOUPlugin`, not `MultilingualModel`)
+- EOUPlugin got confused by echo-transcribed STT output; reverted to VAD-only for Pipeline
 
 ### Outbound Call User Identification Fix
 - "Call Noah" and scheduled calls create room `call-{userId}` — agent now extracts userId from room name directly
 - Previously relied on phone number search which was 404ing (phone format mismatch)
 - Noah now correctly loads the user's name, language, memory, and context on outbound calls
+
+### iOS Echo Cancellation Fix
+- Set `AudioManager.shared.sessionConfiguration` to `.voiceChat` mode with `.defaultToSpeaker`
+- LiveKit SDK defaults to `.videoChat` mode for speaker, which has weaker AEC
+- `.voiceChat` activates Apple's aggressive echo cancellation (same as FaceTime/Phone app)
+
+### Double Agent Dispatch Fix
+- `generateTokenAndDispatch` and `generatePipelineTokenAndDispatch` were dispatching agents TWICE (roomConfig + createDispatch)
+- When both succeeded, two agents joined the same room and talked over each other
+- Removed `roomConfig.agents` entirely — now uses single explicit `createDispatch()` only
+- "Call Noah" was never affected (always used single dispatch)
+
+### Greeting Language Fix
+- `generate_reply()` instruction changed from English to user's language: `"Greet the user warmly in {language}"`
+- Removed English scaffolding text from ChatContext (skills, people, events) — now bare XML tags only
+- Events no longer announced upfront (removed "mention these naturally" English instruction)
+
+### Error Handling Hardening
+- `_create_zep_session` wrapped in try/except (was crashing entire entrypoint)
+- SIP phone number lookup wrapped in try/except (was crashing on unknown callers)
+- Pipeline session creation wrapped in try/except with API key validation logging
+- Realtime session, `session.start()`, and `generate_reply()` all wrapped with traceback logging
+
+### Railway Deployment Notes
+- Nuked and recreated `elderly-livekit-server-python` service from Git
+- Disabled "Wait for CI" on `elderly-companion-api` (was blocking deploys with no GitHub Actions configured)
+- Updated Zep API key (old one expired)
+- N8N no longer used (env vars removed)
