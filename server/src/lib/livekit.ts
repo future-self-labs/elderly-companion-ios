@@ -1,4 +1,3 @@
-import { RoomAgentDispatch, RoomConfiguration } from "@livekit/protocol";
 import { AccessToken, SipClient, AgentDispatchClient } from "livekit-server-sdk";
 import { v4 as uuidv4 } from "uuid";
 
