@@ -6,7 +6,9 @@ struct HomeView: View {
     @State private var selectedMood: Mood?
     @State private var showConversation = false
     @State private var showPipelineConversation = false
+    @State private var showElevenLabsAgentConversation = false
     @State private var calendarService = CalendarService()
+    private let elevenLabsAgentId = "DKL2sCrmpji2Necnar8f"
 
     var body: some View {
         ScrollView {
@@ -68,6 +70,13 @@ struct HomeView: View {
         }
         .fullScreenCover(isPresented: $showPipelineConversation) {
             ConversationView(usePipeline: true)
+                .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showElevenLabsAgentConversation) {
+            ConversationView(
+                usePipeline: true,
+                pipelineVoiceIdOverride: elevenLabsAgentId
+            )
                 .environment(appState)
         }
         .alert("Call Failed", isPresented: $showCallAlert) {
@@ -166,6 +175,27 @@ struct HomeView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Talk to Noah using pipeline voice")
+
+            // Dedicated ElevenLabs mode with fixed agent/voice ID
+            Button {
+                showElevenLabsAgentConversation = true
+            } label: {
+                HStack(spacing: CompanionTheme.Spacing.md) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 22, weight: .bold))
+
+                    Text("Talk Now (11labs Agent)")
+                        .font(.companionHeadline)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 72)
+                .background(Color.purple)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: CompanionTheme.Radius.xl))
+                .shadow(color: Color.purple.opacity(0.3), radius: 8, y: 3)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Talk to Noah using direct ElevenLabs agent mode")
 
             // Secondary: Call AI (phone call)
             LargeButton("Call Noah", icon: "phone.fill", style: .secondary) {

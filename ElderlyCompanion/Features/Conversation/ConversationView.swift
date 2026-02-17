@@ -7,6 +7,8 @@ struct ConversationView: View {
 
     /// Set to true to use the pipeline agent (Deepgram + GPT-4o-mini + ElevenLabs)
     var usePipeline: Bool = false
+    /// Optional explicit ElevenLabs voice/agent identifier for a dedicated mode
+    var pipelineVoiceIdOverride: String? = nil
 
     var body: some View {
         ZStack {
@@ -38,7 +40,7 @@ struct ConversationView: View {
         .onAppear {
             viewModel.usePipeline = usePipeline
             if usePipeline {
-                viewModel.voiceId = UserDefaults.standard.string(forKey: "pipelineVoiceId")
+                viewModel.voiceId = pipelineVoiceIdOverride ?? UserDefaults.standard.string(forKey: "pipelineVoiceId")
             }
             viewModel.startSession(userId: UserDefaults.standard.string(forKey: "userId") ?? "")
         }
