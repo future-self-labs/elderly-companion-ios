@@ -15,12 +15,17 @@ struct ElderRootView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ElderHomeView(path: $path)
+                .hidesWhileCovered(ownDepth: 0, stackDepth: path.count)
                 .navigationDestination(for: ElderRoute.self) { route in
-                    switch route {
-                    case .myStory: MyStoryView(path: $path)
-                    case .storyEntry(let entry): ElderStoryDetailView(entry: entry)
-                    case .reminders: ElderRemindersView()
+                    Group {
+                        switch route {
+                        case .myStory: MyStoryView(path: $path)
+                        case .storyEntry(let entry): ElderStoryDetailView(entry: entry)
+                        case .reminders: ElderRemindersView()
+                        }
                     }
+                    .noahPushedScreen()
+                    .hidesWhileCovered(ownDepth: (path.firstIndex(of: route) ?? 0) + 1, stackDepth: path.count)
                 }
         }
         .fullScreenCover(isPresented: $session.isConversationPresented) {

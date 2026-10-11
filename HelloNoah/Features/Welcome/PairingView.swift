@@ -13,6 +13,7 @@ struct PairingView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
+                ElderBackButton()
                 Text("Telefoon koppelen")
                     .font(NoahFont.Elder.hero).noahElderTitleScaling()
                     .foregroundColor(NoahColor.text)
@@ -65,8 +66,9 @@ struct PairingView: View {
             .padding(.vertical, NoahSpacing.l)
             .noahReadableWidth()
         }
-        .noahScreenBackground()
-        .navigationBarTitleDisplayMode(.inline)
+        // Like the rest of the older person's interface: no navigation bar (the root has none
+        // either, so nothing animates in during the push) and a big "Terug" button instead.
+        .elderSubscreen()
         .onAppear {
             if let initialCode, code.isEmpty { code = initialCode }
         }

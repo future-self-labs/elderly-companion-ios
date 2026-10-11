@@ -77,31 +77,41 @@ struct CaregiverRootView: View {
     private var tabs: some View {
         TabView(selection: $router.tab) {
             NavigationStack(path: $router.overviewPath) {
-                DashboardView().caregiverDestinations()
+                DashboardView()
+                    .hidesWhileCovered(ownDepth: 0, stackDepth: router.overviewPath.count)
+                    .caregiverDestinations()
             }
             .tabItem { Label("Overzicht", systemImage: "house.fill") }
             .tag(CaregiverTab.overview)
 
             NavigationStack(path: $router.conversationsPath) {
-                ConversationListView().caregiverDestinations()
+                ConversationListView()
+                    .hidesWhileCovered(ownDepth: 0, stackDepth: router.conversationsPath.count)
+                    .caregiverDestinations()
             }
             .tabItem { Label("Gesprekken", systemImage: "bubble.left.and.bubble.right.fill") }
             .tag(CaregiverTab.conversations)
 
             NavigationStack(path: $router.lifeStoryPath) {
-                LifeStoryListView().caregiverDestinations()
+                LifeStoryListView()
+                    .hidesWhileCovered(ownDepth: 0, stackDepth: router.lifeStoryPath.count)
+                    .caregiverDestinations()
             }
             .tabItem { Label("Verhaal", systemImage: "book.fill") }
             .tag(CaregiverTab.lifeStory)
 
             NavigationStack(path: $router.remindersPath) {
-                RemindersListView().caregiverDestinations()
+                RemindersListView()
+                    .hidesWhileCovered(ownDepth: 0, stackDepth: router.remindersPath.count)
+                    .caregiverDestinations()
             }
             .tabItem { Label("Herinneringen", systemImage: "bell.fill") }
             .tag(CaregiverTab.reminders)
 
             NavigationStack(path: $router.morePath) {
-                MoreView().caregiverDestinations()
+                MoreView()
+                    .hidesWhileCovered(ownDepth: 0, stackDepth: router.morePath.count)
+                    .caregiverDestinations()
             }
             .tabItem { Label("Meer", systemImage: "ellipsis.circle.fill") }
             .tag(CaregiverTab.more)
@@ -150,6 +160,7 @@ extension View {
     func caregiverDestinations() -> some View {
         navigationDestination(for: CaregiverRoute.self) { route in
             CaregiverDestinationView(route: route)
+                .noahPushedScreen()
         }
     }
 }

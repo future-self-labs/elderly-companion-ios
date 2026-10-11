@@ -65,9 +65,32 @@ enum NoahAppearance {
 // MARK: - Screen scaffolding
 
 extension View {
-    /// Fills the screen with the ground colour (behind safe areas too).
+    /// Fills the whole screen (behind safe areas too) with an opaque ground colour.
     func noahScreenBackground(_ color: Color = NoahColor.ground) -> some View {
-        background(color.ignoresSafeArea())
+        frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(color.ignoresSafeArea())
+    }
+
+    /// For screens pushed onto a NavigationStack: opaque full-bleed background plus a soft shade
+    /// just outside the leading edge. The shade is off-screen at rest and only visible while the
+    /// screen slides in, so the edge stays readable on dark-on-dark.
+    func noahPushedScreen() -> some View {
+        noahScreenBackground()
+            .overlay(alignment: .leading) {
+                LinearGradient(colors: [.clear, NoahColor.pushEdgeShade], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: 18)
+                    .offset(x: -18)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+    }
+
+    /// Hides a screen while another one is pushed on top of it, so its text can't peek out next to
+    /// the incoming screen during the slide (both share the same ground colour). `ownDepth` is this
+    /// screen's position in the stack (root = 0), `stackDepth` the current number of pushed screens.
+    func hidesWhileCovered(ownDepth: Int, stackDepth: Int) -> some View {
+        modifier(HidesWhileCovered(ownDepth: ownDepth, stackDepth: stackDepth))
     }
 
     /// Limits content to a readable width (iPad) and centres it.
@@ -88,6 +111,41 @@ extension View {
     func noahRowBackground() -> some View {
         listRowBackground(NoahColor.surface)
             .listRowSeparatorTint(NoahColor.divider)
+    }
+}
+
+struct HidesWhileCovered: ViewModifier {
+    let ownDepth: Int
+    let stackDepth: Int
+
+    @State private var hidden = false
+    @State private var lastDepth: Int?
+    @State private var revealTask: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(hidden ? 0 : 1)
+            // Only the content fades: the ground stays, so the navigation container's own
+            // (black) backdrop never shows next to the incoming screen.
+            .background(NoahColor.ground.ignoresSafeArea())
+            .onAppear { lastDepth = stackDepth }
+            .onChange(of: stackDepth) { newDepth in
+                let oldDepth = lastDepth ?? ownDepth
+                lastDepth = newDepth
+                if oldDepth <= ownDepth, newDepth > ownDepth {
+                    // Something was pushed on top of us: fade out for the slide, then restore
+                    // (we are fully covered by then, and visible again for a swipe back).
+                    withAnimation(.easeOut(duration: 0.08)) { hidden = true }
+                    revealTask?.cancel()
+                    revealTask = Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 700_000_000)
+                        if !Task.isCancelled { hidden = false }
+                    }
+                } else if newDepth <= ownDepth, hidden {
+                    revealTask?.cancel()
+                    withAnimation(.easeOut(duration: 0.15)) { hidden = false }
+                }
+            }
     }
 }
 

@@ -61,17 +61,22 @@ struct WelcomeFlowView: View {
             }
             .noahScreenBackground()
             .toolbar(.hidden, for: .navigationBar)
+            .hidesWhileCovered(ownDepth: 0, stackDepth: path.count)
             .navigationDestination(for: Step.self) { step in
-                switch step {
-                case .caregiverIntro:
-                    CaregiverIntroView { path.append(.signIn) }
-                case .signIn:
-                    SignInView { path.append(.phoneSignIn) }
-                case .phoneSignIn:
-                    PhoneSignInView()
-                case .pairing:
-                    PairingView(initialCode: prefilledPairingCode)
+                Group {
+                    switch step {
+                    case .caregiverIntro:
+                        CaregiverIntroView { path.append(.signIn) }
+                    case .signIn:
+                        SignInView { path.append(.phoneSignIn) }
+                    case .phoneSignIn:
+                        PhoneSignInView()
+                    case .pairing:
+                        PairingView(initialCode: prefilledPairingCode)
+                    }
                 }
+                .noahPushedScreen()
+                .hidesWhileCovered(ownDepth: (path.firstIndex(of: step) ?? 0) + 1, stackDepth: path.count)
             }
         }
         .confirmationDialog("Ontwikkelaarsopties", isPresented: $showsDebugToggle, titleVisibility: .visible) {

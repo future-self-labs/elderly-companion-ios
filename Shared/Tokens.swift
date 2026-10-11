@@ -48,6 +48,8 @@ enum NoahColor {
     static let accentGlow = Color(hex: 0xF2B84B, opacity: 0.22)
     static let dangerSoft = Color(hex: 0xE2725B, opacity: 0.18)
     static let positiveSoft = Color(hex: 0x8FD3A8, opacity: 0.18)
+    /// Shade along the leading edge of a screen sliding in, so the edge reads on dark-on-dark.
+    static let pushEdgeShade = Color(hex: 0x000000, opacity: 0.45)
 
     /// Mood scale 1…5 (somber → heel goed). All pass WCAG AA on `ground` and `surface`.
     static func mood(_ score: Double?) -> Color {
