@@ -1,77 +1,136 @@
-# Noah - Elderly Companion
+# HelloNoah — iOS
 
-**Calm. Dignified. Always There.**
+Native iOS app of **HelloNoah.ai**: Noah, a Dutch, voice-first AI companion for older people.
+The family caregiver (*mantelzorger*) buys and sets it up; the older person just talks to Noah.
+A product by Aldery.
 
-A voice-first AI companion for elderly people, reachable via phone call or native iOS app.
+- Product spec: `HelloNoah.ai — Product & Research Handoff.md` (Section 1 is binding).
+- API contract: [`../elderly-companion-api/docs/api-v2.md`](../elderly-companion-api/docs/api-v2.md) (API v2).
+- Screenshots of every screen (mock mode): [`docs/screenshots/`](docs/screenshots/).
 
-## Architecture
+## Two interfaces in one app
 
-```
-iOS App (SwiftUI)  ──────►  Backend API (Hono/Bun)  ──────►  LiveKit Cloud
-                                    │                              │
-                                    ├──► Twilio (OTP, phone)       │
-                                    ├──► Zep (memory)         SIP Trunk
-                                    │                              │
-                              Phone Number  ◄──────────────  Twilio SIP
-```
+At launch the app decides by what is in the Keychain:
 
-## Project Structure
-
-- `ElderlyCompanion/` - Native iOS app (Swift/SwiftUI, iOS 17+)
-- Backend API: **not in this repo** — see the `elderly-companion-api` repository (the canonical server; the old `server/` copy was removed)
-
-## Getting Started
-
-### iOS App
-
-1. Generate the Xcode project:
-
-```bash
-brew install xcodegen  # if not installed
-xcodegen generate
-```
-
-2. Open `ElderlyCompanion.xcodeproj` in Xcode
-3. Wait for Swift Package Manager to resolve LiveKit SDK
-4. Build and run on simulator or device
-
-### Backend API
-
-The backend now lives only in the separate **`elderly-companion-api`** repository
-(sibling folder `../elderly-companion-api`). The duplicate `server/` copy that used to be
-synced into this repo by hand was removed — it is still available in git history.
-See that repo's `.env.example` for setup and required environment variables.
-
-## Environment Variables
-
-| Variable | Description |
+| Keychain | Interface |
 |---|---|
-| `TWILIO_ACCOUNT_SID` | Twilio account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio auth token |
-| `TWILIO_PHONE_NUMBER` | Twilio phone number (the number users call) |
-| `TWILIO_VERIFY_SERVICE_SID` | Twilio Verify service SID (for OTP) |
-| `LIVEKIT_API_KEY` | LiveKit Cloud API key |
-| `LIVEKIT_API_SECRET` | LiveKit Cloud API secret |
-| `LIVEKIT_URL` | LiveKit Cloud WebSocket URL |
-| `ZEP_API_KEY` | Zep Cloud API key (memory layer) |
+| device token (`hnd_…`) | **Older person** — formal "u", huge targets, no login ever |
+| caregiver tokens | **Caregiver** — informal "je", tab bar |
+| nothing | Welcome: "Ik ben mantelzorger" or "Deze telefoon is voor iemand die met Noah gaat praten" (6-digit pairing code) |
 
-## API Endpoints
+**Older person:** Home (big round "Praat met Noah", last conversation, "Bel mij", next reminder, Mijn verhaal,
+Herinneringen) · Conversation (orb + waveform reacting to who speaks, optional large subtitles, big "Ophangen") ·
+Mijn verhaal (by topic or by period, detail) · Herinneringen · widgets (small, medium, lock-screen circular) that open
+`hellonoah://praat` and start a conversation at once. A hidden long-press (2 s) on the greeting opens settings for the
+caregiver (unpair this phone).
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/otp/create` | Send OTP to phone number |
-| `POST` | `/api/v1/otp/validate` | Validate OTP code |
-| `POST` | `/api/v1/livekit/get-token` | Get LiveKit token for in-app voice |
-| `POST` | `/api/v1/livekit/call` | Initiate outbound phone call |
-| `POST` | `/api/v1/users` | Create user |
-| `GET` | `/api/v1/users/:id` | Get user |
-| `GET` | `/api/v1/users/search?phoneNumber=` | Search user by phone |
-| `GET` | `/api/v1/memory/:userId` | Get user memory context |
-| `POST` | `/api/v1/memory` | Store conversation messages |
+**Caregiver:** 4 welcome slides · Sign in with Apple / phone + SMS code · start (new profile or invitation code) ·
+9-step profile wizard (name & address form, phone, about, important people, preferences, Noah settings, emergency
+contacts, pairing code, subscription) · dashboard (alerts, latest summary, week stats, 7-day mood chart, upcoming
+reminders, life story, "Laat Noah nu bellen", push pre-prompt, trial/inactive banners) · conversations (paginated) +
+detail with transcript · life story (topics / timeline, add/edit/delete) · reminders (once / daily / weekly, Noah calls
+or mentions it) · mood (7/30/90 days, Swift Charts) · alerts list + detail (acknowledge, resolve, "vals alarm") ·
+Meer: Noah settings, profile, important people, emergency contacts (reorder), Noah's phone number (add to contacts),
+caregivers & invitations, pairing, paired devices, subscription, account (GDPR export, delete with "VERWIJDER"),
+switching between older people. A `lezer` sees no edit controls and none of the beheerder-only screens.
 
-## Reused from Existing Setup
+## Run it
 
-This project reuses the same credentials and infrastructure:
-- Same Twilio account, phone number, and Verify service
-- Same LiveKit Cloud project and SIP trunk (`ST_FsnpUMR6sYFp`)
-- Same Zep Cloud memory layer
+```sh
+brew install xcodegen          # once
+xcodegen generate              # after changing project.yml (the generated project is committed)
+open HelloNoah.xcodeproj       # ⌘R
+```
+
+### Mock mode (no backend, no ElevenLabs)
+
+The scheme passes `-useMockAPI YES`, so **⌘R runs the whole app against an in-app mock of API v2**
+(`HelloNoah/Core/Mock`): caregiver Anna de Vries, her father Wim (beheerder) and aunt Riet (lezer), a month of
+conversations, mood, life story, reminders and alerts, plus a scripted conversation with fake audio levels.
+Uncheck the argument in *Edit Scheme → Run → Arguments* to use the live backend.
+
+- Sign in with Apple → Anna. Phone number + any 6-digit code → a brand-new caregiver (walk through the wizard).
+- Pairing: any 6 digits pair the phone with Wim. `000000` is always rejected (error states).
+- Hidden toggle (works in TestFlight too): tap the HelloNoah logo on the welcome screen 5×, or long-press the version
+  line in *Meer → Account en privacy*.
+- Handy launch arguments (mock only): `-mockPersona caregiver|new|elder|none`, `-uiRoute <screen>` (e.g.
+  `dashboard`, `conversationDetail`, `alertDetail`, `wizard`, `paywall`, `conversation`, `myStory`; see
+  `CaregiverRootView.applyDebugRoute` / `ElderRootView`), `-mockOffline YES`, `-mockInactive YES`, `-mockLatency 0`.
+- Purchases: run from Xcode to use `Products.storekit` (intro €9,99 × 6, then €59,99). Without a StoreKit
+  configuration (e.g. launched from the command line) mock mode simulates the purchase.
+
+Mock data lives in memory and resets at each launch.
+
+### Live
+
+Base URL: `Config/HelloNoah.xcconfig` (`API_BASE_URL`, default
+`https://elderly-companion-api-production.up.railway.app/api/v2`), override at runtime with
+`-apiBaseURL https://…`. Terms/privacy/support links are in the same file.
+
+### Tests
+
+```sh
+xcodebuild -scheme HelloNoah -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build test
+```
+
+46+ unit tests: every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
+arrays), request encoding, single-flight token refresh (5 parallel 401s → exactly 1 refresh), sign-out on an invalid
+refresh token, device unpairing on 401, Dutch relative dates and reminder schedules, phone number normalisation,
+role gating (incl. the mock enforcing it) and deep links.
+
+## Structure
+
+```
+project.yml                 xcodegen (app, widget, tests; iOS 16; team 465F27GDQR)
+Config/HelloNoah.xcconfig   base URL and legal links
+Shared/Tokens.swift         design tokens (colours, type, spacing, radii, sizes) — app + widget
+HelloNoah/
+  App/                      @main, AppModel (mode, sessions), deep links, router
+  DesignSystem/             UIKit appearance + components (buttons, cards, rows, inputs, chips, states, orb)
+  Core/Models               Codable models of API v2 (+ tolerant decoding helpers)
+  Core/Networking           APIClient (auth, errors, single-flight refresh), NoahAPI protocol, LiveNoahAPI
+  Core/Mock                 MockNoahAPI + Dutch sample data
+  Core/Voice                ConversationController, ElevenLabsVoiceEngine, MockVoiceEngine
+  Core/Services             StoreKit 2, push, reachability
+  Core/Formatting           Dutch dates, schedules, phone numbers, labels
+  Features/Welcome|Elder|Caregiver
+  Resources/                fonts (+ OFL licences), assets, Localizable.xcstrings, PrivacyInfo.xcprivacy
+HelloNoahWidget/            WidgetKit extension
+HelloNoahTests/             unit tests + contract fixtures
+```
+
+### Design system
+
+Direction "B · Avond": ground `#13203A`, surfaces `#1D2D4D`/`#0E182D`, amber accent `#F2B84B`, coral hang-up
+`#E2725B`, DM Serif Display for titles and Lexend for copy (both OFL, bundled with their licences). **All visual
+decisions live in `Shared/Tokens.swift` and `HelloNoah/DesignSystem/`**; feature views only use tokens and
+components, so a redesign is mostly a token change. Custom fonts scale with Dynamic Type (`relativeTo:`); very long
+display titles are capped at accessibility size 1 to avoid mid-word breaks, body text keeps scaling.
+
+### Voice
+
+`POST /device/conversation` → `ElevenLabs.startConversation(conversationToken:config:)` (Swift SDK 3.4) with the
+returned `dynamicVariables` (typed) and `overrides` (prompt, first message, language, voice, speed) unchanged. The app
+owns the audio session (`.playAndRecord`, `.voiceChat` for echo cancellation, loudspeaker, Bluetooth), reads levels
+from LiveKit's `AudioManager`, ends calmly on an incoming phone call, shows network hiccups, enforces
+`maxDurationSeconds`, keeps the screen awake and continues with the screen locked (background audio).
+
+## Strings
+
+Dutch is the development language and the only compiled language (`XCSTRINGS_LANGUAGES_TO_COMPILE = nl`).
+Xcode fills `Localizable.xcstrings` automatically when building in the IDE; from the command line run
+`xcrun xcstringstool sync HelloNoah/Resources/Localizable.xcstrings --stringsdata <files>` with the `.stringsdata`
+files from the build's intermediates.
+
+## Release checklist (Apple)
+
+See the report in `LOG.md` (2026-10-11): App ID capabilities (Sign in with Apple, Push, Associated Domains), the
+widget App ID, the auto-renewable subscription `ai.hellonoah.unlimited.monthly` in group "Noah" with the 6-month
+pay-as-you-go intro offer, App Store Server Notifications V2 URL, APNs key for the backend, AASA file on
+hellonoah.ai, TestFlight.
+
+```sh
+xcodegen generate
+xcodebuild archive -project HelloNoah.xcodeproj -scheme HelloNoah -configuration Release \
+  -destination "generic/platform=iOS" -archivePath build/HelloNoah.xcarchive -allowProvisioningUpdates
+```

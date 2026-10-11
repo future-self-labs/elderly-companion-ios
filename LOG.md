@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-10-10
+Last updated: 2026-10-11
 
 ---
 
@@ -416,6 +416,32 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - **Symptom**: Phone calls occasionally greet in English and say "the user" instead of the real name.
 - **Likely cause**: User data lookup returning incomplete data (missing name/language fields). Added logging to diagnose.
 - **Status**: Investigating via Railway logs.
+
+---
+
+## 2026-10-11 — HelloNoah v2 iOS app (replaces ElderlyCompanion)
+
+The LiveKit-based `ElderlyCompanion` target was removed (`git rm`, recoverable from history) and replaced by the
+**HelloNoah** app: API v2 (`elderly-companion-api/docs/api-v2.md`), ElevenLabs Agents Swift SDK 3.4, iOS 16+,
+bundle id `ai.hellonoah.app` (+ widget `ai.hellonoah.app.widget`), Dutch only, design "B · Avond". Everything above
+this entry describes the old v1 stack. See `README.md` for structure, mock mode and tests.
+
+**Apple Developer / App Store Connect set-up still needed (founder):**
+- App IDs `ai.hellonoah.app` and `ai.hellonoah.app.widget` (team 465F27GDQR). Capabilities on the app: Sign in with
+  Apple, Push Notifications, Associated Domains (`applinks:hellonoah.ai`; host
+  `/.well-known/apple-app-site-association` for `/uitnodiging/*`). Automatic signing creates them on first build.
+- App Store Connect app "HelloNoah" (primary language Dutch), auto-renewable subscription
+  `ai.hellonoah.unlimited.monthly` in group "Noah", €59,99/maand, introductory offer pay-as-you-go €9,99 × 6 months.
+  App Store Server Notifications V2 → `https://…/api/v2/subscriptions/app-store/notifications`. Paid-apps agreement,
+  tax and banking.
+- APNs auth key (.p8) for the backend (key id + team id); sandbox for debug builds, production for TestFlight/App Store.
+- Sign in with Apple: the backend verifies `aud = ai.hellonoah.app`.
+- Privacy policy and terms URLs in `Config/HelloNoah.xcconfig` (privacy currently `https://hellonoah.ai/privacy`,
+  terms = Apple standard EULA), App Privacy questionnaire matching `PrivacyInfo.xcprivacy`, review notes with the
+  review phone number/OTP (`REVIEW_PHONE_NUMBER`).
+- iPad is enabled (older people often use tablets) → App Store needs iPad screenshots too.
+- One subscription group allows one active subscription per Apple ID: a caregiver who pays for two older people
+  with the same Apple ID needs a product decision (second product/group, or family payment by another caregiver).
 
 ---
 
