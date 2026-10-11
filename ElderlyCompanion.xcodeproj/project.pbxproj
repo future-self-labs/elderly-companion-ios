@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -101,7 +101,7 @@
 		9024B16293DA0148D61AF718 /* LegacyArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyArchiveView.swift; sourceTree = "<group>"; };
 		9445CF15D4CBA1E063688A03 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		966D066DBE2492FC99912786 /* EscalationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationView.swift; sourceTree = "<group>"; };
-		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A321130DBBAB88A6FBB55063 /* ElderlyCompanion.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ElderlyCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4D7A04953955F5FD168D23C /* MoodSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodSelector.swift; sourceTree = "<group>"; };
 		A648D4D84FD44F2BD6C4C82D /* LegacyPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPreferencesView.swift; sourceTree = "<group>"; };
 		A91C94C877C30CBE18B0DFC0 /* RoutinesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutinesViewModel.swift; sourceTree = "<group>"; };
@@ -464,6 +464,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F210BA939AC74EED49E427E8 = {
+						DevelopmentTeam = 465F27GDQR;
+					};
+				};
 			};
 			buildConfigurationList = 65CA05CA28D557AD345B5253 /* Build configuration list for PBXProject "ElderlyCompanion" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -478,6 +483,7 @@
 			packageReferences = (
 				C30B90C8995966C56BC8888C /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -587,7 +593,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 465F27GDQR;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -616,7 +622,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -624,7 +629,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.futureselflabs.elderlycompanion;
+				PRODUCT_BUNDLE_IDENTIFIER = net.nextempire.noah;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -638,7 +643,6 @@
 				CODE_SIGN_ENTITLEMENTS = ElderlyCompanion/ElderlyCompanion.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 465F27GDQR;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ElderlyCompanion/App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -646,7 +650,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.futureselflabs.elderlycompanion;
+				PRODUCT_BUNDLE_IDENTIFIER = net.nextempire.noah;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -688,7 +692,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 465F27GDQR;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

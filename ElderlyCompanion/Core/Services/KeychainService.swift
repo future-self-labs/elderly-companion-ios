@@ -3,7 +3,7 @@ import Security
 
 /// Simple Keychain wrapper for storing auth tokens securely.
 enum KeychainService {
-    private static let service = "com.futureselflabs.elderlycompanion"
+    private static let service = "net.nextempire.noah"
 
     static func save(key: String, value: String) {
         guard let data = value.data(using: .utf8) else { return }

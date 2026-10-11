@@ -354,7 +354,7 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 ## Key Hardcoded Values
 - API URL: `https://elderly-companion-api-production.up.railway.app/api/v1`
 - LiveKit Cloud: `wss://test-7hm3rr9r.livekit.cloud`
-- Bundle ID: `com.futureselflabs.elderlycompanion` (legacy Future Self Labs identifier, unchanged)
+- Bundle ID: `net.nextempire.noah` (team Next Empire BV, 465F27GDQR)
 - SIP Trunk: `ST_FsnpUMR6sYFp`
 - Agent name: `noah`
 - JWT expiry: 30 days
@@ -526,3 +526,5 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - Disabled "Wait for CI" on `elderly-companion-api` (was blocking deploys with no GitHub Actions configured)
 - Updated Zep API key (old one expired)
 - N8N no longer used (env vars removed)
+- 2026-10-11: Aligned with StoriesFrom.ai conventions. Legal entity Next Empire, Nieuwpoortkade 2A, 1055 RX Amsterdam, KvK 63190982, btw NL855130374B01 (website legal pages updated). Bundle ID now `net.nextempire.noah`, team Next Empire BV (465F27GDQR); Keychain service renamed to match, so existing installs log in again. Needs a new App ID / App Store Connect app. GitHub org `future-self-labs` kept (StoriesFrom uses it too).
+- 2026-10-11: Deployed hardened API and voice agent to Railway; shared `SERVICE_API_TOKEN` set on both services.
