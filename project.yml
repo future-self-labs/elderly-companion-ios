@@ -1,64 +1,123 @@
-name: ElderlyCompanion
+name: HelloNoah
 options:
-  bundleIdPrefix: net.nextempire
+  bundleIdPrefix: ai.hellonoah
+  developmentLanguage: nl
   deploymentTarget:
-    iOS: "17.0"
-  xcodeVersion: "16.0"
-  generateEmptyDirectories: true
+    iOS: "16.0"
+  createIntermediateGroups: true
   groupSortPosition: top
 
 packages:
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk
+    from: "3.4.0"
+  # Already a dependency of the ElevenLabs SDK; declared so the app can configure the audio
+  # session (voice-chat mode) and read audio levels from LiveKit's AudioManager.
   LiveKit:
     url: https://github.com/livekit/client-sdk-swift
-    from: "2.0.0"
+    from: "2.10.0"
+
+configFiles:
+  Debug: Config/HelloNoah.xcconfig
+  Release: Config/HelloNoah.xcconfig
 
 settings:
   base:
-    SWIFT_VERSION: "5.10"
+    MARKETING_VERSION: "2.0.0"
+    CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: "465F27GDQR"
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    GENERATE_INFOPLIST_FILE: NO
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    # Dutch is the development language and the only language that ships.
+    XCSTRINGS_LANGUAGES_TO_COMPILE: "nl"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    TARGETED_DEVICE_FAMILY: "1,2"
+
+schemes:
+  HelloNoah:
+    build:
+      targets:
+        HelloNoah: all
+        HelloNoahWidget: all
+    run:
+      config: Debug
+      storeKitConfiguration: Products.storekit
+      commandLineArguments:
+        # Runs the whole app against the in-app mock of API v2 (no backend, no ElevenLabs).
+        # Uncheck in Xcode (Edit Scheme → Arguments) to talk to the live backend.
+        "-useMockAPI YES": true
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - HelloNoahTests
+    archive:
+      config: Release
 
 targets:
-  ElderlyCompanion:
+  HelloNoah:
     type: application
     platform: iOS
     sources:
-      - ElderlyCompanion
-    entitlements:
-      path: ElderlyCompanion/ElderlyCompanion.entitlements
-      properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
-    settings:
-      base:
-        INFOPLIST_FILE: ElderlyCompanion/App/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: net.nextempire.noah
-        MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: 1
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        SWIFT_EMIT_LOC_STRINGS: "YES"
-        GENERATE_INFOPLIST_FILE: false
-        CODE_SIGN_ENTITLEMENTS: ElderlyCompanion/ElderlyCompanion.entitlements
+      - path: HelloNoah
+        excludes:
+          - "Supporting/Info.plist"
+          - "Supporting/HelloNoah.entitlements"
+      - path: Shared
+      - path: Products.storekit
+        buildPhase: none
     dependencies:
+      - package: ElevenLabs
+        product: ElevenLabs
       - package: LiveKit
         product: LiveKit
-    info:
-      path: ElderlyCompanion/App/Info.plist
-      properties:
-        CFBundleDisplayName: Noah
-        CFBundleName: ElderlyCompanion
-        CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "1"
-        UILaunchScreen:
-          UIColorName: ""
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-        NSCalendarsUsageDescription: "Noah uses your calendar to help manage appointments and send you timely reminders."
-        NSCalendarsFullAccessUsageDescription: "Noah uses your calendar to help manage appointments and send you timely reminders."
-        NSMicrophoneUsageDescription: "Noah needs access to your microphone so you can talk with your companion."
-        NSContactsUsageDescription: "Noah can access your contacts to help manage your trusted circle."
-        NSHealthShareUsageDescription: "Noah reads your health data to monitor your wellbeing and share important updates with your family circle."
-        NSHealthUpdateUsageDescription: "Noah does not write health data, only reads it."
-        UIBackgroundModes:
-          - audio
-          - voip
-        ITSAppUsesNonExemptEncryption: false
+      - target: HelloNoahWidget
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.hellonoah.app
+        PRODUCT_NAME: HelloNoah
+        INFOPLIST_FILE: HelloNoah/Supporting/Info.plist
+        CODE_SIGN_ENTITLEMENTS: HelloNoah/Supporting/HelloNoah.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+  HelloNoahWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: HelloNoahWidget
+        excludes:
+          - "Info.plist"
+      - path: Shared
+      - path: HelloNoah/Resources/Fonts
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.hellonoah.app.widget
+        PRODUCT_NAME: HelloNoahWidget
+        INFOPLIST_FILE: HelloNoahWidget/Info.plist
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+
+  HelloNoahTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: HelloNoahTests
+    dependencies:
+      - target: HelloNoah
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.hellonoah.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/HelloNoah.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HelloNoah"
+        BUNDLE_LOADER: "$(TEST_HOST)"

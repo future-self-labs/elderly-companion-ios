@@ -1,0 +1,11 @@
+// HelloNoah build configuration.
+//
+// API_BASE_URL is the root of API v2. It is written into Info.plist (HNAPIBaseURL) and can be
+// overridden at runtime with the launch argument `-apiBaseURL https://…` (debug/testing only).
+// Note: `//` starts a comment in xcconfig files, hence the `$()` between the slashes.
+API_BASE_URL = https:/$()/elderly-companion-api-production.up.railway.app/api/v2
+
+// Links shown on the paywall and in settings (App Store Review requires terms + privacy).
+TERMS_URL = https:/$()/www.apple.com/legal/internet-services/itunes/dev/stdeula/
+PRIVACY_URL = https:/$()/hellonoah.ai/privacy
+SUPPORT_URL = https:/$()/hellonoah.ai/hulp

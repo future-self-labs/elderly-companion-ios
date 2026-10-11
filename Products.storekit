@@ -1,0 +1,73 @@
+{
+  "identifier" : "6C0E9A3B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "465F27GDQR",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_locale" : "nl_NL",
+    "_storefront" : "NLD",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [
+        {
+          "description" : "Noah, de AI-metgezel voor je naaste",
+          "displayName" : "Noah",
+          "locale" : "nl"
+        }
+      ],
+      "name" : "Noah",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6700000001",
+          "introductoryOffer" : {
+            "displayPrice" : "9.99",
+            "internalID" : "6700000002",
+            "numberOfPeriods" : 6,
+            "paymentMode" : "payAsYouGo",
+            "subscriptionPeriod" : "P1M"
+          },
+          "localizations" : [
+            {
+              "description" : "Onbeperkt praten met Noah, dashboard, levensverhaal en meldingen.",
+              "displayName" : "Noah Unlimited",
+              "locale" : "nl"
+            }
+          ],
+          "productID" : "ai.hellonoah.unlimited.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Noah Unlimited (maandelijks)",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

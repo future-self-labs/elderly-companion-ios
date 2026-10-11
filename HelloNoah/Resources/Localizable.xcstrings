@@ -1,0 +1,4489 @@
+{
+  "sourceLanguage": "nl",
+  "strings": {
+    "": {
+      "shouldTranslate": false
+    },
+    "%@ actief": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ actief"
+          }
+        }
+      }
+    },
+    "%@ doet mee aan de bètatest. Noah is in die periode gratis.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ doet mee aan de bètatest. Noah is in die periode gratis."
+          }
+        }
+      }
+    },
+    "%@ doet mee aan de bètatest: Noah is gratis en meteen actief.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ doet mee aan de bètatest: Noah is gratis en meteen actief."
+          }
+        }
+      }
+    },
+    "%@ kan nu met Noah praten, via de app en via het telefoonnummer.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kan nu met Noah praten, via de app en via het telefoonnummer."
+          }
+        }
+      }
+    },
+    "%@, verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, verwijderen"
+          }
+        }
+      }
+    },
+    "%@: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%lld herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld herinneringen"
+          }
+        }
+      }
+    },
+    "%lld minuten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minuten"
+          }
+        }
+      }
+    },
+    "%lld open meldingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld open meldingen"
+          }
+        }
+      }
+    },
+    "06 12345678": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "06 12345678"
+          }
+        }
+      }
+    },
+    "1 herinnering": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 herinnering"
+          }
+        }
+      }
+    },
+    "1 open melding": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 open melding"
+          }
+        }
+      }
+    },
+    "1941": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1941"
+          }
+        }
+      }
+    },
+    "1962": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1962"
+          }
+        }
+      }
+    },
+    "30 dagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 dagen"
+          }
+        }
+      }
+    },
+    "7 dagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 dagen"
+          }
+        }
+      }
+    },
+    "90 dagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "90 dagen"
+          }
+        }
+      }
+    },
+    "Aan de slag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan de slag"
+          }
+        }
+      }
+    },
+    "Aankopen herstellen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aankopen herstellen"
+          }
+        }
+      }
+    },
+    "Aanspreekvorm": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanspreekvorm"
+          }
+        }
+      }
+    },
+    "Abonnement": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement"
+          }
+        }
+      }
+    },
+    "Abonnement beheren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement beheren"
+          }
+        }
+      }
+    },
+    "Abonnement starten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement starten"
+          }
+        }
+      }
+    },
+    "Accepteren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepteren"
+          }
+        }
+      }
+    },
+    "Account": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Account definitief verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account definitief verwijderen"
+          }
+        }
+      }
+    },
+    "Account en privacy": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account en privacy"
+          }
+        }
+      }
+    },
+    "Account verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account verwijderen"
+          }
+        }
+      }
+    },
+    "Achternaam (optioneel)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achternaam (optioneel)"
+          }
+        }
+      }
+    },
+    "Actief": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actief"
+          }
+        }
+      }
+    },
+    "Afgelopen 7 dagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afgelopen 7 dagen"
+          }
+        }
+      }
+    },
+    "Afgesloten via Google Play.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afgesloten via Google Play."
+          }
+        }
+      }
+    },
+    "Afhandelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afhandelen"
+          }
+        }
+      }
+    },
+    "Alle": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        }
+      }
+    },
+    "Alle herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle herinneringen"
+          }
+        }
+      }
+    },
+    "Alleen voor de juiste Nederlandse zinnen, zoals “meneer” of “mevrouw”.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen voor de juiste Nederlandse zinnen, zoals “meneer” of “mevrouw”."
+          }
+        }
+      }
+    },
+    "Alles": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles"
+          }
+        }
+      }
+    },
+    "Ander nummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ander nummer"
+          }
+        }
+      }
+    },
+    "Anna de Vries": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anna de Vries"
+          }
+        }
+      }
+    },
+    "Annuleren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        }
+      }
+    },
+    "Begint meteen een gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begint meteen een gesprek"
+          }
+        }
+      }
+    },
+    "Bekijk het gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekijk het gesprek"
+          }
+        }
+      }
+    },
+    "Bel %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bel %@"
+          }
+        }
+      }
+    },
+    "Bel 112": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bel 112"
+          }
+        }
+      }
+    },
+    "Bel Noah nu": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bel Noah nu"
+          }
+        }
+      }
+    },
+    "Bel mij": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bel mij"
+          }
+        }
+      }
+    },
+    "Belangrijke mensen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belangrijke mensen"
+          }
+        }
+      }
+    },
+    "Bellen met Noah, zonder app": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bellen met Noah, zonder app"
+          }
+        }
+      }
+    },
+    "Bewaar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewaar"
+          }
+        }
+      }
+    },
+    "Bewaar instellingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewaar instellingen"
+          }
+        }
+      }
+    },
+    "Bewaar profiel": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewaar profiel"
+          }
+        }
+      }
+    },
+    "Bewerk": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewerk"
+          }
+        }
+      }
+    },
+    "Bezig…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezig…"
+          }
+        }
+      }
+    },
+    "Beëindigt het gesprek met %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beëindigt het gesprek met %@"
+          }
+        }
+      }
+    },
+    "Bij een noodgeval waarschuwt Noah deze mensen in deze volgorde, per sms en/of telefoon. Ze hebben de app niet nodig. Mantelzorgers met de app krijgen altijd een melding.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bij een noodgeval waarschuwt Noah deze mensen in deze volgorde, per sms en/of telefoon. Ze hebben de app niet nodig. Mantelzorgers met de app krijgen altijd een melding."
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: De trouwdag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: De trouwdag"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: de witte na het ontbijt": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: de witte na het ontbijt"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: dinsdag een afspraak bij de huisarts": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: dinsdag een afspraak bij de huisarts"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: ik heb gebeld, alles is goed": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: ik heb gebeld, alles is goed"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: komt op zaterdag langs": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: komt op zaterdag langs"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: oud-onderwijzer, houdt van tuinieren, weduwnaar sinds 2019": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: oud-onderwijzer, houdt van tuinieren, weduwnaar sinds 2019"
+          }
+        }
+      }
+    },
+    "Binnenkort": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Binnenkort"
+          }
+        }
+      }
+    },
+    "Citaat: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citaat: %@"
+          }
+        }
+      }
+    },
+    "Code": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
+          }
+        }
+      }
+    },
+    "Code maken…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code maken…"
+          }
+        }
+      }
+    },
+    "Code opnieuw sturen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code opnieuw sturen"
+          }
+        }
+      }
+    },
+    "Code van %lld cijfers": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code van %lld cijfers"
+          }
+        }
+      }
+    },
+    "Code: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code: %@"
+          }
+        }
+      }
+    },
+    "Daarna kan op deze telefoon niet meer met Noah worden gepraat, tot hij opnieuw is gekoppeld met een nieuwe code.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daarna kan op deze telefoon niet meer met Noah worden gepraat, tot hij opnieuw is gekoppeld met een nieuwe code."
+          }
+        }
+      }
+    },
+    "Dag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dag"
+          }
+        }
+      }
+    },
+    "Dat lukte even niet": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat lukte even niet"
+          }
+        }
+      }
+    },
+    "Datum en tijd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datum en tijd"
+          }
+        }
+      }
+    },
+    "De ander installeert HelloNoah, logt in en vult deze code in (of tikt op de link).": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De ander installeert HelloNoah, logt in en vult deze code in (of tikt op de link)."
+          }
+        }
+      }
+    },
+    "De kleinkinderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De kleinkinderen"
+          }
+        }
+      }
+    },
+    "De mantelzorger vindt de code in de HelloNoah-app, bij Meer → Telefoon koppelen. De code is 15 minuten geldig.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De mantelzorger vindt de code in de HelloNoah-app, bij Meer → Telefoon koppelen. De code is 15 minuten geldig."
+          }
+        }
+      }
+    },
+    "Deel de uitnodiging": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deel de uitnodiging"
+          }
+        }
+      }
+    },
+    "Definitief verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definitief verwijderen"
+          }
+        }
+      }
+    },
+    "Demo-modus aanzetten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-modus aanzetten"
+          }
+        }
+      }
+    },
+    "Demo-modus uitzetten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-modus uitzetten"
+          }
+        }
+      }
+    },
+    "Demo-modus: voorbeeldgegevens": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-modus: voorbeeldgegevens"
+          }
+        }
+      }
+    },
+    "Demo-modus: zonder StoreKit-configuratie wordt de aankoop gesimuleerd.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-modus: zonder StoreKit-configuratie wordt de aankoop gesimuleerd."
+          }
+        }
+      }
+    },
+    "Deze code is verlopen. Maak een nieuwe code.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze code is verlopen. Maak een nieuwe code."
+          }
+        }
+      }
+    },
+    "Deze herinnering verwijderen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze herinnering verwijderen?"
+          }
+        }
+      }
+    },
+    "Deze persoon verwijderen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze persoon verwijderen?"
+          }
+        }
+      }
+    },
+    "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzigt u in de HelloNoah-app van de mantelzorger.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzigt u in de HelloNoah-app van de mantelzorger."
+          }
+        }
+      }
+    },
+    "Deze telefoon is voor iemand die met Noah gaat praten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon is voor iemand die met Noah gaat praten"
+          }
+        }
+      }
+    },
+    "Deze telefoon ontkoppelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon ontkoppelen"
+          }
+        }
+      }
+    },
+    "Deze telefoon ontkoppelen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon ontkoppelen?"
+          }
+        }
+      }
+    },
+    "Dit was vals alarm": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit was vals alarm"
+          }
+        }
+      }
+    },
+    "Door verder te gaan ga je akkoord met de voorwaarden en het privacybeleid van HelloNoah.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Door verder te gaan ga je akkoord met de voorwaarden en het privacybeleid van HelloNoah."
+          }
+        }
+      }
+    },
+    "Doorgaan met Apple": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan met Apple"
+          }
+        }
+      }
+    },
+    "Doorgaan met instellen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan met instellen"
+          }
+        }
+      }
+    },
+    "Doorgaan met telefoonnummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan met telefoonnummer"
+          }
+        }
+      }
+    },
+    "E-mail": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        }
+      }
+    },
+    "Een andere mantelzorger betaalt dit abonnement.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een andere mantelzorger betaalt dit abonnement."
+          }
+        }
+      }
+    },
+    "Een gevoelig onderwerp": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een gevoelig onderwerp"
+          }
+        }
+      }
+    },
+    "Een paar zinnen helpen Noah om echt een gesprek te voeren.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een paar zinnen helpen Noah om echt een gesprek te voeren."
+          }
+        }
+      }
+    },
+    "Een product van Aldery": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een product van Aldery"
+          }
+        }
+      }
+    },
+    "Emotionele momenten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emotionele momenten"
+          }
+        }
+      }
+    },
+    "Er staan nu geen herinneringen klaar. U kunt Noah vragen om u ergens aan te herinneren.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er staan nu geen herinneringen klaar. U kunt Noah vragen om u ergens aan te herinneren."
+          }
+        }
+      }
+    },
+    "Er was niets aan de hand.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er was niets aan de hand."
+          }
+        }
+      }
+    },
+    "Even contact": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even contact"
+          }
+        }
+      }
+    },
+    "Even geduld…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even geduld…"
+          }
+        }
+      }
+    },
+    "Eén plan. Alles inbegrepen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén plan. Alles inbegrepen."
+          }
+        }
+      }
+    },
+    "Eén tik en Noah luistert.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén tik en Noah luistert."
+          }
+        }
+      }
+    },
+    "Familie, vrienden of buren over wie %@ graag praat. Noah vraagt naar ze en onthoudt verjaardagen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Familie, vrienden of buren over wie %@ graag praat. Noah vraagt naar ze en onthoudt verjaardagen."
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        }
+      }
+    },
+    "Geboortejaar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geboortejaar"
+          }
+        }
+      }
+    },
+    "Gebruiksvoorwaarden (EULA)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruiksvoorwaarden (EULA)"
+          }
+        }
+      }
+    },
+    "Geen herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen herinneringen"
+          }
+        }
+      }
+    },
+    "Geen herinneringen gepland.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen herinneringen gepland."
+          }
+        }
+      }
+    },
+    "Geen internetverbinding. Je ziet de laatst geladen gegevens.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen internetverbinding. Je ziet de laatst geladen gegevens."
+          }
+        }
+      }
+    },
+    "Geen open meldingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen open meldingen"
+          }
+        }
+      }
+    },
+    "Geen verbinding": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geen verbinding"
+          }
+        }
+      }
+    },
+    "Gegevens": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gegevens"
+          }
+        }
+      }
+    },
+    "Gegevens van %@ exporteren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gegevens van %@ exporteren"
+          }
+        }
+      }
+    },
+    "Gegevens versleuteld in de EU, geen geluidsopnames": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gegevens versleuteld in de EU, geen geluidsopnames"
+          }
+        }
+      }
+    },
+    "Gekoppeld op %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppeld op %@"
+          }
+        }
+      }
+    },
+    "Gekoppelde telefoons": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekoppelde telefoons"
+          }
+        }
+      }
+    },
+    "Geldig tot %@. Rol: %@.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Geldig tot %1$@. Rol: %2$@."
+          }
+        }
+      }
+    },
+    "Geluidsopnames worden niet bewaard. Alle gegevens staan versleuteld op servers in de EU, volgens de AVG. Je kunt alles op elk moment inzien, exporteren of verwijderen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geluidsopnames worden niet bewaard. Alle gegevens staan versleuteld op servers in de EU, volgens de AVG. Je kunt alles op elk moment inzien, exporteren of verwijderen."
+          }
+        }
+      }
+    },
+    "Genoemd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genoemd"
+          }
+        }
+      }
+    },
+    "Gepauzeerd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gepauzeerd"
+          }
+        }
+      }
+    },
+    "Geselecteerd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geselecteerd"
+          }
+        }
+      }
+    },
+    "Geslacht (optioneel)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geslacht (optioneel)"
+          }
+        }
+      }
+    },
+    "Gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprek"
+          }
+        }
+      }
+    },
+    "Gesprekken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprekken"
+          }
+        }
+      }
+    },
+    "Haarlem": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haarlem"
+          }
+        }
+      }
+    },
+    "Helderheid": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helderheid"
+          }
+        }
+      }
+    },
+    "HelloNoah %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HelloNoah %@"
+          }
+        }
+      }
+    },
+    "HelloNoah %@ · Een product van Aldery": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HelloNoah %@ · Een product van Aldery"
+          }
+        }
+      }
+    },
+    "Herinnering": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinnering"
+          }
+        }
+      }
+    },
+    "Herinnering bewerken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinnering bewerken"
+          }
+        }
+      }
+    },
+    "Herinnering toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinnering toevoegen"
+          }
+        }
+      }
+    },
+    "Herinnering verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinnering verwijderen"
+          }
+        }
+      }
+    },
+    "Herinnering verwijderen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinnering verwijderen?"
+          }
+        }
+      }
+    },
+    "Herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen"
+          }
+        }
+      }
+    },
+    "Herinneringen voor pillen, afspraken en verjaardagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herinneringen voor pillen, afspraken en verjaardagen"
+          }
+        }
+      }
+    },
+    "Het levensverhaal is nog leeg": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het levensverhaal is nog leeg"
+          }
+        }
+      }
+    },
+    "Het levensverhaal, voor altijd bewaard": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het levensverhaal, voor altijd bewaard"
+          }
+        }
+      }
+    },
+    "Het profiel is al bewaard. Je kunt alles later aanvullen via Meer.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het profiel is al bewaard. Je kunt alles later aanvullen via Meer."
+          }
+        }
+      }
+    },
+    "Het verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het verhaal"
+          }
+        }
+      }
+    },
+    "Hier ziet u wat er gezegd wordt.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier ziet u wat er gezegd wordt."
+          }
+        }
+      }
+    },
+    "Hij verdwijnt uit het levensverhaal, ook voor de andere mantelzorgers.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij verdwijnt uit het levensverhaal, ook voor de andere mantelzorgers."
+          }
+        }
+      }
+    },
+    "Hoe heet je?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe heet je?"
+          }
+        }
+      }
+    },
+    "Hoe herinnert Noah eraan?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe herinnert Noah eraan?"
+          }
+        }
+      }
+    },
+    "Hoe klonk het": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe klonk het"
+          }
+        }
+      }
+    },
+    "Hoe wil hij of zij genoemd worden?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe wil hij of zij genoemd worden?"
+          }
+        }
+      }
+    },
+    "Hoi %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoi %@"
+          }
+        }
+      }
+    },
+    "Hoi!": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoi!"
+          }
+        }
+      }
+    },
+    "Houdt niet van": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houdt niet van"
+          }
+        }
+      }
+    },
+    "Houdt van": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Houdt van"
+          }
+        }
+      }
+    },
+    "Iemand in je familie heeft Noah al ingesteld en je een code gestuurd.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iemand in je familie heeft Noah al ingesteld en je een code gestuurd."
+          }
+        }
+      }
+    },
+    "Iemand uitnodigen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iemand uitnodigen"
+          }
+        }
+      }
+    },
+    "Iets rustiger praten helpt vaak bij slechthorendheid.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets rustiger praten helpt vaak bij slechthorendheid."
+          }
+        }
+      }
+    },
+    "Iets wat letterlijk zo gezegd is": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets wat letterlijk zo gezegd is"
+          }
+        }
+      }
+    },
+    "Ik ben mantelzorger": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik ben mantelzorger"
+          }
+        }
+      }
+    },
+    "Ik heb een uitnodiging": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik heb een uitnodiging"
+          }
+        }
+      }
+    },
+    "Ik heb het gezien": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik heb het gezien"
+          }
+        }
+      }
+    },
+    "Ik stel Noah in voor mijn vader, moeder of een andere naaste, en kijk mee hoe het gaat.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ik stel Noah in voor mijn vader, moeder of een andere naaste, en kijk mee hoe het gaat."
+          }
+        }
+      }
+    },
+    "In de demo-modus werkt de hele app met voorbeeldgegevens, zonder server en zonder ElevenLabs.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In de demo-modus werkt de hele app met voorbeeldgegevens, zonder server en zonder ElevenLabs."
+          }
+        }
+      }
+    },
+    "In deze periode is nog geen stemming gemeten.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In deze periode is nog geen stemming gemeten."
+          }
+        }
+      }
+    },
+    "In deze tijd belt Noah nooit, behalve bij een noodgeval.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In deze tijd belt Noah nooit, behalve bij een noodgeval."
+          }
+        }
+      }
+    },
+    "Inloggen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen"
+          }
+        }
+      }
+    },
+    "Instellingen voor de mantelzorger": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen voor de mantelzorger"
+          }
+        }
+      }
+    },
+    "Ja, later verder": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ja, later verder"
+          }
+        }
+      }
+    },
+    "Jaar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaar"
+          }
+        }
+      }
+    },
+    "Je gegevens blijven bewaard. Je kunt later weer inloggen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je gegevens blijven bewaard. Je kunt later weer inloggen."
+          }
+        }
+      }
+    },
+    "Je gegevens worden geladen…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je gegevens worden geladen…"
+          }
+        }
+      }
+    },
+    "Je hebt altijd recht op je gegevens (AVG). De export bevat je account en alle gegevens van de profielen waarvan je beheerder bent.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt altijd recht op je gegevens (AVG). De export bevat je account en alle gegevens van de profielen waarvan je beheerder bent."
+          }
+        }
+      }
+    },
+    "Je kijkt nu mee bij %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je kijkt nu mee bij %@"
+          }
+        }
+      }
+    },
+    "Je krijgt een melding als %@ zo lang niet met Noah heeft gepraat.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je krijgt een melding als %@ zo lang niet met Noah heeft gepraat."
+          }
+        }
+      }
+    },
+    "Je mobiele nummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je mobiele nummer"
+          }
+        }
+      }
+    },
+    "Je naam": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je naam"
+          }
+        }
+      }
+    },
+    "Je telefoonnummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoonnummer"
+          }
+        }
+      }
+    },
+    "K7P-2QX": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "K7P-2QX"
+          }
+        }
+      }
+    },
+    "Kies naaste, nu %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies naaste, nu %@"
+          }
+        }
+      }
+    },
+    "Klaar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        }
+      }
+    },
+    "Koppel de telefoon of tablet van %@, dan kan hij of zij met één tik met Noah praten.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppel de telefoon of tablet van %@, dan kan hij of zij met één tik met Noah praten."
+          }
+        }
+      }
+    },
+    "Koppel de telefoon van %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppel de telefoon van %@"
+          }
+        }
+      }
+    },
+    "Koppel deze telefoon met de code van 6 cijfers van de mantelzorger.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppel deze telefoon met de code van 6 cijfers van de mantelzorger."
+          }
+        }
+      }
+    },
+    "Koppelcode": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppelcode"
+          }
+        }
+      }
+    },
+    "Koppelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppelen"
+          }
+        }
+      }
+    },
+    "Korte samenvattingen van de gesprekken, hoe de stemming is en een seintje als er iets lijkt te spelen. Zo weet je hoe het gaat, ook op afstand. Samen met familie, als je wilt.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korte samenvattingen van de gesprekken, hoe de stemming is en een seintje als er iets lijkt te spelen. Zo weet je hoe het gaat, ook op afstand. Samen met familie, als je wilt."
+          }
+        }
+      }
+    },
+    "Krijg een seintje als Noah zich zorgen maakt over %@, of als %@ om hulp vraagt. Je krijgt geen reclame.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Krijg een seintje als Noah zich zorgen maakt over %1$@, of als %2$@ om hulp vraagt. Je krijgt geen reclame."
+          }
+        }
+      }
+    },
+    "Laat Noah %@ nu bellen, bijvoorbeeld als je weet dat het een stille dag is.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat Noah %@ nu bellen, bijvoorbeeld als je weet dat het een stille dag is."
+          }
+        }
+      }
+    },
+    "Laat Noah nu bellen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat Noah nu bellen"
+          }
+        }
+      }
+    },
+    "Laatst gebruikt %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laatst gebruikt %@"
+          }
+        }
+      }
+    },
+    "Laatste gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laatste gesprek"
+          }
+        }
+      }
+    },
+    "Later": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        }
+      }
+    },
+    "Later starten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later starten"
+          }
+        }
+      }
+    },
+    "Later verder gaan?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later verder gaan?"
+          }
+        }
+      }
+    },
+    "Lees het hele gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees het hele gesprek"
+          }
+        }
+      }
+    },
+    "Lees verder": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees verder"
+          }
+        }
+      }
+    },
+    "Levensverhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Levensverhaal"
+          }
+        }
+      }
+    },
+    "Liever vermijden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liever vermijden"
+          }
+        }
+      }
+    },
+    "Log in of maak in één stap een account. Daarna stel je Noah in voor je naaste.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in of maak in één stap een account. Daarna stel je Noah in voor je naaste."
+          }
+        }
+      }
+    },
+    "Loopt af op %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loopt af op %@"
+          }
+        }
+      }
+    },
+    "Maak beheerder": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak beheerder"
+          }
+        }
+      }
+    },
+    "Maak je account": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak je account"
+          }
+        }
+      }
+    },
+    "Maak lezer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak lezer"
+          }
+        }
+      }
+    },
+    "Maak uitnodiging": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak uitnodiging"
+          }
+        }
+      }
+    },
+    "Mag leeg blijven als het jaar niet bekend is.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mag leeg blijven als het jaar niet bekend is."
+          }
+        }
+      }
+    },
+    "Mantelzorgers": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantelzorgers"
+          }
+        }
+      }
+    },
+    "Mark de Vries": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark de Vries"
+          }
+        }
+      }
+    },
+    "Maximale gesprekslengte": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximale gesprekslengte"
+          }
+        }
+      }
+    },
+    "Meer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meer"
+          }
+        }
+      }
+    },
+    "Melding": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melding"
+          }
+        }
+      }
+    },
+    "Melding afhandelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melding afhandelen"
+          }
+        }
+      }
+    },
+    "Meldingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen"
+          }
+        }
+      }
+    },
+    "Meldingen aanzetten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen aanzetten"
+          }
+        }
+      }
+    },
+    "Meldingen aanzetten?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meldingen aanzetten?"
+          }
+        }
+      }
+    },
+    "Mensen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensen"
+          }
+        }
+      }
+    },
+    "Met": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met"
+          }
+        }
+      }
+    },
+    "Met één tik een gesprek met Noah beginnen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met één tik een gesprek met Noah beginnen."
+          }
+        }
+      }
+    },
+    "Mijn gegevens exporteren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn gegevens exporteren"
+          }
+        }
+      }
+    },
+    "Mijn verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mijn verhaal"
+          }
+        }
+      }
+    },
+    "Mobiel nummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mobiel nummer"
+          }
+        }
+      }
+    },
+    "Mobiel of vast nummer van %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mobiel of vast nummer van %@"
+          }
+        }
+      }
+    },
+    "Mooi citaat (optioneel)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mooi citaat (optioneel)"
+          }
+        }
+      }
+    },
+    "Na %lld dagen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na %lld dagen"
+          }
+        }
+      }
+    },
+    "Na 1 dag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na 1 dag"
+          }
+        }
+      }
+    },
+    "Na elk gesprek met Noah verschijnt hier een korte samenvatting, met de stemming en de onderwerpen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na elk gesprek met Noah verschijnt hier een korte samenvatting, met de stemming en de onderwerpen."
+          }
+        }
+      }
+    },
+    "Na elk gesprek schat Noah de stemming en de helderheid in, op een schaal van 1 tot 5. Het is een signaal om op te letten, geen diagnose. Twijfel je, bespreek het dan met de huisarts.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na elk gesprek schat Noah de stemming en de helderheid in, op een schaal van 1 tot 5. Het is een signaal om op te letten, geen diagnose. Twijfel je, bespreek het dan met de huisarts."
+          }
+        }
+      }
+    },
+    "Naam": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam"
+          }
+        }
+      }
+    },
+    "Naam en aanspreekvorm": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam en aanspreekvorm"
+          }
+        }
+      }
+    },
+    "Naam van Noah": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam van Noah"
+          }
+        }
+      }
+    },
+    "Naar Instellingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar Instellingen"
+          }
+        }
+      }
+    },
+    "Naar het overzicht": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar het overzicht"
+          }
+        }
+      }
+    },
+    "Naasten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naasten"
+          }
+        }
+      }
+    },
+    "Nieuw profiel toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw profiel toevoegen"
+          }
+        }
+      }
+    },
+    "Nieuwe code": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe code"
+          }
+        }
+      }
+    },
+    "Nieuwe herinnering": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe herinnering"
+          }
+        }
+      }
+    },
+    "Nieuwste: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwste: %@"
+          }
+        }
+      }
+    },
+    "Noah": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah"
+          }
+        }
+      }
+    },
+    "Noah Unlimited": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah Unlimited"
+          }
+        }
+      }
+    },
+    "Noah Unlimited voor %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah Unlimited voor %@"
+          }
+        }
+      }
+    },
+    "Noah begint hier zelf niet over.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah begint hier zelf niet over."
+          }
+        }
+      }
+    },
+    "Noah belt dan elke gekozen dag om een goedemorgen te wensen en de dag door te nemen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah belt dan elke gekozen dag om een goedemorgen te wensen en de dag door te nemen."
+          }
+        }
+      }
+    },
+    "Noah belt elke ochtend": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah belt elke ochtend"
+          }
+        }
+      }
+    },
+    "Noah belt u op uw telefoon": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah belt u op uw telefoon"
+          }
+        }
+      }
+    },
+    "Noah gebruikt deze naam in de gesprekken.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah gebruikt deze naam in de gesprekken."
+          }
+        }
+      }
+    },
+    "Noah geeft signalen door om je te helpen opletten. Het is geen medisch oordeel. Twijfel je, overleg dan met de huisarts.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah geeft signalen door om je te helpen opletten. Het is geen medisch oordeel. Twijfel je, overleg dan met de huisarts."
+          }
+        }
+      }
+    },
+    "Noah herinnert u er op tijd aan, in een gesprek of door u te bellen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah herinnert u er op tijd aan, in een gesprek of door u te bellen."
+          }
+        }
+      }
+    },
+    "Noah herkent dit nummer als er gebeld wordt, en belt naar dit nummer voor herinneringen en het ochtendgesprek.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah herkent dit nummer als er gebeld wordt, en belt naar dit nummer voor herinneringen en het ochtendgesprek."
+          }
+        }
+      }
+    },
+    "Noah instellen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah instellen"
+          }
+        }
+      }
+    },
+    "Noah is actief voor %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah is actief voor %@"
+          }
+        }
+      }
+    },
+    "Noah is actief voor %@.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah is actief voor %@."
+          }
+        }
+      }
+    },
+    "Noah is een warme metgezel om mee te praten. Voor waardig ouder worden, en gemoedsrust voor de familie.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah is een warme metgezel om mee te praten. Voor waardig ouder worden, en gemoedsrust voor de familie."
+          }
+        }
+      }
+    },
+    "Noah is een warme metgezel voor je vader, moeder of naaste. Iemand die luistert, onthoudt en er altijd is, ook als jij er even niet bent. Want eenzaamheid hoort niet bij ouder worden.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah is een warme metgezel voor je vader, moeder of naaste. Iemand die luistert, onthoudt en er altijd is, ook als jij er even niet bent. Want eenzaamheid hoort niet bij ouder worden."
+          }
+        }
+      }
+    },
+    "Noah kan helpen onthouden: pillen, afspraken, verjaardagen of een vast rondje wandelen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah kan helpen onthouden: pillen, afspraken, verjaardagen of een vast rondje wandelen."
+          }
+        }
+      }
+    },
+    "Noah laat het je weten als er iets lijkt te spelen, zoals een sombere stemming, een hulpvraag of een mogelijk oplichtingstelefoontje.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah laat het je weten als er iets lijkt te spelen, zoals een sombere stemming, een hulpvraag of een mogelijk oplichtingstelefoontje."
+          }
+        }
+      }
+    },
+    "Noah maakt een praatje, haalt herinneringen op, bewaart het levensverhaal en helpt met de dag: van pillen tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah maakt een praatje, haalt herinneringen op, bewaart het levensverhaal en helpt met de dag: van pillen tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk."
+          }
+        }
+      }
+    },
+    "Noah merkte iets op": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah merkte iets op"
+          }
+        }
+      }
+    },
+    "Noah neemt dit mee in de volgende gesprekken.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah neemt dit mee in de volgende gesprekken."
+          }
+        }
+      }
+    },
+    "Noah zegt standaard “u”. Kies “jij” als dat vertrouwder voelt.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah zegt standaard “u”. Kies “jij” als dat vertrouwder voelt."
+          }
+        }
+      }
+    },
+    "Noah-instellingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah-instellingen"
+          }
+        }
+      }
+    },
+    "Nog %lld:%@ geldig, één keer te gebruiken.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Nog %1$lld:%2$@ geldig, één keer te gebruiken."
+          }
+        }
+      }
+    },
+    "Nog geen gesprekken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen gesprekken"
+          }
+        }
+      }
+    },
+    "Nog geen gesprekken. Na het eerste gesprek met Noah zie je hier een korte samenvatting.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen gesprekken. Na het eerste gesprek met Noah zie je hier een korte samenvatting."
+          }
+        }
+      }
+    },
+    "Nog geen herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen herinneringen"
+          }
+        }
+      }
+    },
+    "Nog geen meldingen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen meldingen"
+          }
+        }
+      }
+    },
+    "Nog geen noodcontacten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen noodcontacten"
+          }
+        }
+      }
+    },
+    "Nog geen stemming gemeten deze week.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen stemming gemeten deze week."
+          }
+        }
+      }
+    },
+    "Nog geen telefoon gekoppeld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen telefoon gekoppeld"
+          }
+        }
+      }
+    },
+    "Nog niemand toegevoegd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog niemand toegevoegd"
+          }
+        }
+      }
+    },
+    "Nog niets over %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog niets over %@"
+          }
+        }
+      }
+    },
+    "Nog ongeveer een minuut": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog ongeveer een minuut"
+          }
+        }
+      }
+    },
+    "Noodcontact": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noodcontact"
+          }
+        }
+      }
+    },
+    "Noodcontact toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noodcontact toevoegen"
+          }
+        }
+      }
+    },
+    "Noodcontacten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noodcontacten"
+          }
+        }
+      }
+    },
+    "Notitie": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notitie"
+          }
+        }
+      }
+    },
+    "Notitie (optioneel)": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notitie (optioneel)"
+          }
+        }
+      }
+    },
+    "Notitie voor Noah": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notitie voor Noah"
+          }
+        }
+      }
+    },
+    "Ochtendgesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ochtendgesprek"
+          }
+        }
+      }
+    },
+    "Onbeperkt praten met Noah, via de app en een gewoon telefoonnummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onbeperkt praten met Noah, via de app en een gewoon telefoonnummer"
+          }
+        }
+      }
+    },
+    "Ondertitels aanzetten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ondertitels aanzetten"
+          }
+        }
+      }
+    },
+    "Ondertitels uitzetten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ondertitels uitzetten"
+          }
+        }
+      }
+    },
+    "Onderwerp": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onderwerp"
+          }
+        }
+      }
+    },
+    "Onderwerpen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onderwerpen"
+          }
+        }
+      }
+    },
+    "Onderwerpen om over te beginnen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onderwerpen om over te beginnen"
+          }
+        }
+      }
+    },
+    "Ontkoppel": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ontkoppel"
+          }
+        }
+      }
+    },
+    "Ontkoppelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ontkoppelen"
+          }
+        }
+      }
+    },
+    "Ontwikkelaarsopties": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ontwikkelaarsopties"
+          }
+        }
+      }
+    },
+    "Op deze telefoon kan dan meteen niet meer met Noah worden gepraat. Je kunt hem later opnieuw koppelen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op deze telefoon kan dan meteen niet meer met Noah worden gepraat. Je kunt hem later opnieuw koppelen."
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Opent het hele verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent het hele verhaal"
+          }
+        }
+      }
+    },
+    "Opent het stemmingsoverzicht": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent het stemmingsoverzicht"
+          }
+        }
+      }
+    },
+    "Ophangen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ophangen"
+          }
+        }
+      }
+    },
+    "Opnieuw praten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw praten"
+          }
+        }
+      }
+    },
+    "Opnieuw proberen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
+    },
+    "Opnieuw sturen over %lld s": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw sturen over %lld s"
+          }
+        }
+      }
+    },
+    "Opslaan en verder": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opslaan en verder"
+          }
+        }
+      }
+    },
+    "Opties voor %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opties voor %@"
+          }
+        }
+      }
+    },
+    "Opzeggen kan altijd, via Instellingen › je naam › Abonnementen. Het abonnement loopt dan door tot het einde van de betaalde maand.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opzeggen kan altijd, via Instellingen › je naam › Abonnementen. Het abonnement loopt dan door tot het einde van de betaalde maand."
+          }
+        }
+      }
+    },
+    "Over %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Over %@"
+          }
+        }
+      }
+    },
+    "Overleden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overleden"
+          }
+        }
+      }
+    },
+    "Overslaan": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overslaan"
+          }
+        }
+      }
+    },
+    "Overzicht": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overzicht"
+          }
+        }
+      }
+    },
+    "Per onderwerp": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per onderwerp"
+          }
+        }
+      }
+    },
+    "Per periode": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per periode"
+          }
+        }
+      }
+    },
+    "Periode": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Periode"
+          }
+        }
+      }
+    },
+    "Persoon bewerken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persoon bewerken"
+          }
+        }
+      }
+    },
+    "Persoon toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persoon toevoegen"
+          }
+        }
+      }
+    },
+    "Pillen innemen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pillen innemen"
+          }
+        }
+      }
+    },
+    "Plaats": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plaats"
+          }
+        }
+      }
+    },
+    "Plaatsen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plaatsen"
+          }
+        }
+      }
+    },
+    "Politiek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politiek"
+          }
+        }
+      }
+    },
+    "Praat met %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Praat met %@"
+          }
+        }
+      }
+    },
+    "Praat met Noah": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Praat met Noah"
+          }
+        }
+      }
+    },
+    "Prioriteit %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioriteit %lld"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        }
+      }
+    },
+    "Privacy voorop": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy voorop"
+          }
+        }
+      }
+    },
+    "Privacybeleid": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacybeleid"
+          }
+        }
+      }
+    },
+    "Profiel": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel"
+          }
+        }
+      }
+    },
+    "Profiel aanmaken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel aanmaken"
+          }
+        }
+      }
+    },
+    "Profiel toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel toevoegen"
+          }
+        }
+      }
+    },
+    "Profiel verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiel verwijderen"
+          }
+        }
+      }
+    },
+    "Reeks": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reeks"
+          }
+        }
+      }
+    },
+    "Relatie": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relatie"
+          }
+        }
+      }
+    },
+    "Rol": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rol"
+          }
+        }
+      }
+    },
+    "Rustig": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rustig"
+          }
+        }
+      }
+    },
+    "Rusttijden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rusttijden"
+          }
+        }
+      }
+    },
+    "Samen zorgen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samen zorgen"
+          }
+        }
+      }
+    },
+    "Samenvatting": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samenvatting"
+          }
+        }
+      }
+    },
+    "Samenvattingen, stemming en meldingen voor jou en je familie": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samenvattingen, stemming en meldingen voor jou en je familie"
+          }
+        }
+      }
+    },
+    "Sara": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sara"
+          }
+        }
+      }
+    },
+    "Score": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score"
+          }
+        }
+      }
+    },
+    "Signalen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signalen"
+          }
+        }
+      }
+    },
+    "Sluiten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluiten"
+          }
+        }
+      }
+    },
+    "Soort": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soort"
+          }
+        }
+      }
+    },
+    "Spreektempo": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spreektempo"
+          }
+        }
+      }
+    },
+    "Staat om 7:30 op, wandelt na de lunch": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staat om 7:30 op, wandelt na de lunch"
+          }
+        }
+      }
+    },
+    "Stap %lld van %lld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Stap %1$lld van %2$lld"
+          }
+        }
+      }
+    },
+    "Start Noah Unlimited": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Noah Unlimited"
+          }
+        }
+      }
+    },
+    "Start voor %@ per maand": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start voor %@ per maand"
+          }
+        }
+      }
+    },
+    "Stem": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stem"
+          }
+        }
+      }
+    },
+    "Stemming": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stemming"
+          }
+        }
+      }
+    },
+    "Stemming deze week": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stemming deze week"
+          }
+        }
+      }
+    },
+    "Stemming en helderheid per dag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stemming en helderheid per dag"
+          }
+        }
+      }
+    },
+    "Stemming per dag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stemming per dag"
+          }
+        }
+      }
+    },
+    "Stemming: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stemming: %@"
+          }
+        }
+      }
+    },
+    "Stoppen met meekijken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppen met meekijken"
+          }
+        }
+      }
+    },
+    "Stuur code": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuur code"
+          }
+        }
+      }
+    },
+    "Stuur de code": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuur de code"
+          }
+        }
+      }
+    },
+    "Stuur het nummer naar %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuur het nummer naar %@"
+          }
+        }
+      }
+    },
+    "Tekst": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekst"
+          }
+        }
+      }
+    },
+    "Telefoon koppelen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoon koppelen"
+          }
+        }
+      }
+    },
+    "Telefoon ontkoppelen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoon ontkoppelen?"
+          }
+        }
+      }
+    },
+    "Telefoonnummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoonnummer"
+          }
+        }
+      }
+    },
+    "Telefoonnummer van Noah": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefoonnummer van Noah"
+          }
+        }
+      }
+    },
+    "Terug": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terug"
+          }
+        }
+      }
+    },
+    "Tijd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd"
+          }
+        }
+      }
+    },
+    "Tijden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijden"
+          }
+        }
+      }
+    },
+    "Tijdens de gesprekken bewaart Noah mooie herinneringen. Je kunt ook zelf een herinnering toevoegen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdens de gesprekken bewaart Noah mooie herinneringen. Je kunt ook zelf een herinnering toevoegen."
+          }
+        }
+      }
+    },
+    "Tijdlijn": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdlijn"
+          }
+        }
+      }
+    },
+    "Tik om te wisselen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik om te wisselen"
+          }
+        }
+      }
+    },
+    "Titel": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel"
+          }
+        }
+      }
+    },
+    "Toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toevoegen"
+          }
+        }
+      }
+    },
+    "Tot": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tot"
+          }
+        }
+      }
+    },
+    "Tuinieren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tuinieren"
+          }
+        }
+      }
+    },
+    "Typ VERWIJDER om te bevestigen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ VERWIJDER om te bevestigen"
+          }
+        }
+      }
+    },
+    "Typ en tik op Toevoegen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ en tik op Toevoegen"
+          }
+        }
+      }
+    },
+    "U: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U: %@"
+          }
+        }
+      }
+    },
+    "Uitloggen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitloggen"
+          }
+        }
+      }
+    },
+    "Uitloggen?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitloggen?"
+          }
+        }
+      }
+    },
+    "Uitnodigen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitnodigen"
+          }
+        }
+      }
+    },
+    "Uitnodiging accepteren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitnodiging accepteren"
+          }
+        }
+      }
+    },
+    "Uitnodiging klaar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitnodiging klaar"
+          }
+        }
+      }
+    },
+    "Uitnodigingscode": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitnodigingscode"
+          }
+        }
+      }
+    },
+    "Uitnodigingscode invullen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitnodigingscode invullen"
+          }
+        }
+      }
+    },
+    "Uw verhaal begint hier": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uw verhaal begint hier"
+          }
+        }
+      }
+    },
+    "VERWIJDER": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERWIJDER"
+          }
+        }
+      }
+    },
+    "Vanaf": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanaf"
+          }
+        }
+      }
+    },
+    "Vaste gewoontes": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaste gewoontes"
+          }
+        }
+      }
+    },
+    "Verberg het gesprek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verberg het gesprek"
+          }
+        }
+      }
+    },
+    "Verder": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verder"
+          }
+        }
+      }
+    },
+    "Verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verhaal"
+          }
+        }
+      }
+    },
+    "Verjaardag": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verjaardag"
+          }
+        }
+      }
+    },
+    "Verjaardag bekend": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verjaardag bekend"
+          }
+        }
+      }
+    },
+    "Versie %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versie %@"
+          }
+        }
+      }
+    },
+    "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op."
+          }
+        }
+      }
+    },
+    "Vertel iets meer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel iets meer"
+          }
+        }
+      }
+    },
+    "Vertel wat er gebeurde…": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel wat er gebeurde…"
+          }
+        }
+      }
+    },
+    "Verwijderen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwijderen"
+          }
+        }
+      }
+    },
+    "Vlot": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vlot"
+          }
+        }
+      }
+    },
+    "Voeg eerst je naaste toe, dan zie je hier hoe het gaat.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg eerst je naaste toe, dan zie je hier hoe het gaat."
+          }
+        }
+      }
+    },
+    "Voeg minstens één persoon toe die Noah kan waarschuwen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg minstens één persoon toe die Noah kan waarschuwen."
+          }
+        }
+      }
+    },
+    "Volgende": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende"
+          }
+        }
+      }
+    },
+    "Volgende herinnering": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende herinnering"
+          }
+        }
+      }
+    },
+    "Volgende: %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende: %@"
+          }
+        }
+      }
+    },
+    "Volgorde": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgorde"
+          }
+        }
+      }
+    },
+    "Voor %@. Maandelijks opzegbaar.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor %@. Maandelijks opzegbaar."
+          }
+        }
+      }
+    },
+    "Voor de mantelzorger": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor de mantelzorger"
+          }
+        }
+      }
+    },
+    "Voor je vader, moeder of een andere naaste. Jij wordt beheerder.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor je vader, moeder of een andere naaste. Jij wordt beheerder."
+          }
+        }
+      }
+    },
+    "Voor sms bij noodgevallen en om in te loggen met een code.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor sms bij noodgevallen en om in te loggen met een code."
+          }
+        }
+      }
+    },
+    "Voor wie is deze telefoon?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor wie is deze telefoon?"
+          }
+        }
+      }
+    },
+    "Voor wie stel je Noah in? Deze gegevens gebruikt Noah om je naaste persoonlijk aan te spreken.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor wie stel je Noah in? Deze gegevens gebruikt Noah om je naaste persoonlijk aan te spreken."
+          }
+        }
+      }
+    },
+    "Voor wie stel je Noah in? We lopen stap voor stap door wat Noah moet weten. Dat duurt ongeveer tien minuten, en je kunt alles later nog aanpassen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor wie stel je Noah in? We lopen stap voor stap door wat Noah moet weten. Dat duurt ongeveer tien minuten, en je kunt alles later nog aanpassen."
+          }
+        }
+      }
+    },
+    "Voorkeuren": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorkeuren"
+          }
+        }
+      }
+    },
+    "Voornaam": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voornaam"
+          }
+        }
+      }
+    },
+    "Voortgang": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voortgang"
+          }
+        }
+      }
+    },
+    "Voorwaarden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorwaarden"
+          }
+        }
+      }
+    },
+    "Vul de code in": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de code in"
+          }
+        }
+      }
+    },
+    "Vul de code in die je hebt gekregen, bijvoorbeeld K7P-2QX. Je vindt hem in het bericht met de uitnodiging.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de code in die je hebt gekregen, bijvoorbeeld K7P-2QX. Je vindt hem in het bericht met de uitnodiging."
+          }
+        }
+      }
+    },
+    "Vul de code van 6 cijfers in die u van uw mantelzorger heeft gekregen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul de code van 6 cijfers in die u van uw mantelzorger heeft gekregen."
+          }
+        }
+      }
+    },
+    "Waar": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar"
+          }
+        }
+      }
+    },
+    "Waar praat Noah graag over?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar praat Noah graag over?"
+          }
+        }
+      }
+    },
+    "Waaraan moet Noah herinneren?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waaraan moet Noah herinneren?"
+          }
+        }
+      }
+    },
+    "Waardig ouder worden": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waardig ouder worden"
+          }
+        }
+      }
+    },
+    "Waarschuw me bij geen contact": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarschuw me bij geen contact"
+          }
+        }
+      }
+    },
+    "Waarschuwen met een telefoontje": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarschuwen met een telefoontje"
+          }
+        }
+      }
+    },
+    "Waarschuwen per sms": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waarschuwen per sms"
+          }
+        }
+      }
+    },
+    "Wanneer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wanneer"
+          }
+        }
+      }
+    },
+    "Wat Noah doet": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat Noah doet"
+          }
+        }
+      }
+    },
+    "Wat is er gebeurd? Je notitie helpt de andere mantelzorgers, en helpt Noah om beter te leren wat wel en niet zorgelijk is.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat is er gebeurd? Je notitie helpt de andere mantelzorgers, en helpt Noah om beter te leren wat wel en niet zorgelijk is."
+          }
+        }
+      }
+    },
+    "Wat jij ziet": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat jij ziet"
+          }
+        }
+      }
+    },
+    "We hebben een sms met een code van 6 cijfers gestuurd naar %@.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We hebben een sms met een code van 6 cijfers gestuurd naar %@."
+          }
+        }
+      }
+    },
+    "We sturen je een sms met een code. Zo heb je geen wachtwoord nodig.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We sturen je een sms met een code. Zo heb je geen wachtwoord nodig."
+          }
+        }
+      }
+    },
+    "Weergave": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weergave"
+          }
+        }
+      }
+    },
+    "Welkom": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welkom"
+          }
+        }
+      }
+    },
+    "Welkom!": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welkom!"
+          }
+        }
+      }
+    },
+    "Welkom, %@!": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welkom, %@!"
+          }
+        }
+      }
+    },
+    "Wie gaat er met Noah praten?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie gaat er met Noah praten?"
+          }
+        }
+      }
+    },
+    "Wie moet Noah waarschuwen bij een noodgeval? Zet ze op volgorde: de eerste wordt als eerste gebeld.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie moet Noah waarschuwen bij een noodgeval? Zet ze op volgorde: de eerste wordt als eerste gebeld."
+          }
+        }
+      }
+    },
+    "Wie nodig je uit?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie nodig je uit?"
+          }
+        }
+      }
+    },
+    "Wie zijn belangrijk voor %@? Noah gebruikt dit om naar ze te vragen en verjaardagen te onthouden.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie zijn belangrijk voor %@? Noah gebruikt dit om naar ze te vragen en verjaardagen te onthouden."
+          }
+        }
+      }
+    },
+    "Willem": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willem"
+          }
+        }
+      }
+    },
+    "Wim": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wim"
+          }
+        }
+      }
+    },
+    "Woonplaats": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Woonplaats"
+          }
+        }
+      }
+    },
+    "Woonsituatie": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Woonsituatie"
+          }
+        }
+      }
+    },
+    "Wordt verlengd op %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wordt verlengd op %@"
+          }
+        }
+      }
+    },
+    "Zet in contacten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet in contacten"
+          }
+        }
+      }
+    },
+    "Zo gaat het met %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zo gaat het met %@"
+          }
+        }
+      }
+    },
+    "Zo stelt Noah zich voor. Je kunt een andere naam kiezen als dat prettiger voelt.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zo stelt Noah zich voor. Je kunt een andere naam kiezen als dat prettiger voelt."
+          }
+        }
+      }
+    },
+    "Zo weten familieleden en Noah wie je bent.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zo weten familieleden en Noah wie je bent."
+          }
+        }
+      }
+    },
+    "Zorg je samen? Nodig familie uit om mee te kijken. Een beheerder kan alles instellen, een lezer kan alleen meelezen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zorg je samen? Nodig familie uit om mee te kijken. Een beheerder kan alles instellen, een lezer kan alleen meelezen."
+          }
+        }
+      }
+    },
+    "de Vries": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "de Vries"
+          }
+        }
+      }
+    },
+    "de eerste %lld maanden, daarna %@ per maand": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "de eerste %1$lld maanden, daarna %2$@ per maand"
+          }
+        }
+      }
+    },
+    "gem. stemming": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gem. stemming"
+          }
+        }
+      }
+    },
+    "gemiddeld": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gemiddeld"
+          }
+        }
+      }
+    },
+    "gesprekken": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gesprekken"
+          }
+        }
+      }
+    },
+    "herinnering bewaard": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "herinnering bewaard"
+          }
+        }
+      }
+    },
+    "herinneringen bewaard": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "herinneringen bewaard"
+          }
+        }
+      }
+    },
+    "kleindochter": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kleindochter"
+          }
+        }
+      }
+    },
+    "minuten": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minuten"
+          }
+        }
+      }
+    },
+    "trend": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "trend"
+          }
+        }
+      }
+    },
+    "zoon": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zoon"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

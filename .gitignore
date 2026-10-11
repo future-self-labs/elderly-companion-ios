@@ -19,10 +19,10 @@ build/
 !default.perspectivev3
 *.xcuserstate
 
-# Swift Package Manager
+# Swift Package Manager (the app's Package.resolved inside HelloNoah.xcodeproj is committed on purpose)
 .build/
 Packages/
-Package.resolved
+/Package.resolved
 
 # Former duplicate API copy — the canonical server lives in the elderly-companion-api repo.
 # Ignore any stale local checkout so it can't be re-added by accident.
@@ -46,3 +46,6 @@ __pycache__/
 
 # IDE
 .idea/
+
+# Old ElderlyCompanion build output
+Build/

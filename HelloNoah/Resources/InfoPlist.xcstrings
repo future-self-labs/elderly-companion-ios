@@ -1,0 +1,54 @@
+{
+  "sourceLanguage": "nl",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Info.plist",
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HelloNoah"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "comment": "Info.plist",
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HelloNoah"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "comment": "Info.plist",
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah gebruikt de microfoon zodat u met Noah kunt praten. Er worden geen geluidsopnames bewaard."
+          }
+        }
+      }
+    },
+    "NSContactsUsageDescription": {
+      "comment": "Info.plist",
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HelloNoah zet het telefoonnummer van Noah in je contacten, alleen als je daar zelf om vraagt."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
