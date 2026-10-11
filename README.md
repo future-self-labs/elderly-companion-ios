@@ -111,8 +111,10 @@ display titles are capped at accessibility size 1 to avoid mid-word breaks, body
 
 `POST /device/conversation` → `ElevenLabs.startConversation(conversationToken:config:)` (Swift SDK 3.4) with the
 returned `dynamicVariables` (typed) and `overrides` (prompt, first message, language, voice, speed) unchanged. The app
-owns the audio session (`.playAndRecord`, `.voiceChat` for echo cancellation, loudspeaker, Bluetooth), reads levels
-from LiveKit's `AudioManager`, ends calmly on an incoming phone call, shows network hiccups, enforces
+owns the audio session (`.playAndRecord`, `.voiceChat` for echo cancellation, loudspeaker, Bluetooth), drives the orb
+and waveform from a renderer on the agent's `RemoteAudioTrack` (Noah) and the mic renderer + server VAD score (the
+older person), with a calm synthetic wave when no levels arrive, ends calmly on an incoming phone call, shows
+network hiccups, enforces
 `maxDurationSeconds`, keeps the screen awake and continues with the screen locked (background audio).
 
 ## Strings

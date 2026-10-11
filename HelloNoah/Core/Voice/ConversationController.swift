@@ -173,11 +173,11 @@ final class ConversationController: ObservableObject {
         case .turn(let turn):
             self.turn = turn
         case .levels(let agent, let user):
-            agentLevel = agent
-            userLevel = user
-            let value = turn == .speaking ? agent : user
+            let shown = displayedLevels(agent: agent, user: user, now: Date())
+            agentLevel = shown.agent
+            userLevel = shown.user
             levelHistory.removeFirst()
-            levelHistory.append(value)
+            levelHistory.append(turn == .speaking ? shown.agent : shown.user)
         case .subtitles(let lines):
             subtitles = lines.filter { !$0.text.isEmpty }
         case .ended(let reason):
@@ -188,6 +188,15 @@ final class ConversationController: ObservableObject {
             case .connectionLost: finish(.failed(reachability.isOnline ? .connectionLost : .offline))
             }
         }
+    }
+
+    // MARK: Levels
+
+    private var levelShaper = LevelShaper()
+    var usesSyntheticLevels: Bool { levelShaper.isSynthetic }
+
+    private func displayedLevels(agent: Double, user: Double, now: Date) -> (agent: Double, user: Double) {
+        levelShaper.levels(agent: agent, user: user, turn: turn, now: now)
     }
 
     private func tick() {
@@ -251,5 +260,42 @@ final class ConversationController: ObservableObject {
                 self.networkLost = !online
             }
             .store(in: &cancellables)
+    }
+}
+
+/// Real audio levels when they arrive; otherwise a calm synthetic wave keyed on who is speaking,
+/// so the orb and waveform never look frozen (e.g. when a device exposes no audio buffers).
+struct LevelShaper {
+    /// Below this a level counts as "no signal".
+    static let silenceThreshold = 0.04
+    /// How long without a real level before the synthetic wave takes over.
+    static let fallbackDelay: TimeInterval = 0.5
+
+    private var lastRealAgentLevelAt = Date.distantPast
+    private var lastRealUserLevelAt = Date.distantPast
+    private(set) var isSynthetic = false
+
+    mutating func levels(agent: Double, user: Double, turn: VoiceTurn, now: Date) -> (agent: Double, user: Double) {
+        if agent > Self.silenceThreshold { lastRealAgentLevelAt = now }
+        if user > Self.silenceThreshold { lastRealUserLevelAt = now }
+        let t = now.timeIntervalSinceReferenceDate
+        var shownAgent = agent
+        var shownUser = user
+        isSynthetic = false
+        switch turn {
+        case .speaking where now.timeIntervalSince(lastRealAgentLevelAt) > Self.fallbackDelay:
+            // Speech-like: a slow swell with faster syllable ripples.
+            shownAgent = 0.42 + 0.2 * sin(t * 5.3) + 0.14 * sin(t * 13.7 + 1.3) + 0.06 * sin(t * 29.1)
+            isSynthetic = true
+        case .listening where now.timeIntervalSince(lastRealUserLevelAt) > Self.fallbackDelay:
+            // Quiet "breathing" so it is visible that Noah is listening.
+            shownUser = 0.07 + 0.04 * sin(t * 2.1)
+            isSynthetic = true
+        case .thinking:
+            shownAgent = max(agent, 0.05 + 0.03 * sin(t * 6))
+        default:
+            break
+        }
+        return (min(max(shownAgent, 0), 1), min(max(shownUser, 0), 1))
     }
 }

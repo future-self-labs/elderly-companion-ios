@@ -9,6 +9,13 @@ import LiveKit
 /// The backend's `POST /device/conversation` response is passed through unchanged:
 /// `conversationToken` authenticates the private agent, `dynamicVariables` and `overrides` go into
 /// the `ConversationConfig`.
+///
+/// Audio levels (SDK 3.4 has no level publisher):
+/// - Noah: a renderer on the agent's `RemoteAudioTrack` (a WebRTC track sink, so it receives
+///   decoded audio even when Apple's voice processing bypasses WebRTC's audio-processing module,
+///   which is why `AudioManager.add(remoteAudioRenderer:)` alone stays silent on devices).
+/// - The older person: the server's VAD score (`onVadScore`, 0…1) plus the local mic renderer.
+/// `ConversationController` adds a gentle synthetic animation if no real level arrives.
 @MainActor
 final class ElevenLabsVoiceEngine: VoiceEngine {
     var onEvent: ((VoiceEvent) -> Void)?
@@ -16,7 +23,10 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
     private var conversation: Conversation?
     private var cancellables = Set<AnyCancellable>()
     private let agentMeter = LevelMeter()
+    private let agentProcessingMeter = LevelMeter()
     private let micMeter = LevelMeter()
+    private var vadScore = VADScore()
+    private weak var attachedAgentTrack: RemoteAudioTrack?
     private var levelTimer: Timer?
     private var endedLocally = false
     private var didReportEnd = false
@@ -40,6 +50,8 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
         if let tts = session.overrides?.tts {
             config.ttsOverrides = TTSOverrides(voiceId: tts.voiceId, speed: tts.speed)
         }
+        let vad = vadScore
+        config.onVadScore = { score in vad.update(score) }
         config.onDisconnect = { [weak self] reason in
             Task { @MainActor in
                 guard let self else { return }
@@ -55,12 +67,20 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
         self.conversation = conversation
         observe(conversation)
 
-        AudioManager.shared.add(remoteAudioRenderer: agentMeter)
+        AudioManager.shared.add(remoteAudioRenderer: agentProcessingMeter)
         AudioManager.shared.add(localAudioRenderer: micMeter)
+        attachAgentTrackIfNeeded()
         levelTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
-                self.onEvent?(.levels(agent: Double(self.agentMeter.level), user: Double(self.micMeter.level)))
+                // The agent's track appears once the agent publishes it; attach as soon as it exists.
+                self.attachAgentTrackIfNeeded()
+                let agent = max(self.agentMeter.level, self.agentProcessingMeter.level)
+                let user = max(self.micMeter.level, Float(self.vadScore.value) * 0.8)
+                #if DEBUG
+                self.logFirstLevels(agent: agent, user: user)
+                #endif
+                self.onEvent?(.levels(agent: Double(agent), user: Double(user)))
             }
         }
         onEvent?(.connected)
@@ -117,6 +137,32 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
             .store(in: &cancellables)
     }
 
+    #if DEBUG
+    private var loggedAgentLevel = false
+    private var loggedUserLevel = false
+
+    private func logFirstLevels(agent: Float, user: Float) {
+        if !loggedAgentLevel, agent > 0.04 {
+            loggedAgentLevel = true
+            NSLog("[HelloNoah Voice] real agent level %.2f (track sink %.2f, APM %.2f)", agent, agentMeter.level, agentProcessingMeter.level)
+        }
+        if !loggedUserLevel, user > 0.04 {
+            loggedUserLevel = true
+            NSLog("[HelloNoah Voice] real user level %.2f (vad %.2f)", user, vadScore.value)
+        }
+    }
+    #endif
+
+    private func attachAgentTrackIfNeeded() {
+        guard let track = conversation?.agentAudioTrack, track !== attachedAgentTrack else { return }
+        attachedAgentTrack?.remove(audioRenderer: agentMeter)
+        track.add(audioRenderer: agentMeter)
+        attachedAgentTrack = track
+        #if DEBUG
+        NSLog("[HelloNoah Voice] level renderer attached to agent track")
+        #endif
+    }
+
     private func reportEnd(_ reason: VoiceEndReason) {
         guard !didReportEnd else { return }
         didReportEnd = true
@@ -126,7 +172,9 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
     private func cleanup() {
         levelTimer?.invalidate()
         levelTimer = nil
-        AudioManager.shared.remove(remoteAudioRenderer: agentMeter)
+        attachedAgentTrack?.remove(audioRenderer: agentMeter)
+        attachedAgentTrack = nil
+        AudioManager.shared.remove(remoteAudioRenderer: agentProcessingMeter)
         AudioManager.shared.remove(localAudioRenderer: micMeter)
         cancellables.removeAll()
         conversation = nil
@@ -144,6 +192,23 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
         case .object(let object): return .object(object.mapValues(sdkValue))
         case .null: return .null
         }
+    }
+}
+
+/// Latest server VAD score, decaying when no new scores arrive.
+final class VADScore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var score: Double = 0
+    private var at = Date.distantPast
+
+    func update(_ value: Double) {
+        lock.lock(); score = min(max(value, 0), 1); at = Date(); lock.unlock()
+    }
+
+    var value: Double {
+        lock.lock(); defer { lock.unlock() }
+        let age = Date().timeIntervalSince(at)
+        return age > 0.6 ? 0 : score * (1 - age / 0.6)
     }
 }
 
