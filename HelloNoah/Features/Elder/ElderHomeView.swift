@@ -8,7 +8,6 @@ struct ElderHomeView: View {
     @EnvironmentObject private var session: ElderSession
     @EnvironmentObject private var reachability: Reachability
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var callMessage: String?
     @State private var callFailed = false
     @State private var isCalling = false
@@ -170,8 +169,8 @@ struct ElderHomeView: View {
     }
 
     private var navigationButtons: some View {
-        let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: NoahSpacing.m)) : AnyLayout(HStackLayout(spacing: NoahSpacing.m))
-        return layout {
+        // Full-width rows: long single words like "Herinneringen" never break mid-word.
+        VStack(spacing: NoahSpacing.m) {
             ElderTileButton(title: "Mijn verhaal", systemImage: "book.fill") { path.append(.myStory) }
                 .accessibilityIdentifier("elder.myStory")
             ElderTileButton(title: "Herinneringen", systemImage: "bell.fill") { path.append(.reminders) }
@@ -204,19 +203,26 @@ struct ElderTileButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: NoahSpacing.s) {
+            HStack(spacing: NoahSpacing.m) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 32, weight: .semibold))
+                    .font(.system(size: 30, weight: .semibold))
                     .foregroundColor(NoahColor.accent)
+                    .frame(width: 40)
                     .accessibilityHidden(true)
                 Text(title)
                     .font(NoahFont.Elder.bodyStrong)
                     .foregroundColor(NoahColor.text)
-                    .multilineTextAlignment(.center)
+                    .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(NoahFont.Elder.label)
+                    .foregroundColor(NoahColor.textSecondary)
+                    .accessibilityHidden(true)
             }
-            .padding(NoahSpacing.l)
-            .frame(maxWidth: .infinity, minHeight: 132)
+            .padding(.horizontal, NoahSpacing.l)
+            .padding(.vertical, NoahSpacing.m)
+            .frame(maxWidth: .infinity, minHeight: 88)
             .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
             .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
             .contentShape(RoundedRectangle(cornerRadius: NoahRadius.large))
