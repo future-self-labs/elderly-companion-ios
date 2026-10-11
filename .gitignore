@@ -24,11 +24,9 @@ build/
 Packages/
 Package.resolved
 
-# Node / Bun (server)
-server/node_modules/
-server/dist/
-server/.env
-server/bun.lockb
+# Former duplicate API copy — the canonical server lives in the elderly-companion-api repo.
+# Ignore any stale local checkout so it can't be re-added by accident.
+server/
 
 # Environment
 .env
@@ -37,6 +35,9 @@ server/bun.lockb
 
 # macOS
 .DS_Store
+
+# Python
+__pycache__/
 *.swp
 *~
 

@@ -18,7 +18,7 @@ iOS App (SwiftUI)  ──────►  Backend API (Hono/Bun)  ────�
 ## Project Structure
 
 - `ElderlyCompanion/` - Native iOS app (Swift/SwiftUI, iOS 17+)
-- `server/` - Backend API (TypeScript, Hono, Bun)
+- Backend API: **not in this repo** — see the `elderly-companion-api` repository (the canonical server; the old `server/` copy was removed)
 
 ## Getting Started
 
@@ -37,27 +37,10 @@ xcodegen generate
 
 ### Backend API
 
-1. Install dependencies:
-
-```bash
-cd server
-bun install
-```
-
-2. Set up environment variables:
-
-```bash
-cp .env.example .env
-# Fill in your Twilio + LiveKit + Zep credentials
-```
-
-3. Start the development server:
-
-```bash
-bun dev
-```
-
-The API will be running at `http://localhost:3000/api/v1`.
+The backend now lives only in the separate **`elderly-companion-api`** repository
+(sibling folder `../elderly-companion-api`). The duplicate `server/` copy that used to be
+synced into this repo by hand was removed — it is still available in git history.
+See that repo's `.env.example` for setup and required environment variables.
 
 ## Environment Variables
 

@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-02-16 (late night)
+Last updated: 2026-10-10
 
 ---
 
@@ -354,7 +354,7 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 ## Key Hardcoded Values
 - API URL: `https://elderly-companion-api-production.up.railway.app/api/v1`
 - LiveKit Cloud: `wss://test-7hm3rr9r.livekit.cloud`
-- Bundle ID: `com.futureselflabs.elderlycompanion`
+- Bundle ID: `com.futureselflabs.elderlycompanion` (legacy Future Self Labs identifier, unchanged)
 - SIP Trunk: `ST_FsnpUMR6sYFp`
 - Agent name: `noah`
 - JWT expiry: 30 days
@@ -416,6 +416,15 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - **Symptom**: Phone calls occasionally greet in English and say "the user" instead of the real name.
 - **Likely cause**: User data lookup returning incomplete data (missing name/language fields). Added logging to diagnose.
 - **Status**: Investigating via Railway logs.
+
+---
+
+## 2026-10-10 — Rebrand to Next Empire, preparing test phase
+
+- Company rebranded from **Future Self Labs** to **Next Empire**. Docs, project context and user-facing text updated on branch `next-empire/test-phase` (all four repos).
+- The project is being prepared for a **test phase**. The history in this log is kept as-is (not rewritten); entries below this one describe the state as of February 2026.
+- Infrastructure identifiers still carry the old name and are intentionally unchanged until decided: GitHub org `future-self-labs`, bundle ID `com.futureselflabs.elderlycompanion` (and `bundleIdPrefix` in `project.yml`, Keychain service name). Changing the bundle ID means a new App Store app record (acceptable for a fresh test phase, but a deliberate decision).
+- Marketing site (`noah-family-voice`): `.env` (public Supabase keys) removed from git tracking and added to `.gitignore`.
 
 ---
 

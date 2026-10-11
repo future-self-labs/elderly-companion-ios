@@ -1,5 +1,4 @@
 import Foundation
-import LiveKit
 
 @Observable
 final class ConversationViewModel {
