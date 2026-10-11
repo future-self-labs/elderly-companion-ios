@@ -57,6 +57,29 @@ extension View {
     }
 }
 
+/// Capitalisation for `NoahTextField`.
+enum NoahCapitalization {
+    case sentences, words, characters, never
+
+    var uiKit: UITextAutocapitalizationType {
+        switch self {
+        case .sentences: return .sentences
+        case .words: return .words
+        case .characters: return .allCharacters
+        case .never: return .none
+        }
+    }
+
+    var swiftUI: TextInputAutocapitalization {
+        switch self {
+        case .sentences: return .sentences
+        case .words: return .words
+        case .characters: return .characters
+        case .never: return .never
+        }
+    }
+}
+
 struct NoahTextField: View {
     let label: LocalizedStringKey
     @Binding var text: String
@@ -65,28 +88,115 @@ struct NoahTextField: View {
     var error: String?
     var keyboard: UIKeyboardType = .default
     var contentType: UITextContentType?
-    var autocapitalization: TextInputAutocapitalization = .sentences
+    var autocapitalization: NoahCapitalization = .sentences
     var multiline = false
 
-    @FocusState private var focused: Bool
+    @FocusState private var multilineFocused: Bool
+    @State private var singleLineFocused = false
+
+    private var noAutocorrect: Bool {
+        keyboard == .phonePad || keyboard == .numberPad || contentType == .telephoneNumber
+    }
 
     var body: some View {
         NoahField(label: label, footnote: footnote, error: error) {
-            Group {
-                if multiline {
-                    TextField(label, text: $text, prompt: prompt.map { Text($0) }, axis: .vertical)
-                        .lineLimit(3...10)
-                } else {
-                    TextField(label, text: $text, prompt: prompt.map { Text($0) })
+            if multiline {
+                TextField(label, text: $text, prompt: prompt.map { Text($0) }, axis: .vertical)
+                    .lineLimit(3...10)
+                    .keyboardType(keyboard)
+                    .textContentType(contentType)
+                    .textInputAutocapitalization(autocapitalization.swiftUI)
+                    .autocorrectionDisabled(noAutocorrect)
+                    .focused($multilineFocused)
+                    .noahInputBox(isFocused: multilineFocused, hasError: error != nil)
+                    .accessibilityHint(footnote.map { Text($0) } ?? Text(""))
+            } else {
+                // UIKit-backed: the text field owns its text, so fast typing, key bursts and
+                // autofill never lose characters when the surrounding SwiftUI view re-renders.
+                NoahSingleLineField(
+                    text: $text,
+                    isFocused: $singleLineFocused,
+                    keyboard: keyboard,
+                    contentType: contentType,
+                    autocapitalization: autocapitalization.uiKit,
+                    autocorrection: noAutocorrect ? .no : .default
+                )
+                .overlay(alignment: .leading) {
+                    if text.isEmpty, let prompt {
+                        Text(prompt)
+                            .font(NoahFont.bodyText)
+                            .foregroundColor(NoahColor.textSecondary.opacity(0.75))
+                            .lineLimit(1)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
                 }
+                .noahInputBox(isFocused: singleLineFocused, hasError: error != nil)
+                .accessibilityLabel(Text(label))
+                .accessibilityHint(footnote.map { Text($0) } ?? Text(""))
             }
-            .keyboardType(keyboard)
-            .textContentType(contentType)
-            .textInputAutocapitalization(autocapitalization)
-            .autocorrectionDisabled(keyboard == .phonePad || keyboard == .numberPad || contentType == .telephoneNumber)
-            .focused($focused)
-            .noahInputBox(isFocused: focused, hasError: error != nil)
-            .accessibilityHint(footnote.map { Text($0) } ?? Text(""))
+        }
+    }
+}
+
+/// Single-line UITextField styled with the design tokens (Lexend, Dynamic Type).
+struct NoahSingleLineField: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var isFocused: Bool
+    var keyboard: UIKeyboardType
+    var contentType: UITextContentType?
+    var autocapitalization: UITextAutocapitalizationType
+    var autocorrection: UITextAutocorrectionType
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIView(context: Context) -> UITextField {
+        let field = UITextField()
+        let base = UIFont(name: NoahFontFamily.body, size: 17) ?? .preferredFont(forTextStyle: .body)
+        field.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: base)
+        field.adjustsFontForContentSizeCategory = true
+        field.textColor = UIColor(NoahColor.text)
+        field.tintColor = UIColor(NoahColor.accent)
+        field.borderStyle = .none
+        field.backgroundColor = .clear
+        field.returnKeyType = .done
+        field.delegate = context.coordinator
+        field.addTarget(context.coordinator, action: #selector(Coordinator.editingChanged(_:)), for: .editingChanged)
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        field.text = text
+        configure(field)
+        return field
+    }
+
+    func updateUIView(_ field: UITextField, context: Context) {
+        context.coordinator.parent = self
+        if field.text != text { field.text = text }
+        configure(field)
+    }
+
+    private func configure(_ field: UITextField) {
+        if field.keyboardType != keyboard { field.keyboardType = keyboard }
+        if field.textContentType != contentType { field.textContentType = contentType }
+        if field.autocapitalizationType != autocapitalization { field.autocapitalizationType = autocapitalization }
+        if field.autocorrectionType != autocorrection { field.autocorrectionType = autocorrection }
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        var parent: NoahSingleLineField
+        init(_ parent: NoahSingleLineField) { self.parent = parent }
+
+        @objc func editingChanged(_ field: UITextField) {
+            let value = field.text ?? ""
+            if parent.text != value { parent.text = value }
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) { parent.isFocused = true }
+        func textFieldDidEndEditing(_ textField: UITextField) { parent.isFocused = false }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
         }
     }
 }
@@ -188,56 +298,5 @@ struct NoahOptionCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
-    }
-}
-
-/// Six separate digit boxes backed by a single hidden text field (pairing and SMS codes).
-struct NoahCodeField: View {
-    @Binding var code: String
-    var length = 6
-    var large = false
-    var onComplete: (() -> Void)?
-
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        ZStack {
-            TextField("", text: Binding(
-                get: { code },
-                set: { newValue in
-                    let digits = newValue.filter(\.isNumber)
-                    code = String(digits.prefix(length))
-                    if code.count == length { onComplete?() }
-                }
-            ))
-            .keyboardType(.numberPad)
-            .textContentType(.oneTimeCode)
-            .focused($focused)
-            .foregroundColor(.clear)
-            .tint(.clear)
-            .opacity(0.011)
-            .accessibilityLabel(Text("Code van \(length) cijfers"))
-            .accessibilityValue(Text(verbatim: code))
-
-            HStack(spacing: large ? NoahSpacing.s : NoahSpacing.xs) {
-                ForEach(0..<length, id: \.self) { index in
-                    let character = index < code.count ? String(Array(code)[index]) : ""
-                    Text(verbatim: character)
-                        .font(large ? NoahFont.display(40, relativeTo: .largeTitle) : NoahFont.display(30, relativeTo: .title))
-                        .foregroundColor(NoahColor.text)
-                        .frame(maxWidth: .infinity, minHeight: large ? 76 : 60)
-                        .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surface))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous)
-                                .strokeBorder(focused && index == min(code.count, length - 1) ? NoahColor.accent : NoahColor.border, lineWidth: focused && index == min(code.count, length - 1) ? 2 : 1)
-                        )
-                }
-            }
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { focused = true }
-        .onAppear { focused = true }
     }
 }

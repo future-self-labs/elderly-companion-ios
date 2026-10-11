@@ -34,6 +34,7 @@
 		3DCFD7425D763FA7DF5D7CE8 /* OFL-Lexend.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20A641E00D52284031FAD338 /* OFL-Lexend.txt */; };
 		4210100071E9A2B144F26867 /* ElderRemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012744EACD6EBE003E07B603 /* ElderRemindersView.swift */; };
 		47E9FB7B78641926A1D12C73 /* MyStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36B3612E14E0DD48A5555756 /* MyStoryView.swift */; };
+		4E9FA0171CBA6890EA278B60 /* CodeField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF6AE8204A9DB296A02B757 /* CodeField.swift */; };
 		4ECBD3F33933DDEF0E8A756A /* ContractFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E118EA164824B2298F8AE5A /* ContractFixtures.swift */; };
 		566A066BCA1D47C921265FEE /* ListRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A62732A7069EFA87CDA14E2 /* ListRows.swift */; };
 		57FA521551CB7B6F5061A826 /* ContractDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07167BA140C8DBA99A7BF02 /* ContractDecodingTests.swift */; };
@@ -54,11 +55,13 @@
 		805AD41998FB33BD1D5E5C29 /* DMSerifDisplay-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C11AA97EE32F2F4073F498FE /* DMSerifDisplay-Regular.ttf */; };
 		81B5FD43EDF846645E1DC0DA /* NoahAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C8570CACD47FA3DC66B4CA /* NoahAPI.swift */; };
 		86841686210995186A5A74EC /* ContactsAndPhoneViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EAEC3BDB9238961ED60BBEB /* ContactsAndPhoneViews.swift */; };
+		884F1290F1A6150B3D97903C /* CodeFieldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2707AD9D947A501B8EC428C7 /* CodeFieldTests.swift */; };
 		8A83C40587BDFDA49D22C0F7 /* AlertsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D526FE25505265B641F5408A /* AlertsViews.swift */; };
 		8B45BA67587E9D6890892808 /* VoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202CC73FA768947D8D30E3EB /* VoiceEngine.swift */; };
 		8C2D765738BC72301D686959 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B06D8DCFC72E5A71C20F09D5 /* PrivacyInfo.xcprivacy */; };
 		8C4AB6D5579BE6D34CAC596E /* ElevenLabsVoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C2013EB7048E365A228714 /* ElevenLabsVoiceEngine.swift */; };
 		8EF7AACACF427D211F4D44E2 /* LifeStoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E930DAD9AC20BE5E2F91BB /* LifeStoryViews.swift */; };
+		8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */; };
 		8F83CDDBA87E7D5AD4D21D2D /* MoodChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = B62B1F179FFF9CDB00B482CA /* MoodChart.swift */; };
 		957000B28467C219EDFBACAA /* Inputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E7311DCC82A4BB3C886700 /* Inputs.swift */; };
 		96F46AEFACE4D4DB70E03FA6 /* HelloNoahWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB8365F7BB480EDACBEABBF4 /* HelloNoahWidget.swift */; };
@@ -142,6 +145,7 @@
 		202CC73FA768947D8D30E3EB /* VoiceEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceEngine.swift; sourceTree = "<group>"; };
 		20A641E00D52284031FAD338 /* OFL-Lexend.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Lexend.txt"; sourceTree = "<group>"; };
 		24565C77FC779982A00BEE2F /* ProfileWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileWizardView.swift; sourceTree = "<group>"; };
+		2707AD9D947A501B8EC428C7 /* CodeFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFieldTests.swift; sourceTree = "<group>"; };
 		2EAB4EB272673D153D92C369 /* NoahOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahOrb.swift; sourceTree = "<group>"; };
 		32BB4B8AD1F28FCA108D9573 /* ConversationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationScreen.swift; sourceTree = "<group>"; };
 		32E7311DCC82A4BB3C886700 /* Inputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inputs.swift; sourceTree = "<group>"; };
@@ -151,12 +155,14 @@
 		4428F576D329347D1D38592B /* MockData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
 		45864FAEB21F35E433F38F69 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		477A8D4E84FEA4E610B299FF /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
+		483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelShaperTests.swift; sourceTree = "<group>"; };
 		4A172D7BEE7A975B33DE4710 /* MoodOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodOverviewView.swift; sourceTree = "<group>"; };
 		4D9354884D46541C3F0DA2F7 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		54A05BFD2690AA6B76C432DE /* CaregiversAndDevicesViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaregiversAndDevicesViews.swift; sourceTree = "<group>"; };
 		551501931F47852F3C865A17 /* HelloNoahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloNoahApp.swift; sourceTree = "<group>"; };
 		5667674571D1457F458678E4 /* NoahSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahSettingsView.swift; sourceTree = "<group>"; };
 		57C2F9382CCF03124FA9A8C4 /* LiveNoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNoahAPI.swift; sourceTree = "<group>"; };
+		5EF6AE8204A9DB296A02B757 /* CodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeField.swift; sourceTree = "<group>"; };
 		5F73611EFE76A07F61E8F244 /* HelloNoah.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HelloNoah.xcconfig; sourceTree = "<group>"; };
 		66EDC62D120F9A96D5C0CE51 /* HelloNoah.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HelloNoah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		67F97E64CE8569EF508A8FCD /* SubscriptionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionViews.swift; sourceTree = "<group>"; };
@@ -340,6 +346,7 @@
 				B25808448C7465A3FD4DDB18 /* Buttons.swift */,
 				FD61E8B0429545A57FB6A909 /* Cards.swift */,
 				EA57CBF11F8E43E63C5C0540 /* Chips.swift */,
+				5EF6AE8204A9DB296A02B757 /* CodeField.swift */,
 				32E7311DCC82A4BB3C886700 /* Inputs.swift */,
 				9A62732A7069EFA87CDA14E2 /* ListRows.swift */,
 				2EAB4EB272673D153D92C369 /* NoahOrb.swift */,
@@ -390,9 +397,11 @@
 		5E0A12ED8F3A99EA0493F2F2 /* HelloNoahTests */ = {
 			isa = PBXGroup;
 			children = (
+				2707AD9D947A501B8EC428C7 /* CodeFieldTests.swift */,
 				E07167BA140C8DBA99A7BF02 /* ContractDecodingTests.swift */,
 				7E118EA164824B2298F8AE5A /* ContractFixtures.swift */,
 				CB7782D5731C2167EBC600DA /* FormattingTests.swift */,
+				483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */,
 				CDBB429CEAC357FC4DCFA228 /* RoleAndRoutingTests.swift */,
 				D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */,
 			);
@@ -739,9 +748,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				884F1290F1A6150B3D97903C /* CodeFieldTests.swift in Sources */,
 				57FA521551CB7B6F5061A826 /* ContractDecodingTests.swift in Sources */,
 				4ECBD3F33933DDEF0E8A756A /* ContractFixtures.swift in Sources */,
 				F00474A8200E9642E7DAD125 /* FormattingTests.swift in Sources */,
+				8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */,
 				F04D511CCAEE0637DEF9857A /* RoleAndRoutingTests.swift in Sources */,
 				14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */,
 			);
@@ -774,6 +785,7 @@
 				B7BB47046506C26C52D0FA2E /* CaregiverStartView.swift in Sources */,
 				0ADD6482A824A0E832A7C426 /* CaregiversAndDevicesViews.swift in Sources */,
 				1C14FDA83E8B0A8BC405A654 /* Chips.swift in Sources */,
+				4E9FA0171CBA6890EA278B60 /* CodeField.swift in Sources */,
 				62A63F3EE59AD55428E7246F /* Coding.swift in Sources */,
 				86841686210995186A5A74EC /* ContactsAndPhoneViews.swift in Sources */,
 				BA6A774A4DF3FAEF064F8B02 /* ConversationController.swift in Sources */,

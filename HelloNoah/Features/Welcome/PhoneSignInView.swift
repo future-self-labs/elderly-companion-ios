@@ -9,9 +9,6 @@ struct PhoneSignInView: View {
     @State private var isWorking = false
     @State private var error: String?
     @State private var resendAvailableAt = Date()
-    @State private var now = Date()
-
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ScrollView {
@@ -37,12 +34,9 @@ struct PhoneSignInView: View {
                             error = nil
                         }
                         Spacer()
-                        if now < resendAvailableAt {
-                            Text("Opnieuw sturen over \(Int(resendAvailableAt.timeIntervalSince(now)) + 1) s")
-                                .foregroundColor(NoahColor.textSecondary)
-                        } else {
-                            Button("Code opnieuw sturen") { Task { await start() } }
-                        }
+                        // Own subview: the countdown re-renders every second without touching the
+                        // code field (a re-render mid-typing makes SwiftUI text fields drop keys).
+                        ResendCodeButton(availableAt: resendAvailableAt) { Task { await start() } }
                     }
                     .font(NoahFont.subheadline)
                     .foregroundColor(NoahColor.accent)
@@ -71,7 +65,6 @@ struct PhoneSignInView: View {
         .scrollDismissesKeyboard(.interactively)
         .noahScreenBackground()
         .navigationBarTitleDisplayMode(.inline)
-        .onReceive(timer) { now = $0 }
     }
 
     private func start() async {
@@ -100,6 +93,23 @@ struct PhoneSignInView: View {
         } catch {
             self.error = APIError.from(error).userMessage
             code = ""
+        }
+    }
+}
+
+/// "Opnieuw sturen over 12 s" → "Code opnieuw sturen".
+private struct ResendCodeButton: View {
+    let availableAt: Date
+    let action: () -> Void
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            if context.date < availableAt {
+                Text("Opnieuw sturen over \(Int(availableAt.timeIntervalSince(context.date)) + 1) s")
+                    .foregroundColor(NoahColor.textSecondary)
+            } else {
+                Button("Code opnieuw sturen", action: action)
+            }
         }
     }
 }
