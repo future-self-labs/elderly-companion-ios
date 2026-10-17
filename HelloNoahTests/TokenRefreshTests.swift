@@ -160,7 +160,7 @@ final class TokenRefreshTests: XCTestCase {
         let (client, _) = makeClient(tokens: nil, deviceToken: "hnd_1")
         StubURLProtocol.handler = { _ in (409, ContractFixtures.error) }
         do {
-            _ = try await LiveNoahAPI(client: client).startDeviceConversation()
+            _ = try await LiveNoahAPI(client: client).startDeviceConversation(mode: .gesprek)
             XCTFail("expected 409")
         } catch let error as APIError {
             XCTAssertEqual(error.code, "inactive")

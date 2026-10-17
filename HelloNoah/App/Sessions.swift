@@ -12,6 +12,8 @@ final class ElderSession: ObservableObject {
     @Published private(set) var me: Loadable<DeviceMe> = .idle
     /// Set when a conversation should open (big button, widget, `hellonoah://praat`).
     @Published var isConversationPresented = false
+    /// What the next conversation is: "Praat met Noah" or "Vertel een verhaal" (v2.1).
+    @Published private(set) var conversationMode: ConversationMode = .gesprek
     @Published var justPaired = false
 
     init(api: NoahAPI, reachability: Reachability, makeEngine: @escaping () -> VoiceEngine) {
@@ -34,12 +36,14 @@ final class ElderSession: ObservableObject {
         }
     }
 
-    func requestConversation() {
+    func requestConversation(mode: ConversationMode = .gesprek) {
+        guard !isConversationPresented else { return }
+        conversationMode = mode
         isConversationPresented = true
     }
 
     func makeConversationController() -> ConversationController {
-        ConversationController(api: api, reachability: reachability, makeEngine: makeEngine)
+        ConversationController(api: api, reachability: reachability, mode: conversationMode, makeEngine: makeEngine)
     }
 }
 

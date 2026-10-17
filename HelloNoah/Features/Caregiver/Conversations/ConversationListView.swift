@@ -93,8 +93,22 @@ struct ConversationListView: View {
 struct ConversationRow: View {
     let conversation: ConversationSummary
 
+    @EnvironmentObject private var session: CaregiverSession
+
     var body: some View {
         NoahCard {
+            info
+            if conversation.hasAudio {
+                // Outside the combined accessibility element, so VoiceOver can reach the button.
+                let api = session.api
+                let id = conversation.id
+                RecordingInlineButton { try await api.conversationAudio(conversationId: id) }
+            }
+        }
+    }
+
+    private var info: some View {
+        VStack(alignment: .leading, spacing: NoahSpacing.s) {
             HStack(alignment: .firstTextBaseline) {
                 Label {
                     Text(verbatim: DutchFormat.dayAndTime(conversation.startedAt).capitalizedFirst)
@@ -109,6 +123,9 @@ struct ConversationRow: View {
             Text(verbatim: "\(conversation.channel.label) · \(DutchFormat.duration(seconds: conversation.durationSeconds))")
                 .font(NoahFont.footnote)
                 .foregroundColor(NoahColor.textSecondary)
+            if conversation.mode == .levensverhaal {
+                NoahChip(text: ConversationMode.levensverhaal.label, systemImage: "quote.bubble.fill", tint: NoahColor.accent)
+            }
             if let summary = conversation.summary {
                 Text(verbatim: summary)
                     .font(NoahFont.callout)
@@ -122,6 +139,7 @@ struct ConversationRow: View {
                     .foregroundColor(NoahColor.accent)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityValue(Text("Stemming: \(MoodText.label(conversation.moodScore))"))
     }

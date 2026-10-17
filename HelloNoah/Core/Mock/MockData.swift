@@ -25,6 +25,9 @@ struct MockConversationTemplate {
     let dates: [String]
     let emotional: [String]
     let transcript: [(TranscriptRole, String)]
+
+    /// Story conversations (v2.1 `mode: levensverhaal`); Wim's setting records those.
+    var isStory: Bool { topics.contains("trouwdag") || topics.contains("Toon Hermans") }
 }
 
 enum MockData {
@@ -72,11 +75,11 @@ enum MockData {
             transcript: [(.noah, "U vertelde laatst dat het regende op uw trouwdag. Hoe ging dat?"), (.oudere, "Het goot! Maar niemand ging naar binnen."), (.noah, "Wat mooi. Wat deden jullie dan?"), (.oudere, "Dansen op het plein bij de Bavo. Margriet in haar witte jurk, kletsnat.")]
         ),
         MockConversationTemplate(
-            summary: "Kort gesprek in de ochtend. Wim had zijn pillen ingenomen en ging met de fiets naar de markt.",
-            topics: ["pillen", "markt"], mood: 4, clarity: 5, concern: false,
+            summary: "Kort gesprek in de ochtend. Noah gaf het afgesproken geheugensteuntje voor na het ontbijt. Wim had zijn medicijndoos al klaarstaan en ging daarna met de fiets naar de markt.",
+            topics: ["ochtend", "markt"], mood: 4, clarity: 5, concern: false,
             moodIndicators: ["opgewekt"], signals: [], people: [], places: ["de Grote Markt"], dates: [],
             emotional: [],
-            transcript: [(.noah, "Goedemorgen Wim! Heeft u uw pillen al genomen?"), (.oudere, "Ja hoor, de witte na het ontbijt."), (.noah, "Fijn. Wat gaat u vandaag doen?"), (.oudere, "Naar de markt, verse vis halen.")]
+            transcript: [(.noah, "Goedemorgen Wim! Even het geheugensteuntje dat Anna heeft ingesteld: iets voor na het ontbijt."), (.oudere, "Dank je. Mijn medicijndoos staat al klaar."), (.noah, "Fijn. Wat gaat u vandaag doen?"), (.oudere, "Naar de markt, verse vis halen.")]
         ),
         MockConversationTemplate(
             summary: "Wim vertelde over een vreemd telefoontje van iemand die zei van de bank te zijn en om zijn pincode vroeg. Noah raadde aan niets door te geven en Anna te bellen.",
@@ -148,8 +151,11 @@ enum MockData {
                     mentionedPlaces: template.places,
                     mentionedDates: template.dates,
                     emotionalMoments: template.emotional,
-                    lifeStoryEntryIds: template.topics.contains("trouwdag") ? ["L0000000-0000-4000-8000-000000000003"] : [],
-                    transcript: lines
+                    lifeStoryEntryIds: template.topics.contains("trouwdag") ? ["L0000000-0000-4000-8000-000000000003"]
+                        : (template.topics.contains("Toon Hermans") ? ["L0000000-0000-4000-8000-000000000007"] : []),
+                    transcript: lines,
+                    mode: template.isStory ? .levensverhaal : .gesprek,
+                    hasAudio: template.isStory
                 ))
             }
         }
@@ -183,30 +189,35 @@ enum MockData {
                 emotionalMoments: [],
                 lifeStoryEntryIds: [],
                 transcript: [TranscriptLine(role: .noah, text: "Goedemiddag Riet, hoe gaat het met u?", atSeconds: 1),
-                             TranscriptLine(role: .oudere, text: "Goed hoor, dank je.", atSeconds: 6)]
+                             TranscriptLine(role: .oudere, text: "Goed hoor, dank je.", atSeconds: 6)],
+                mode: .gesprek,
+                hasAudio: false
             )
         }
     }
 
     static func wimLifeStory(now: Date) -> [LifeStoryEntry] {
-        func entry(_ n: Int, _ category: LifeStoryCategory, _ title: String, _ content: String, _ year: Int?, people: [String] = [], places: [String] = [], quote: String? = nil, by: CreatedBy = .noah) -> LifeStoryEntry {
-            LifeStoryEntry(
+        // Conversations 6 (trouwdag) and 9 (Toon Hermans) are recorded story conversations.
+        func entry(_ n: Int, _ category: LifeStoryCategory, _ title: String, _ content: String, _ year: Int?, people: [String] = [], places: [String] = [], quote: String? = nil, by: CreatedBy = .noah, conversation: Int = 6, audioStart: Double?? = .none) -> LifeStoryEntry {
+            let conversationId = String(format: "C0A1B2C3-0000-4000-8000-%012d", conversation)
+            return LifeStoryEntry(
                 id: String(format: "L0000000-0000-4000-8000-%012d", n),
                 category: category, title: title, content: content, year: year,
                 people: people, places: places, quote: quote,
-                conversationId: by == .noah ? "C0A1B2C3-0000-4000-8000-000000000006" : nil,
+                conversationId: by == .noah ? conversationId : nil,
                 createdBy: by,
-                createdAt: now.addingTimeInterval(TimeInterval(-n * 86_400 * 2))
+                createdAt: now.addingTimeInterval(TimeInterval(-n * 86_400 * 2)),
+                audio: audioStart.map { LifeStoryAudio(conversationId: conversationId, startSeconds: $0, durationSeconds: MockRecording.durationSeconds) }
             )
         }
         return [
             entry(1, .jeugd, "De kruidenierswinkel van vader", "Wim groeide op boven de kruidenierswinkel van zijn vader in de Haarlemse Kleverlaan. Op zaterdag mocht hij de stroopwafels afwegen. Wie aardig was, kreeg er een gebroken exemplaar bij.", 1949, people: ["zijn vader"], places: ["Kleverlaan, Haarlem"], quote: "Een gebroken stroopwafel smaakt het lekkerst."),
             entry(2, .jeugd, "Schaatsen op het Spaarne", "In de strenge winter van 1956 lag het Spaarne helemaal dicht. Wim schaatste met zijn broer Kees tot aan Spaarndam en terug, met warme chocolademelk bij een koek-en-zopie onderweg.", 1956, people: ["Kees"], places: ["het Spaarne", "Spaarndam"]),
-            entry(3, .familie, "De trouwdag met Margriet", "Het regende op 12 mei 1962, maar niemand ging naar binnen. Op het plein bij de Bavo werd gedanst, Margriet in haar witte jurk, kletsnat en lachend.", 1962, people: ["Margriet"], places: ["Grote Markt, Haarlem"], quote: "Niemand ging naar binnen."),
+            entry(3, .familie, "De trouwdag met Margriet", "Het regende op 12 mei 1962, maar niemand ging naar binnen. Op het plein bij de Bavo werd gedanst, Margriet in haar witte jurk, kletsnat en lachend.", 1962, people: ["Margriet"], places: ["Grote Markt, Haarlem"], quote: "Niemand ging naar binnen.", audioStart: 6),
             entry(4, .werk, "Eerste dag voor de klas", "Op zijn eenentwintigste stond Wim voor het eerst voor de klas, 38 kinderen in de vierde klas van de Ritmeesterschool. Hij was zenuwachtiger dan zij.", 1963, places: ["Ritmeesterschool"], quote: "Ik was banger voor hen dan zij voor mij."),
             entry(5, .familie, "De geboorte van Anna", "Anna werd geboren op een zondagochtend in mei. Wim fietste in recordtijd naar het ziekenhuis en vergat zijn jas.", 1972, people: ["Anna", "Margriet"], places: ["Haarlem"]),
             entry(6, .reizen, "Met de Kever naar Italië", "In de zomer van 1968 reden Wim en Margriet met hun lichtblauwe Volkswagen Kever naar het Gardameer. Op de Brenner kookte de motor twee keer.", 1968, people: ["Margriet"], places: ["Gardameer", "Brennerpas"]),
-            entry(7, .hobbys, "Toon Hermans in Carré", "Een avond die Wim nooit vergeet: Toon Hermans in Carré. Hij en Margriet huilden van het lachen.", 1975, people: ["Margriet"], places: ["Carré, Amsterdam"]),
+            entry(7, .hobbys, "Toon Hermans in Carré", "Een avond die Wim nooit vergeet: Toon Hermans in Carré. Hij en Margriet huilden van het lachen.", 1975, people: ["Margriet"], places: ["Carré, Amsterdam"], conversation: 9, audioStart: .some(nil)),
             entry(8, .hobbys, "De moestuin aan de Kleverlaan", "Sinds 1985 heeft Wim een volkstuin. Hij kweekt tomaten, bonen en dahlia's, en deelt alles met de buren.", 1985, places: ["volkstuin Kleverlaan"]),
             entry(9, .belangrijkeMomenten, "Afscheid van de Ritmeesterschool", "Na veertig jaar nam Wim afscheid. De hele school zong in de gymzaal, en oud-leerlingen kwamen uit het hele land.", 2003, places: ["Ritmeesterschool"]),
             entry(10, .belangrijkeMomenten, "Het verlies van Margriet", "Margriet overleed in 2019. Wim praat er liever kort over, maar vertelt graag over hun mooie jaren.", 2019, people: ["Margriet"], by: .caregiver),

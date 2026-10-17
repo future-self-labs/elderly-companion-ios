@@ -32,6 +32,11 @@ struct AccountView: View {
 
             VStack(alignment: .leading, spacing: NoahSpacing.s) {
                 NoahEyebrow(text: "Privacy")
+                Text(verbatim: ProductCopy.privacy)
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("account.privacy")
                 Text("Je hebt altijd recht op je gegevens (AVG). De export bevat je account en alle gegevens van de profielen waarvan je beheerder bent.")
                     .font(NoahFont.callout)
                     .foregroundColor(NoahColor.textSoft)

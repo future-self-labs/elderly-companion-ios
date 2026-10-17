@@ -77,6 +77,7 @@ enum APIError: Error, Equatable {
         case "quiet_hours": return "Het is nu rusttijd. Noah belt niet tijdens de ingestelde rusttijden."
         case "phone_number_taken": return "Dit telefoonnummer hoort al bij een ander profiel."
         case "last_beheerder": return "Er moet altijd minstens één beheerder zijn."
+        case "geen_opname": return "Er is geen opname van dit gesprek."
         case "invalid_code", "code_expired": return "Deze code klopt niet of is verlopen. Vraag een nieuwe code."
         case "rate_limited": return "Even geduld: te veel pogingen. Probeer het over een paar minuten opnieuw."
         default: break

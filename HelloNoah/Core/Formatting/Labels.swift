@@ -67,6 +67,55 @@ extension ConversationChannel {
     }
 }
 
+extension ConversationMode {
+    var label: String {
+        switch self {
+        case .gesprek, .unknown: return "Gewoon gesprek"
+        case .levensverhaal: return "Verhaal-gesprek"
+        }
+    }
+}
+
+extension RecordingSetting {
+    var label: String {
+        switch self {
+        case .uit: return "Uit"
+        case .levensverhaal: return "Alleen bij levensverhalen"
+        case .alleGesprekken: return "Alle gesprekken"
+        case .unknown: return "Onbekend"
+        }
+    }
+
+    func explanation(name: String) -> String {
+        switch self {
+        case .uit: return "Er wordt niets opgenomen. Je leest wel de samenvattingen."
+        case .levensverhaal: return "Alleen verhaal-gesprekken, zodat je later de eigen stem van \(name) bij het levensverhaal kunt terughoren."
+        case .alleGesprekken: return "Elk gesprek met Noah, als \(name) daar toestemming voor geeft."
+        case .unknown: return ""
+        }
+    }
+}
+
+/// Copy that must say exactly the same everywhere (contract v2.1, founder corrections).
+enum ProductCopy {
+    /// Point 6: honest privacy. Never claim "geen geluidsopnames" or "alle gegevens in de EU".
+    static let privacy = String(localized: "Gesprekken en gegevens worden versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten; die bewaren geen gegevens langer dan nodig. Opnames alleen als jij dat aanzet én je naaste toestemming geeft.")
+
+    /// Point 5: reminders are a memory aid. Shown on every caregiver reminder screen.
+    static let reminderDisclaimer = String(localized: "Noah's herinneringen zijn een extra geheugensteuntje, naast wat er al is (zoals een medicijndoos, de apotheek, thuiszorg of je eigen berichtjes). Noah houdt geen medicijngebruik bij en is geen medisch hulpmiddel. Vertrouw er niet als enige op: een gemist gesprek of een storing kan altijd.")
+
+    /// Shorter version, shown when a caregiver creates a reminder for the first time.
+    static let reminderDisclaimerShort = String(localized: "Goed om te weten: Noah is een extra geheugensteuntje, naast wat er al is. Geen medisch hulpmiddel, dus vertrouw er niet als enige op.")
+
+    /// For the older person ("u").
+    static let elderReminderNote = String(localized: "Noah helpt u herinneren, naast wat u al gebruikt, zoals uw medicijndoos of de kalender.")
+
+    /// Point 1: fair use, plainly and kindly. Never "onbeperkt".
+    static func fairUse(name: String, allowanceMinutes: Int) -> String {
+        String(localized: "Praten met Noah kan zo vaak als \(name) wil, met een redelijk-gebruikbeleid van \(DutchFormat.hours(minutes: allowanceMinutes)) per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken (tot \(Plan.cappedConversationMinutes) minuten). De maand erna is alles weer zoals gewoonlijk.")
+    }
+}
+
 extension LifeStoryCategory {
     var label: String {
         switch self {
@@ -98,7 +147,8 @@ extension LifeStoryCategory {
 extension ReminderType {
     var label: String {
         switch self {
-        case .medicatie: return "Medicatie"
+        // A memory aid, never medical care (contract v2.1 point 5).
+        case .medicatie: return "Medicijnen (geheugensteun)"
         case .afspraak: return "Afspraak"
         case .verjaardag: return "Verjaardag"
         case .routine: return "Routine"
@@ -157,6 +207,7 @@ extension AlertType {
         case .oplichting: return "Mogelijke oplichting"
         case .verwardheid: return "Verwardheid"
         case .noodgeval: return "Noodgeval"
+        case .verbruik: return "Redelijk gebruik"
         case .unknown: return "Melding"
         }
     }
@@ -170,6 +221,7 @@ extension AlertType {
         case .oplichting: return "shield.lefthalf.filled"
         case .verwardheid: return "questionmark.circle.fill"
         case .noodgeval: return "staroflife.fill"
+        case .verbruik: return "clock.fill"
         case .unknown: return "bell.fill"
         }
     }

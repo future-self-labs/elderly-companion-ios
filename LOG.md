@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-10-11
+Last updated: 2026-10-17
 
 ---
 
@@ -416,6 +416,35 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - **Symptom**: Phone calls occasionally greet in English and say "the user" instead of the real name.
 - **Likely cause**: User data lookup returning incomplete data (missing name/language fields). Added logging to diagnose.
 - **Status**: Investigating via Railway logs.
+
+---
+
+## 2026-10-17 — Product corrections from the founder (API v2.1), iOS
+
+Implements the 2026-10-17 changelog entry of `elderly-companion-api/docs/api-v2.md` (and the backend's v2.1 notes).
+
+- **Fair use, no "unlimited".** Plan name only in `Plan.displayName` ("HelloNoah-abonnement"); new product id
+  `ai.hellonoah.abonnement.maand` (`Products.storekit`: intro €9,99 × 6, then €59,99). Paywall explains fair use
+  (10 uur per maand, daarna kortere gesprekken, Noah blijft bereikbaar); the subscription screen shows
+  `usage` (minutes this month / allowance, reset date, over-allowance notice). New alert type `verbruik`.
+- **Honest privacy copy** (`ProductCopy.privacy`) on the welcome slide and in Account en privacy (paywall: "Versleuteld opgeslagen in de EU");
+  microphone string: recording only when the family turned it on and the older person agrees.
+- **Recording setting** (beheerder only) in Noah-instellingen: Uit / Alleen bij levensverhalen / Alle gesprekken, with
+  the consent explanation. Unknown future values are never sent back.
+- **Story mode.** Elder home "Vertel een verhaal" (one tap, below the orb) → `POST /device/conversation`
+  `{ "mode": "levensverhaal" }`; `hellonoah://verhaal` does the same. The conversation screen shows "U vertelt een
+  verhaal" and, only when `recording: true`, a calm red-dot "Wordt opgenomen als u ja zegt" (Noah asks consent itself;
+  the app cannot see the answer, so the wording stays conditional as the backend suggests).
+- **Caregiver.** "Laat Noah nu bellen": Gewoon gesprek / Verhaal-gesprek. Conversations show the mode and a "Luister"
+  button when `hasAudio`; detail has a player. Life-story entries with `audio` get "Luister naar Wim" from
+  `startSeconds`. `RecordingPlayer` (AVPlayer) fetches the signed URL on tap, refreshes it when it expired (resume
+  after a long pause, or `403 link_verlopen` → one automatic retry with a fresh URL), one recording at a time.
+  "Mijn verhaal" detail plays the older person's own voice via `GET /device/conversations/:id/audio`.
+- **Reminders = memory aid.** `medicatie` → "Medicijnen (geheugensteun)"; the contract disclaimer on the caregiver
+  reminders list and editor, a short version the first time a reminder is created; elder screen: "Noah helpt u
+  herinneren, naast wat u al gebruikt…". Mock transcripts no longer have Noah checking pills.
+- Mock: recording setting, modes, `hasAudio`, generated demo audio, usage (`-mockOverAllowance YES`), audio 404s.
+- Not done (backend additive, not asked): `DELETE /conversations/:id/audio` (remove one recording) has no UI yet.
 
 ---
 

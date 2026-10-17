@@ -84,7 +84,7 @@ final class RoleGatingTests: XCTestCase {
             XCTAssertEqual(error.status, 403)
         }
         do {
-            _ = try await api.callNow(elderlyId: MockIDs.riet)
+            _ = try await api.callNow(elderlyId: MockIDs.riet, mode: .gesprek)
             XCTFail("lezer must not trigger calls")
         } catch let error as APIError {
             XCTAssertEqual(error.status, 403)
@@ -118,5 +118,6 @@ final class DeepLinkTests: XCTestCase {
         XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://melding/a1?elderly=e1")!), .alert(id: "a1", elderlyId: "e1"))
         XCTAssertNil(DeepLink(url: URL(string: "https://example.com/uitnodiging/K7P-2QX")!))
         XCTAssertNil(DeepLink(url: URL(string: "hellonoah://onbekend")!))
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://verhaal")!), .story)
     }
 }

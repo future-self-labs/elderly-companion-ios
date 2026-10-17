@@ -41,6 +41,7 @@ struct ElderRootView: View {
         guard let route = DebugRoute.take(scope: "elder") else { return }
         switch route {
         case "conversation": session.requestConversation()
+        case "storyConversation": session.requestConversation(mode: .levensverhaal)
         case "myStory": path = [.myStory]
         case "storyEntry":
             path = [.myStory, .storyEntry(MockData.wimLifeStory(now: Date())[2])]

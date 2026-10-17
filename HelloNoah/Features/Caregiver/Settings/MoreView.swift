@@ -39,7 +39,7 @@ struct MoreView: View {
                 let permissions = session.permissions
                 group("Noah") {
                     if permissions.canViewSettings {
-                        link(.noahSettings, icon: "slider.horizontal.3", title: "Noah-instellingen", subtitle: "Naam, stem, tempo, ochtendgesprek")
+                        link(.noahSettings, icon: "slider.horizontal.3", title: "Noah-instellingen", subtitle: "Naam, stem, ochtendgesprek, opnemen")
                     }
                     link(.profile, icon: "person.text.rectangle", title: "Profiel van \(selected.preferredName)", subtitle: "Over \(selected.preferredName), voorkeuren en onderwerpen")
                     if permissions.canViewPeople {
@@ -59,7 +59,7 @@ struct MoreView: View {
                     }
 
                     group("Abonnement") {
-                        link(.subscription, icon: "creditcard.fill", title: "Noah Unlimited", subtitle: selected.access == .active ? "Noah is actief" : "Nog niet gestart")
+                        link(.subscription, icon: "creditcard.fill", title: Plan.displayName, subtitle: selected.access == .active ? "Noah is actief" : "Nog niet gestart")
                     }
                 } else {
                     VStack(alignment: .leading, spacing: NoahSpacing.s) {

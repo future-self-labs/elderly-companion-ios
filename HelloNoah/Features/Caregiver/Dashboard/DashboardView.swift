@@ -8,6 +8,7 @@ struct DashboardView: View {
     @EnvironmentObject private var push: PushManager
     @State private var state: Loadable<Dashboard> = .idle
     @State private var callResult: (text: String, isError: Bool)?
+    @State private var callMode: ConversationMode = .gesprek
     @State private var subscription: Subscription?
 
     var body: some View {
@@ -29,7 +30,7 @@ struct DashboardView: View {
                 } else if let subscription, !subscription.isPaidOrBeta, session.permissions.canManageSubscription {
                     let free = subscription.freeConversationsLeft ?? 0
                     NoahNotice(kind: .info,
-                               text: free == 1 ? "Proefperiode: \(selected.preferredName) kan nog 1 gratis gesprek voeren. Start Noah Unlimited om daarna door te praten." : "Proefperiode: \(selected.preferredName) kan nog \(free) gratis gesprekken voeren. Start Noah Unlimited om daarna door te praten.",
+                               text: free == 1 ? "Proefperiode: \(selected.preferredName) kan nog 1 gratis gesprek voeren. Start het \(Plan.displayName) om daarna door te praten." : "Proefperiode: \(selected.preferredName) kan nog \(free) gratis gesprekken voeren. Start het \(Plan.displayName) om daarna door te praten.",
                                actionTitle: "Abonnement starten") {
                         router.present(.paywall(elderlyId: selected.id))
                     }
@@ -208,6 +209,13 @@ struct DashboardView: View {
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: NoahSpacing.s) {
+                NoahOptionCard(title: ConversationMode.gesprek.label, subtitle: "Een praatje over de dag.",
+                               isSelected: callMode == .gesprek) { callMode = .gesprek }
+                NoahOptionCard(title: ConversationMode.levensverhaal.label, subtitle: "Noah vraagt naar herinneringen van vroeger, voor het levensverhaal.",
+                               isSelected: callMode == .levensverhaal) { callMode = .levensverhaal }
+                    .accessibilityIdentifier("dashboard.callStory")
+            }
             NoahAsyncButton(kind: .primary, action: callNow) {
                 NoahButtonLabel(title: "Laat Noah nu bellen", systemImage: "phone.arrow.up.right.fill")
             }
@@ -239,8 +247,14 @@ struct DashboardView: View {
     private func callNow() async {
         guard let selected = session.selected else { return }
         do {
-            _ = try await session.api.callNow(elderlyId: selected.id)
-            callResult = ("Noah belt \(selected.preferredName) nu. Na het gesprek zie je hier de samenvatting.", false)
+            let response = try await session.api.callNow(elderlyId: selected.id, mode: callMode)
+            var text = callMode == .levensverhaal
+                ? "Noah belt \(selected.preferredName) nu voor een verhaal-gesprek. Mooie herinneringen komen daarna in het levensverhaal."
+                : "Noah belt \(selected.preferredName) nu. Na het gesprek zie je hier de samenvatting."
+            if response.recording == true {
+                text += " Noah vraagt eerst of het gesprek opgenomen mag worden."
+            }
+            callResult = (text, false)
         } catch {
             callResult = (APIError.from(error).userMessage, true)
         }

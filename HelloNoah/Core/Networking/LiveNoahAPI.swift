@@ -194,6 +194,10 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("GET", "/conversations/\(esc(id))", auth: .caregiver)
     }
 
+    func conversationAudio(conversationId: String) async throws -> ConversationAudio {
+        try await client.send("GET", "/conversations/\(esc(conversationId))/audio", auth: .caregiver)
+    }
+
     func mood(elderlyId: String, days: Int) async throws -> MoodOverview {
         try await client.send("GET", "/elderly/\(esc(elderlyId))/mood", query: [URLQueryItem(name: "days", value: String(days))], auth: .caregiver)
     }
@@ -256,8 +260,8 @@ final class LiveNoahAPI: NoahAPI {
 
     // MARK: Calls & phone line
 
-    func callNow(elderlyId: String) async throws -> CallNowResponse {
-        try await client.send("POST", "/elderly/\(esc(elderlyId))/call-now", auth: .caregiver)
+    func callNow(elderlyId: String, mode: ConversationMode) async throws -> CallNowResponse {
+        try await client.send("POST", "/elderly/\(esc(elderlyId))/call-now", body: ConversationModeRequest(mode: mode), auth: .caregiver)
     }
 
     func phoneLine() async throws -> PhoneLine {
@@ -280,8 +284,8 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("GET", "/device/me", auth: .device)
     }
 
-    func startDeviceConversation() async throws -> ConversationSession {
-        try await client.send("POST", "/device/conversation", auth: .device)
+    func startDeviceConversation(mode: ConversationMode) async throws -> ConversationSession {
+        try await client.send("POST", "/device/conversation", body: ConversationModeRequest(mode: mode), auth: .device)
     }
 
     func deviceCallMe() async throws {
@@ -290,6 +294,10 @@ final class LiveNoahAPI: NoahAPI {
 
     func deviceLifeStory(cursor: String?, limit: Int) async throws -> Page<LifeStoryEntry> {
         try await client.send("GET", "/device/life-story", query: page(cursor, limit), auth: .device)
+    }
+
+    func deviceConversationAudio(conversationId: String) async throws -> ConversationAudio {
+        try await client.send("GET", "/device/conversations/\(esc(conversationId))/audio", auth: .device)
     }
 
     func deviceReminders() async throws -> [Reminder] {

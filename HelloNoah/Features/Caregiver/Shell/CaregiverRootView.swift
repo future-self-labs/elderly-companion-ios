@@ -126,6 +126,7 @@ struct CaregiverRootView: View {
         case "dashboard": router.tab = .overview
         case "conversations": router.tab = .conversations
         case "conversationDetail": router.show(.conversation(id: "C0A1B2C3-0000-4000-8000-000000000001"), in: .conversations)
+        case "storyConversationDetail": router.show(.conversation(id: "C0A1B2C3-0000-4000-8000-000000000006"), in: .conversations)
         case "lifeStory": router.tab = .lifeStory
         case "lifeStoryEntry": router.show(.lifeStoryEntry(MockData.wimLifeStory(now: Date())[2]), in: .lifeStory)
         case "reminders": router.tab = .reminders

@@ -49,6 +49,10 @@ final class ConversationController: ObservableObject {
     @Published private(set) var elapsed: TimeInterval = 0
     @Published private(set) var networkLost = false
     @Published private(set) var isNearMaxDuration = false
+    /// The server records this conversation (Noah asks permission first): show "Wordt opgenomen".
+    @Published private(set) var isRecording = false
+    /// "Praat met Noah" (`gesprek`) or "Vertel een verhaal" (`levensverhaal`).
+    let mode: ConversationMode
     @Published var showsSubtitles: Bool {
         didSet { UserDefaults.standard.set(showsSubtitles, forKey: Self.subtitlesKey) }
     }
@@ -64,9 +68,10 @@ final class ConversationController: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var interruptionObserver: NSObjectProtocol?
 
-    init(api: NoahAPI, reachability: Reachability, makeEngine: @escaping () -> VoiceEngine) {
+    init(api: NoahAPI, reachability: Reachability, mode: ConversationMode = .gesprek, makeEngine: @escaping () -> VoiceEngine) {
         self.api = api
         self.reachability = reachability
+        self.mode = mode
         self.makeEngine = makeEngine
         showsSubtitles = UserDefaults.standard.object(forKey: Self.subtitlesKey) as? Bool ?? true
     }
@@ -121,7 +126,7 @@ final class ConversationController: ObservableObject {
 
         let session: ConversationSession
         do {
-            session = try await api.startDeviceConversation()
+            session = try await api.startDeviceConversation(mode: mode)
         } catch {
             let apiError = APIError.from(error)
             switch apiError {
@@ -132,6 +137,7 @@ final class ConversationController: ObservableObject {
             }
         }
         if let seconds = session.maxDurationSeconds, seconds > 0 { maxDuration = TimeInterval(seconds) }
+        isRecording = session.recording
 
         phase = .connecting
         let engine = makeEngine()
@@ -238,6 +244,7 @@ final class ConversationController: ObservableObject {
         elapsed = 0
         networkLost = false
         isNearMaxDuration = false
+        isRecording = false
         engine = nil
     }
 

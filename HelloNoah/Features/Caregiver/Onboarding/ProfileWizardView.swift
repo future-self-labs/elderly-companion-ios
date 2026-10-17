@@ -17,7 +17,7 @@ final class ProfileWizardModel: ObservableObject {
             case .noah: return "Noah instellen"
             case .contacts: return "Noodcontacten"
             case .pair: return "Telefoon koppelen"
-            case .subscription: return "Noah Unlimited"
+            case .subscription: return LocalizedStringKey(Plan.displayName)
             }
         }
 

@@ -3,11 +3,13 @@ import Foundation
 /// Links the app understands.
 ///
 /// - `hellonoah://praat` — start a conversation right away (widget, Siri shortcut).
+/// - `hellonoah://verhaal` — start a story conversation ("Vertel een verhaal", v2.1).
 /// - `hellonoah://koppel/482913` — open pairing with the code filled in.
 /// - `hellonoah://uitnodiging/K7P-2QX` and `https://hellonoah.ai/uitnodiging/K7P-2QX` — accept an invitation.
 /// - `hellonoah://melding/<alertId>?elderly=<elderlyId>` — open an alert (also used by pushes).
 enum DeepLink: Equatable {
     case talk
+    case story
     case pair(code: String)
     case invitation(code: String)
     case alert(id: String, elderlyId: String?)
@@ -32,6 +34,8 @@ enum DeepLink: Equatable {
         switch first {
         case "praat", "talk":
             self = .talk
+        case "verhaal", "story":
+            self = .story
         case "koppel", "pair":
             guard parts.count > 1 else { return nil }
             let digits = parts[1].filter(\.isNumber)

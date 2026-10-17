@@ -1,14 +1,26 @@
 import Foundation
 import StoreKit
 
-/// StoreKit 2 flow for Noah Unlimited (one auto-renewable product, per elderly profile).
+/// The one plan HelloNoah sells. Its display name lives only here, so the founder can rename it in one place.
+enum Plan {
+    /// Shown everywhere the plan is named (paywall, subscription screen, settings, wizard).
+    static let displayName = "HelloNoah-abonnement"
+    /// App Store product (auto-renewable, group "Noah"): intro €9,99 × 6 months, then €59,99 per month.
+    static let productID = "ai.hellonoah.abonnement.maand"
+    /// Fair use per month when the backend sends no `usage` (contract v2.1, `FAIR_USE_MONTHLY_MINUTES`).
+    static let fairUseMonthlyMinutes = 600
+    /// Conversation length once the monthly fair use is used up. Noah never cuts anyone off.
+    static let cappedConversationMinutes = 10
+}
+
+/// StoreKit 2 flow for the HelloNoah-abonnement (one auto-renewable product, per elderly profile).
 ///
 /// - `appAccountToken` is the elderly profile id, so the backend knows which profile was paid for.
 /// - A transaction is only finished after `POST /subscriptions/app-store` accepted its JWS; if that
 ///   fails (no connection) it stays unfinished and is retried from `Transaction.unfinished`/`updates`.
 @MainActor
 final class SubscriptionStore: ObservableObject {
-    nonisolated static let productID = "ai.hellonoah.unlimited.monthly"
+    nonisolated static let productID = Plan.productID
 
     @Published private(set) var product: Product?
     @Published private(set) var isEligibleForIntro = true
@@ -70,7 +82,7 @@ final class SubscriptionStore: ObservableObject {
         }
     }
 
-    /// Buys Noah Unlimited for one elderly profile. Returns the backend subscription on success.
+    /// Buys the subscription for one elderly profile. Returns the backend subscription on success.
     func purchase(elderlyId: String) async -> Subscription? {
         errorMessage = nil
         guard let product else {

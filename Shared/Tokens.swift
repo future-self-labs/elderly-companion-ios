@@ -39,6 +39,8 @@ enum NoahColor {
     static let danger = Color(hex: 0xE2725B)
     /// Text and icons placed on `danger`.
     static let onDanger = Color(hex: 0x13203A)
+    /// The red dot of "Wordt opgenomen" during a recorded conversation.
+    static let recording = Color(hex: 0xF0524F)
     /// Calm positive state (good mood, "afgehandeld").
     static let positive = Color(hex: 0x8FD3A8)
     /// Text and icons placed on `positive`.

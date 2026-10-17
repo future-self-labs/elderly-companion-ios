@@ -141,10 +141,13 @@ extension NoahAsyncButton where Label == Text {
 struct NoahButtonLabel: View {
     let title: LocalizedStringKey
     let systemImage: String
+    /// Optional colour for the icon only (e.g. amber on a secondary button).
+    var iconTint: Color?
 
     var body: some View {
         HStack(spacing: NoahSpacing.s) {
             Image(systemName: systemImage)
+                .foregroundColor(iconTint)
                 .accessibilityHidden(true)
             Text(title)
         }

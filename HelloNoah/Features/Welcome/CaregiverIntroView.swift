@@ -18,13 +18,13 @@ struct CaregiverIntroView: View {
               body: "Noah is een warme metgezel voor je vader, moeder of naaste. Iemand die luistert, onthoudt en er altijd is, ook als jij er even niet bent. Want eenzaamheid hoort niet bij ouder worden."),
         Slide(systemImage: "bubble.left.and.bubble.right.fill",
               title: "Wat Noah doet",
-              body: "Noah maakt een praatje, haalt herinneringen op, bewaart het levensverhaal en helpt met de dag: van pillen tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk."),
+              body: "Noah maakt een praatje, haalt herinneringen op, schrijft het levensverhaal op en geeft een extra geheugensteuntje, van afspraken tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk."),
         Slide(systemImage: "chart.line.uptrend.xyaxis",
               title: "Wat jij ziet",
               body: "Korte samenvattingen van de gesprekken, hoe de stemming is en een seintje als er iets lijkt te spelen. Zo weet je hoe het gaat, ook op afstand. Samen met familie, als je wilt."),
         Slide(systemImage: "lock.shield.fill",
               title: "Privacy voorop",
-              body: "Geluidsopnames worden niet bewaard. Alle gegevens staan versleuteld op servers in de EU, volgens de AVG. Je kunt alles op elk moment inzien, exporteren of verwijderen."),
+              body: "\(ProductCopy.privacy) Je kunt alles op elk moment inzien, exporteren of verwijderen."),
     ]
 
     var body: some View {

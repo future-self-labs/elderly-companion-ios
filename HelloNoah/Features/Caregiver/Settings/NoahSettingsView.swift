@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Noah's name, voice, speed, max length, no-contact alert, morning call and quiet hours.
+/// Noah's name, voice, speed, max length, no-contact alert, morning call, quiet hours and
+/// recording (v2.1). The whole screen is beheerder-only.
 struct NoahSettingsView: View {
     @EnvironmentObject private var session: CaregiverSession
     @State private var state: Loadable<NoahSettings> = .idle
@@ -136,7 +137,45 @@ struct NoahSettingsForm: View {
                 }
                 .noahInputBox()
             }
+
+            recording
         }
+    }
+
+    private var name: String { elderlyName.isEmpty ? "je naaste" : elderlyName }
+
+    /// Recording is a choice (contract v2.1 point 2). Noah always asks permission first.
+    private var recording: some View {
+        NoahField(label: "Gesprekken opnemen") {
+            VStack(alignment: .leading, spacing: NoahSpacing.s) {
+                ForEach(RecordingSetting.knownCases, id: \.self) { option in
+                    NoahOptionCard(title: option.label, subtitle: option.explanation(name: name),
+                                   isSelected: settings.recording == option) { settings.recording = option }
+                        .accessibilityIdentifier("settings.recording.\(option.rawValue)")
+                }
+                VStack(alignment: .leading, spacing: NoahSpacing.xs) {
+                    Label("Noah vraagt altijd eerst toestemming", systemImage: "hand.raised.fill")
+                        .font(NoahFont.bodyStrong)
+                        .foregroundColor(NoahColor.text)
+                    Text("Aan het begin van elk gesprek dat wordt opgenomen, vraagt Noah \(name) of dat goed is. Zegt \(name) nee, dan wordt er niets bewaard.")
+                        .font(NoahFont.callout)
+                        .foregroundColor(NoahColor.textSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Een opname kan later heel dierbaar zijn: de eigen stem van \(name), die een verhaal vertelt. Om zelf terug te luisteren, of samen met de kleinkinderen.")
+                        .font(NoahFont.callout)
+                        .foregroundColor(NoahColor.textSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Opnames worden versleuteld opgeslagen in de EU. Alleen \(name) zelf en de mantelzorgers van \(name) kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.")
+                        .font(NoahFont.footnote)
+                        .foregroundColor(NoahColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(NoahSpacing.m)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surfaceDeep))
+            }
+        }
+        .accessibilityIdentifier("settings.recording")
     }
 
     private var speedLabel: String {

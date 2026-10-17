@@ -48,7 +48,7 @@
 		</dict>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Noah gebruikt de microfoon zodat u met Noah kunt praten. Er worden geen geluidsopnames bewaard.</string>
+	<string>Noah gebruikt de microfoon zodat u met Noah kunt praten. Een gesprek wordt alleen opgenomen als uw familie dat heeft aangezet én u zelf toestemming geeft.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>HelloNoah zet het telefoonnummer van Noah in je contacten, alleen als je daar zelf om vraagt.</string>
 	<key>UIBackgroundModes</key>

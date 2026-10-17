@@ -15,8 +15,27 @@ final class MockVoiceEngine: VoiceEngine {
         case think(seconds: Double)
     }
 
-    private func script(name: String) -> [Step] {
-        [
+    private func script(name: String, mode: ConversationMode?, recording: Bool) -> [Step] {
+        if mode == .levensverhaal {
+            var steps: [Step] = []
+            if recording {
+                steps += [
+                    .noah("Goedemiddag \(name)! Mag ik dit gesprek opnemen, zodat uw familie later uw eigen stem kan terughoren?", seconds: 5.5),
+                    .user("Ja hoor, dat is goed.", seconds: 1.8),
+                    .think(seconds: 0.8),
+                ]
+            }
+            steps += [
+                .noah("Dank u wel. U vertelde eens over uw trouwdag met Margriet. Wilt u daar meer over vertellen?", seconds: 5),
+                .user("Het regende die dag. Het goot! Maar niemand ging naar binnen.", seconds: 3.6),
+                .think(seconds: 1),
+                .noah("Niemand ging naar binnen… Wat deden jullie toen?", seconds: 3.2),
+                .user("We dansten op het plein bij de Bavo. Margriet in haar witte jurk.", seconds: 3.8),
+                .noah("Hoe voelde dat, daar samen in de regen?", seconds: 2.6),
+            ]
+            return steps
+        }
+        return [
             .noah("Goedemiddag \(name)! Fijn dat u er bent. Hoe gaat het vandaag met u?", seconds: 4.5),
             .user("Goed hoor. Ik ben net terug uit de moestuin.", seconds: 3),
             .think(seconds: 1.2),
@@ -33,7 +52,7 @@ final class MockVoiceEngine: VoiceEngine {
         try await Task.sleep(nanoseconds: 1_200_000_000)
         let name = session.dynamicVariables?["user_name"]?.stringValue ?? "Wim"
         onEvent?(.connected)
-        let steps = script(name: name)
+        let steps = script(name: name, mode: session.mode, recording: session.recording)
         task = Task { [weak self] in
             for step in steps {
                 guard !Task.isCancelled, let self else { return }

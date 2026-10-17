@@ -4,6 +4,16 @@
     "": {
       "shouldTranslate": false
     },
+    "%@ Je kunt alles op elk moment inzien, exporteren of verwijderen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Je kunt alles op elk moment inzien, exporteren of verwijderen."
+          }
+        }
+      }
+    },
     "%@ actief": {
       "localizations": {
         "nl": {
@@ -34,12 +44,72 @@
         }
       }
     },
+    "%@ kan eerst %lld gratis gesprekken met Noah voeren, om Noah rustig te leren kennen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kan eerst %2$lld gratis gesprekken met Noah voeren, om Noah rustig te leren kennen."
+          }
+        }
+      }
+    },
+    "%@ kan eerst 1 gratis gesprek met Noah voeren, om Noah rustig te leren kennen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kan eerst 1 gratis gesprek met Noah voeren, om Noah rustig te leren kennen."
+          }
+        }
+      }
+    },
+    "%@ kan nog %lld gratis gesprekken met Noah voeren. Start het abonnement om daarna door te praten.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ kan nog %2$lld gratis gesprekken met Noah voeren. Start het abonnement om daarna door te praten."
+          }
+        }
+      }
+    },
+    "%@ kan nog 1 gratis gesprek met Noah voeren. Start het abonnement om daarna door te praten.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kan nog 1 gratis gesprek met Noah voeren. Start het abonnement om daarna door te praten."
+          }
+        }
+      }
+    },
     "%@ kan nu met Noah praten, via de app en via het telefoonnummer.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ kan nu met Noah praten, via de app en via het telefoonnummer."
+          }
+        }
+      }
+    },
+    "%@ voor %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ voor %2$@"
+          }
+        }
+      }
+    },
+    "%@ vraagt u naar herinneringen van vroeger": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ vraagt u naar herinneringen van vroeger"
           }
         }
       }
@@ -180,6 +250,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aan de slag"
+          }
+        }
+      }
+    },
+    "Aan het begin van elk gesprek dat wordt opgenomen, vraagt Noah %@ of dat goed is. Zegt %@ nee, dan wordt er niets bewaard.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Aan het begin van elk gesprek dat wordt opgenomen, vraagt Noah %1$@ of dat goed is. Zegt %2$@ nee, dan wordt er niets bewaard."
           }
         }
       }
@@ -754,6 +834,16 @@
         }
       }
     },
+    "De teller begint opnieuw op %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De teller begint opnieuw op %@"
+          }
+        }
+      }
+    },
     "Deel de uitnodiging": {
       "localizations": {
         "nl": {
@@ -884,6 +974,16 @@
         }
       }
     },
+    "Dit gesprek wordt opgenomen als u ja zegt": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit gesprek wordt opgenomen als u ja zegt"
+          }
+        }
+      }
+    },
     "Dit was vals alarm": {
       "localizations": {
         "nl": {
@@ -954,12 +1054,32 @@
         }
       }
     },
+    "Een extra geheugensteuntje voor afspraken, verjaardagen en medicijnen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een extra geheugensteuntje voor afspraken, verjaardagen en medicijnen"
+          }
+        }
+      }
+    },
     "Een gevoelig onderwerp": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
             "value": "Een gevoelig onderwerp"
+          }
+        }
+      }
+    },
+    "Een opname kan later heel dierbaar zijn: de eigen stem van %@, die een verhaal vertelt. Om zelf terug te luisteren, of samen met de kleinkinderen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een opname kan later heel dierbaar zijn: de eigen stem van %@, die een verhaal vertelt. Om zelf terug te luisteren, of samen met de kleinkinderen."
           }
         }
       }
@@ -990,6 +1110,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Emotionele momenten"
+          }
+        }
+      }
+    },
+    "Er geldt een redelijk-gebruikbeleid van %@ per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er geldt een redelijk-gebruikbeleid van %@ per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken."
           }
         }
       }
@@ -1084,6 +1214,16 @@
         }
       }
     },
+    "Gebruik deze maand": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik deze maand"
+          }
+        }
+      }
+    },
     "Gebruiksvoorwaarden (EULA)": {
       "localizations": {
         "nl": {
@@ -1164,16 +1304,6 @@
         }
       }
     },
-    "Gegevens versleuteld in de EU, geen geluidsopnames": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gegevens versleuteld in de EU, geen geluidsopnames"
-          }
-        }
-      }
-    },
     "Gekoppeld op %@": {
       "localizations": {
         "nl": {
@@ -1200,16 +1330,6 @@
           "stringUnit": {
             "state": "new",
             "value": "Geldig tot %1$@. Rol: %2$@."
-          }
-        }
-      }
-    },
-    "Geluidsopnames worden niet bewaard. Alle gegevens staan versleuteld op servers in de EU, volgens de AVG. Je kunt alles op elk moment inzien, exporteren of verwijderen.": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geluidsopnames worden niet bewaard. Alle gegevens staan versleuteld op servers in de EU, volgens de AVG. Je kunt alles op elk moment inzien, exporteren of verwijderen."
           }
         }
       }
@@ -1270,6 +1390,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gesprekken"
+          }
+        }
+      }
+    },
+    "Gesprekken en gegevens worden versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten; die bewaren geen gegevens langer dan nodig. Opnames alleen als jij dat aanzet én je naaste toestemming geeft.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprekken en gegevens worden versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten; die bewaren geen gegevens langer dan nodig. Opnames alleen als jij dat aanzet én je naaste toestemming geeft."
+          }
+        }
+      }
+    },
+    "Gesprekken opnemen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprekken opnemen"
+          }
+        }
+      }
+    },
+    "Goed om te weten: Noah is een extra geheugensteuntje, naast wat er al is. Geen medisch hulpmiddel, dus vertrouw er niet als enige op.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goed om te weten: Noah is een extra geheugensteuntje, naast wat er al is. Geen medisch hulpmiddel, dus vertrouw er niet als enige op."
           }
         }
       }
@@ -1374,16 +1524,6 @@
         }
       }
     },
-    "Herinneringen voor pillen, afspraken en verjaardagen": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Herinneringen voor pillen, afspraken en verjaardagen"
-          }
-        }
-      }
-    },
     "Het levensverhaal is nog leeg": {
       "localizations": {
         "nl": {
@@ -1394,12 +1534,12 @@
         }
       }
     },
-    "Het levensverhaal, voor altijd bewaard": {
+    "Het levensverhaal, en als jij dat aanzet ook de eigen stem": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het levensverhaal, voor altijd bewaard"
+            "value": "Het levensverhaal, en als jij dat aanzet ook de eigen stem"
           }
         }
       }
@@ -1754,6 +1894,16 @@
         }
       }
     },
+    "Je ziet dan niets meer van dit profiel. De beheerder kan je opnieuw uitnodigen.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ziet dan niets meer van dit profiel. De beheerder kan je opnieuw uitnodigen."
+          }
+        }
+      }
+    },
     "K7P-2QX": {
       "localizations": {
         "nl": {
@@ -1984,6 +2134,26 @@
         }
       }
     },
+    "Luister naar de opname": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luister naar de opname"
+          }
+        }
+      }
+    },
+    "Luister naar uw verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luister naar uw verhaal"
+          }
+        }
+      }
+    },
     "Maak beheerder": {
       "localizations": {
         "nl": {
@@ -2140,6 +2310,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Met"
+          }
+        }
+      }
+    },
+    "Met stem": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met stem"
+          }
+        }
+      }
+    },
+    "Met uw stem": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met uw stem"
           }
         }
       }
@@ -2354,26 +2544,6 @@
         }
       }
     },
-    "Noah Unlimited": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noah Unlimited"
-          }
-        }
-      }
-    },
-    "Noah Unlimited voor %@": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noah Unlimited voor %@"
-          }
-        }
-      }
-    },
     "Noah begint hier zelf niet over.": {
       "localizations": {
         "nl": {
@@ -2434,12 +2604,12 @@
         }
       }
     },
-    "Noah herinnert u er op tijd aan, in een gesprek of door u te bellen.": {
+    "Noah helpt u herinneren, naast wat u al gebruikt, zoals uw medicijndoos of de kalender.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noah herinnert u er op tijd aan, in een gesprek of door u te bellen."
+            "value": "Noah helpt u herinneren, naast wat u al gebruikt, zoals uw medicijndoos of de kalender."
           }
         }
       }
@@ -2504,12 +2674,12 @@
         }
       }
     },
-    "Noah kan helpen onthouden: pillen, afspraken, verjaardagen of een vast rondje wandelen.": {
+    "Noah kan een extra geheugensteuntje geven: voor een afspraak, een verjaardag, medicijnen of een vast rondje wandelen.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noah kan helpen onthouden: pillen, afspraken, verjaardagen of een vast rondje wandelen."
+            "value": "Noah kan een extra geheugensteuntje geven: voor een afspraak, een verjaardag, medicijnen of een vast rondje wandelen."
           }
         }
       }
@@ -2524,12 +2694,12 @@
         }
       }
     },
-    "Noah maakt een praatje, haalt herinneringen op, bewaart het levensverhaal en helpt met de dag: van pillen tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk.": {
+    "Noah maakt een praatje, haalt herinneringen op, schrijft het levensverhaal op en geeft een extra geheugensteuntje, van afspraken tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noah maakt een praatje, haalt herinneringen op, bewaart het levensverhaal en helpt met de dag: van pillen tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk."
+            "value": "Noah maakt een praatje, haalt herinneringen op, schrijft het levensverhaal op en geeft een extra geheugensteuntje, van afspraken tot verjaardagen. Gewoon door te praten, via de app of een gewoon telefoonnummer. Noah is een AI, geen mens, en zegt dat ook eerlijk."
           }
         }
       }
@@ -2554,12 +2724,32 @@
         }
       }
     },
+    "Noah vraagt altijd eerst toestemming": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah vraagt altijd eerst toestemming"
+          }
+        }
+      }
+    },
     "Noah zegt standaard “u”. Kies “jij” als dat vertrouwder voelt.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
             "value": "Noah zegt standaard “u”. Kies “jij” als dat vertrouwder voelt."
+          }
+        }
+      }
+    },
+    "Noah's herinneringen zijn een extra geheugensteuntje, naast wat er al is (zoals een medicijndoos, de apotheek, thuiszorg of je eigen berichtjes). Noah houdt geen medicijngebruik bij en is geen medisch hulpmiddel. Vertrouw er niet als enige op: een gemist gesprek of een storing kan altijd.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah's herinneringen zijn een extra geheugensteuntje, naast wat er al is (zoals een medicijndoos, de apotheek, thuiszorg of je eigen berichtjes). Noah houdt geen medicijngebruik bij en is geen medisch hulpmiddel. Vertrouw er niet als enige op: een gemist gesprek of een storing kan altijd."
           }
         }
       }
@@ -2754,16 +2944,6 @@
         }
       }
     },
-    "Onbeperkt praten met Noah, via de app en een gewoon telefoonnummer": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Onbeperkt praten met Noah, via de app en een gewoon telefoonnummer"
-          }
-        }
-      }
-    },
     "Ondertitels aanzetten": {
       "localizations": {
         "nl": {
@@ -2894,6 +3074,16 @@
         }
       }
     },
+    "Opnames worden versleuteld opgeslagen in de EU. Alleen %@ zelf en de mantelzorgers van %@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Opnames worden versleuteld opgeslagen in de EU. Alleen %1$@ zelf en de mantelzorgers van %2$@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames."
+          }
+        }
+      }
+    },
     "Opnieuw praten": {
       "localizations": {
         "nl": {
@@ -2994,6 +3184,26 @@
         }
       }
     },
+    "Pauzeer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauzeer"
+          }
+        }
+      }
+    },
+    "Pauzeer de opname": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauzeer de opname"
+          }
+        }
+      }
+    },
     "Per onderwerp": {
       "localizations": {
         "nl": {
@@ -3084,6 +3294,16 @@
         }
       }
     },
+    "Positie in de opname": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Positie in de opname"
+          }
+        }
+      }
+    },
     "Praat met %@": {
       "localizations": {
         "nl": {
@@ -3100,6 +3320,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Praat met Noah"
+          }
+        }
+      }
+    },
+    "Praten met Noah kan zo vaak als %@ wil, met een redelijk-gebruikbeleid van %@ per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken (tot %lld minuten). De maand erna is alles weer zoals gewoonlijk.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Praten met Noah kan zo vaak als %1$@ wil, met een redelijk-gebruikbeleid van %2$@ per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken (tot %3$lld minuten). De maand erna is alles weer zoals gewoonlijk."
+          }
+        }
+      }
+    },
+    "Praten met Noah via de app en via een gewoon telefoonnummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Praten met Noah via de app en via een gewoon telefoonnummer"
           }
         }
       }
@@ -3180,6 +3420,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profiel verwijderen"
+          }
+        }
+      }
+    },
+    "Redelijk gebruik": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redelijk gebruik"
           }
         }
       }
@@ -3314,6 +3564,16 @@
         }
       }
     },
+    "Speel de opname af": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speel de opname af"
+          }
+        }
+      }
+    },
     "Spreektempo": {
       "localizations": {
         "nl": {
@@ -3340,16 +3600,6 @@
           "stringUnit": {
             "state": "new",
             "value": "Stap %1$lld van %2$lld"
-          }
-        }
-      }
-    },
-    "Start Noah Unlimited": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start Noah Unlimited"
           }
         }
       }
@@ -3430,6 +3680,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stoppen met meekijken"
+          }
+        }
+      }
+    },
+    "Stoppen met meekijken bij %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppen met meekijken bij %@"
+          }
+        }
+      }
+    },
+    "Stoppen met meekijken?": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stoppen met meekijken?"
           }
         }
       }
@@ -3634,6 +3904,26 @@
         }
       }
     },
+    "U hoort uw eigen stem.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U hoort uw eigen stem."
+          }
+        }
+      }
+    },
+    "U vertelt een verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U vertelt een verhaal"
+          }
+        }
+      }
+    },
     "U: %@": {
       "localizations": {
         "nl": {
@@ -3814,12 +4104,32 @@
         }
       }
     },
+    "Versleuteld opgeslagen in de EU": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versleuteld opgeslagen in de EU"
+          }
+        }
+      }
+    },
     "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
             "value": "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op."
+          }
+        }
+      }
+    },
+    "Vertel een verhaal": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel een verhaal"
           }
         }
       }
@@ -4314,6 +4624,16 @@
         }
       }
     },
+    "Wordt opgenomen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wordt opgenomen"
+          }
+        }
+      }
+    },
     "Wordt verlengd op %@": {
       "localizations": {
         "nl": {
@@ -4370,6 +4690,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zorg je samen? Nodig familie uit om mee te kijken. Een beheerder kan alles instellen, een lezer kan alleen meelezen."
+          }
+        }
+      }
+    },
+    "als u ja zegt": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "als u ja zegt"
           }
         }
       }

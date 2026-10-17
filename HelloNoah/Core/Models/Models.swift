@@ -296,6 +296,8 @@ struct NoahSettings: Codable, Hashable {
     var noContactAlertDays: Int
     var morningCall: MorningCall
     var quietHours: QuietHours
+    /// v2.1: whether conversations are recorded (only a beheerder can change it). Missing → `.uit`.
+    var recording: RecordingSetting = .uit
 
     static let speedRange: ClosedRange<Double> = 0.8...1.2
     static let minutesRange: ClosedRange<Int> = 5...30
@@ -308,8 +310,54 @@ struct NoahSettings: Codable, Hashable {
         maxConversationMinutes: 30,
         noContactAlertDays: 2,
         morningCall: MorningCall(enabled: false, time: "09:30", weekdays: [1, 2, 3, 4, 5, 6, 7]),
-        quietHours: QuietHours(start: "21:30", end: "08:00")
+        quietHours: QuietHours(start: "21:30", end: "08:00"),
+        recording: .uit
     )
+}
+
+/// v2.1 `NoahSettings.recording`. Noah always asks the older person's permission first.
+enum RecordingSetting: String, TolerantEnum {
+    case uit
+    /// Only story conversations (`mode: levensverhaal`).
+    case levensverhaal
+    case alleGesprekken = "alle_gesprekken"
+    case unknown
+    static var unknownCase: RecordingSetting { .unknown }
+}
+
+// In an extension so the memberwise initialiser stays available.
+extension NoahSettings {
+    enum CodingKeys: String, CodingKey {
+        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            noahName: try c.decode(String.self, forKey: .noahName),
+            voice: try c.decode(NoahVoice.self, forKey: .voice),
+            speakingSpeed: try c.decode(Double.self, forKey: .speakingSpeed),
+            maxConversationMinutes: try c.decode(Int.self, forKey: .maxConversationMinutes),
+            noContactAlertDays: try c.decode(Int.self, forKey: .noContactAlertDays),
+            morningCall: try c.decode(MorningCall.self, forKey: .morningCall),
+            quietHours: try c.decode(QuietHours.self, forKey: .quietHours),
+            // Older backends don't know the field yet.
+            recording: try c.decodeIfPresent(RecordingSetting.self, forKey: .recording) ?? .uit
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(noahName, forKey: .noahName)
+        try c.encode(voice, forKey: .voice)
+        try c.encode(speakingSpeed, forKey: .speakingSpeed)
+        try c.encode(maxConversationMinutes, forKey: .maxConversationMinutes)
+        try c.encode(noContactAlertDays, forKey: .noContactAlertDays)
+        try c.encode(morningCall, forKey: .morningCall)
+        try c.encode(quietHours, forKey: .quietHours)
+        // Never send back a value this app doesn't know.
+        if recording != .unknown { try c.encode(recording, forKey: .recording) }
+    }
 }
 
 // MARK: - Emergency contacts
@@ -380,6 +428,19 @@ enum ConversationChannel: String, TolerantEnum {
     static var unknownCase: ConversationChannel { .unknown }
 }
 
+/// v2.1: an ordinary conversation or a story conversation (Noah interviews for the life story).
+enum ConversationMode: String, TolerantEnum {
+    case gesprek
+    case levensverhaal
+    case unknown
+    static var unknownCase: ConversationMode { .unknown }
+}
+
+/// Body of `POST /device/conversation` and `POST /elderly/:id/call-now` (v2.1).
+struct ConversationModeRequest: Encodable {
+    let mode: ConversationMode
+}
+
 struct ConversationSummary: Codable, Hashable, Identifiable {
     let id: String
     var startedAt: Date
@@ -389,6 +450,10 @@ struct ConversationSummary: Codable, Hashable, Identifiable {
     var moodScore: Double?
     @DefaultEmpty var topics: [String] = []
     @DefaultFalse var hasConcern: Bool = false
+    /// v2.1
+    var mode: ConversationMode?
+    /// v2.1: a recording can be played (`GET /conversations/:id/audio`).
+    @DefaultFalse var hasAudio: Bool = false
 }
 
 enum TranscriptRole: String, TolerantEnum {
@@ -422,6 +487,17 @@ struct ConversationDetail: Codable, Hashable, Identifiable {
     @DefaultEmpty var emotionalMoments: [String] = []
     @DefaultEmpty var lifeStoryEntryIds: [String] = []
     @DefaultEmpty var transcript: [TranscriptLine] = []
+    /// v2.1
+    var mode: ConversationMode?
+    @DefaultFalse var hasAudio: Bool = false
+}
+
+/// v2.1 `GET /conversations/:id/audio` and `GET /device/conversations/:id/audio`.
+/// The URL is signed and valid for about 15 minutes.
+struct ConversationAudio: Decodable, Hashable {
+    let url: URL
+    var durationSeconds: Double?
+    var expiresAt: Date?
 }
 
 // MARK: - Mood
@@ -474,6 +550,15 @@ struct LifeStoryEntry: Codable, Hashable, Identifiable {
     var conversationId: String?
     var createdBy: CreatedBy?
     var createdAt: Date?
+    /// v2.1: the voice fragment that belongs to this story.
+    var audio: LifeStoryAudio?
+}
+
+/// v2.1 `LifeStoryEntry.audio`. `startSeconds` nil = play from the start.
+struct LifeStoryAudio: Codable, Hashable {
+    var conversationId: String
+    var startSeconds: Double?
+    var durationSeconds: Double?
 }
 
 struct LifeStoryInput: Encodable, Equatable {
@@ -622,6 +707,8 @@ enum AlertType: String, TolerantEnum {
     case oplichting
     case verwardheid
     case noodgeval
+    /// v2.1: fair-use notice (info, never pushed, beheerders only, at most one per month).
+    case verbruik
     case unknown
     static var unknownCase: AlertType { .unknown }
 }
@@ -689,6 +776,9 @@ struct Dashboard: Decodable {
 
 struct CallNowResponse: Decodable {
     let status: String
+    /// v2.1 (backend): what kind of call Noah starts and whether it is recorded (after a "ja").
+    var mode: ConversationMode?
+    var recording: Bool?
 }
 
 struct PhoneLine: Decodable, Hashable {
@@ -719,6 +809,21 @@ struct Subscription: Codable, Hashable {
     var paidByMe: Bool?
     /// Additive (backend changelog): free trial conversations left before a subscription is needed.
     var freeConversationsLeft: Int?
+    /// v2.1: fair use this month.
+    var usage: Usage?
+
+    struct Usage: Codable, Hashable {
+        var minutesThisMonth: Double
+        var allowanceMinutes: Double
+        var resetsAt: Date?
+        /// When true Noah keeps working, with shorter conversations.
+        @DefaultFalse var overAllowance: Bool = false
+
+        /// 0…1 for a progress bar.
+        var fraction: Double {
+            allowanceMinutes > 0 ? min(1, max(0, minutesThisMonth / allowanceMinutes)) : 0
+        }
+    }
 
     /// Paid, in the intro period, or beta: no paywall needed.
     var isPaidOrBeta: Bool { status == .actief || status == .intro || status == .beta }
@@ -761,6 +866,10 @@ struct ConversationSession: Decodable {
     var dynamicVariables: [String: JSONValue]?
     let overrides: Overrides?
     let maxDurationSeconds: Int?
+    /// v2.1
+    var mode: ConversationMode?
+    /// v2.1: this conversation is recorded (Noah asks permission first). Shown as "Wordt opgenomen".
+    @DefaultFalse var recording: Bool = false
 }
 
 struct PushTokenRequest: Encodable {

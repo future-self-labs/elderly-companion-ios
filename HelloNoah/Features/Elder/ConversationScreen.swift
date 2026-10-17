@@ -60,6 +60,12 @@ struct ConversationScreen: View {
                     .font(NoahFont.Elder.title).noahElderTitleScaling()
                     .foregroundColor(NoahColor.text)
                     .accessibilityAddTraits(.isHeader)
+                if controller.mode == .levensverhaal {
+                    Text("U vertelt een verhaal")
+                        .font(NoahFont.Elder.label)
+                        .foregroundColor(NoahColor.accent)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                }
                 Text(verbatim: controller.statusText)
                     .font(NoahFont.Elder.label)
                     .foregroundColor(NoahColor.textSoft)
@@ -70,6 +76,10 @@ struct ConversationScreen: View {
                     Text("Nog ongeveer een minuut")
                         .font(NoahFont.Elder.label)
                         .foregroundColor(NoahColor.accent)
+                }
+                if controller.isRecording, controller.phase == .active {
+                    RecordingIndicator()
+                        .padding(.top, NoahSpacing.xs)
                 }
             }
             .padding(.top, NoahSpacing.m)

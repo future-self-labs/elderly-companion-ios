@@ -158,6 +158,13 @@ enum DutchFormat {
     }
 
     /// 3.8 → "3,8"
+    /// 600 → "10 uur", 90 → "1,5 uur", 45 → "45 minuten".
+    static func hours(minutes: Int) -> String {
+        if minutes < 60 { return minutes == 1 ? "1 minuut" : "\(minutes) minuten" }
+        let hours = Double(minutes) / 60
+        return "\(decimal(hours, digits: hours.rounded() == hours ? 0 : 1)) uur"
+    }
+
     static func decimal(_ value: Double, digits: Int = 1) -> String {
         let formatter = NumberFormatter()
         formatter.locale = locale

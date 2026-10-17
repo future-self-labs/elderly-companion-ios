@@ -9,12 +9,16 @@ import Foundation
 /// - Pairing code: any 6 digits pair this phone with Wim; `000000` is rejected.
 /// - Role rules are enforced: writes on Riet's profile fail with 403 like the real backend.
 /// - Launch arguments: `-mockLatency <seconds>`, `-mockOffline YES` (every call fails offline),
-///   `-mockInactive YES` (Wim's profile inactive, to see the 409 flows).
+///   `-mockInactive YES` (Wim's profile inactive, to see the 409 flows), `-mockOverAllowance YES`
+///   (Wim used up this month's fair use: shorter conversations, notice on the subscription screen).
+/// - v2.1: Wim's recording setting is "alleen bij levensverhalen"; his story conversations and two
+///   life-story entries have a (generated, demo) recording.
 /// Data lives in memory and resets at each launch.
 final class MockNoahAPI: NoahAPI {
     private let lock = NSLock()
     private let latency: TimeInterval
     private let offline: Bool
+    private let overAllowance: Bool
     private let defaults: UserDefaults
 
     // MARK: State
@@ -44,6 +48,7 @@ final class MockNoahAPI: NoahAPI {
         self.defaults = defaults
         latency = defaults.object(forKey: "mockLatency") == nil ? 0.35 : defaults.double(forKey: "mockLatency")
         offline = defaults.bool(forKey: "mockOffline")
+        overAllowance = defaults.bool(forKey: "mockOverAllowance")
         seed(now: now, inactive: defaults.bool(forKey: "mockInactive"))
     }
 
@@ -95,6 +100,7 @@ final class MockNoahAPI: NoahAPI {
 
         var wimSettings = NoahSettings.defaults
         wimSettings.morningCall = .init(enabled: true, time: "09:30", weekdays: [1, 2, 3, 4, 5])
+        wimSettings.recording = .levensverhaal
         settingsByElderly[MockIDs.wim] = wimSettings
         settingsByElderly[MockIDs.riet] = NoahSettings.defaults
 
@@ -128,6 +134,12 @@ final class MockNoahAPI: NoahAPI {
                       body: "Wim heeft twee dagen niet met Noah gepraat.", conversationId: nil, status: .afgehandeld,
                       createdAt: now.addingTimeInterval(-86_400 * 12), acknowledgedBy: "Mark"),
         ]
+        if overAllowance {
+            alertsByElderly[MockIDs.wim, default: []].append(
+                NoahAlert(id: "A04", type: .verbruik, severity: .info, title: "Het redelijk gebruik van deze maand is bereikt",
+                          body: "Wim heeft deze maand al veel met Noah gepraat. Noah blijft gewoon bereikbaar, met gesprekken van maximaal 10 minuten tot het einde van de maand.",
+                          conversationId: nil, status: .open, createdAt: now.addingTimeInterval(-3600), acknowledgedBy: nil))
+        }
         alertsByElderly[MockIDs.riet] = []
 
         devicesByElderly[MockIDs.wim] = [PairedDevice(id: MockIDs.wimDevice, deviceName: "iPhone van Wim", platform: "ios", pairedAt: now.addingTimeInterval(-86_400 * 39), lastSeenAt: now.addingTimeInterval(-3600 * 3))]
@@ -205,7 +217,28 @@ final class MockNoahAPI: NoahAPI {
 
     private func summary(_ c: ConversationDetail) -> ConversationSummary {
         ConversationSummary(id: c.id, startedAt: c.startedAt, durationSeconds: c.durationSeconds, channel: c.channel,
-                            summary: c.summary, moodScore: c.moodScore, topics: c.topics, hasConcern: c.hasConcern)
+                            summary: c.summary, moodScore: c.moodScore, topics: c.topics, hasConcern: c.hasConcern,
+                            mode: c.mode, hasAudio: c.hasAudio)
+    }
+
+    /// Fair use this month (v2.1): minutes of this calendar month (Europe/Amsterdam).
+    private func usage(_ elderlyId: String, now: Date = Date()) -> Subscription.Usage {
+        let calendar = DutchFormat.calendar
+        let monthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
+        let resetsAt = calendar.date(byAdding: .month, value: 1, to: monthStart)
+        let seconds = (conversationsByElderly[elderlyId] ?? []).filter { $0.startedAt >= monthStart }.compactMap(\.durationSeconds).reduce(0, +)
+        let allowance = Double(Plan.fairUseMonthlyMinutes)
+        // Kept under the allowance unless `-mockOverAllowance YES`, so screenshots stay stable.
+        let minutes = elderlyId == MockIDs.wim && overAllowance ? allowance + 12 : min((Double(seconds) / 60).rounded(), allowance * 0.9)
+        return Subscription.Usage(minutesThisMonth: minutes, allowanceMinutes: allowance, resetsAt: resetsAt, overAllowance: minutes >= allowance)
+    }
+
+    private func audio(for conversation: ConversationDetail?) throws -> ConversationAudio {
+        guard let conversation, conversation.hasAudio else {
+            throw fail(404, "geen_opname", "Er is geen opname van dit gesprek.")
+        }
+        return ConversationAudio(url: try MockRecording.fileURL(), durationSeconds: MockRecording.durationSeconds,
+                                 expiresAt: Date().addingTimeInterval(15 * 60))
     }
 
     private func refreshedReminders(_ elderlyId: String) -> [Reminder] {
@@ -343,6 +376,7 @@ final class MockNoahAPI: NoahAPI {
                 "conversations": AnyEncodable(owned.flatMap { conversationsByElderly[$0] ?? [] }),
                 "lifeStory": AnyEncodable(owned.flatMap { lifeStories[$0] ?? [] }),
                 "reminders": AnyEncodable(owned.flatMap { remindersByElderly[$0] ?? [] }),
+                "recordings": AnyEncodable(owned.flatMap { (conversationsByElderly[$0] ?? []).filter(\.hasAudio).map { "opnames/\($0.id).m4a" } }),
                 "exportedAt": AnyEncodable(NoahJSON.formatDate(Date())),
             ]
             return try NoahJSON.makeEncoder(pretty: true).encode(export)
@@ -450,6 +484,7 @@ final class MockNoahAPI: NoahAPI {
                 "conversations": AnyEncodable(conversationsByElderly[id] ?? []),
                 "lifeStory": AnyEncodable(lifeStories[id] ?? []),
                 "reminders": AnyEncodable(remindersByElderly[id] ?? []),
+                "recordings": AnyEncodable((conversationsByElderly[id] ?? []).filter(\.hasAudio).map { "opnames/\($0.id).m4a" }),
             ]
             return try NoahJSON.makeEncoder(pretty: true).encode(export)
         }
@@ -720,6 +755,15 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
+    func conversationAudio(conversationId: String) async throws -> ConversationAudio {
+        try await simulate()
+        return try sync {
+            guard let elderlyId = elderlyId(ofConversation: conversationId) else { throw fail(404, "niet_gevonden", "Dit gesprek bestaat niet (meer).") }
+            _ = try role(for: elderlyId)
+            return try audio(for: conversationsByElderly[elderlyId]?.first { $0.id == conversationId })
+        }
+    }
+
     func mood(elderlyId: String, days: Int) async throws -> MoodOverview {
         try await simulate()
         return try sync {
@@ -893,7 +937,7 @@ final class MockNoahAPI: NoahAPI {
 
     // MARK: Calls & phone line
 
-    func callNow(elderlyId: String) async throws -> CallNowResponse {
+    func callNow(elderlyId: String, mode: ConversationMode) async throws -> CallNowResponse {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
@@ -906,7 +950,9 @@ final class MockNoahAPI: NoahAPI {
             if inQuiet {
                 throw fail(409, "quiet_hours", "Het is nu rusttijd (\(quiet.start)–\(quiet.end)). Noah belt dan niet, behalve in een noodgeval.")
             }
-            return CallNowResponse(status: "gestart")
+            let recording = settingsByElderly[elderlyId]?.recording ?? .uit
+            return CallNowResponse(status: "gestart", mode: mode,
+                                   recording: recording == .alleGesprekken || (recording == .levensverhaal && mode == .levensverhaal))
         }
     }
 
@@ -925,7 +971,9 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
-            return subscriptions[elderlyId] ?? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil)
+            var subscription = subscriptions[elderlyId] ?? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil)
+            if subscription.status.grantsAccess { subscription.usage = usage(elderlyId) }
+            return subscription
         }
     }
 
@@ -961,20 +1009,33 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func startDeviceConversation() async throws -> ConversationSession {
+    func startDeviceConversation(mode: ConversationMode) async throws -> ConversationSession {
         try await simulate()
         return try sync {
             let id = deviceElderlyId
             guard profiles[id]?.access == .active else {
                 throw fail(409, "inactive", "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
             }
-            let minutes = settingsByElderly[id]?.maxConversationMinutes ?? 30
+            let settings = settingsByElderly[id] ?? .defaults
+            let mode: ConversationMode = mode == .levensverhaal ? .levensverhaal : .gesprek
+            let recording: Bool
+            switch settings.recording {
+            case .alleGesprekken: recording = true
+            case .levensverhaal: recording = mode == .levensverhaal
+            case .uit, .unknown: recording = false
+            }
+            // Fair use used up: Noah keeps working, with shorter conversations.
+            let minutes = usage(id).overAllowance
+                ? min(settings.maxConversationMinutes, Plan.cappedConversationMinutes)
+                : settings.maxConversationMinutes
             return ConversationSession(
                 agentId: "agent_mock",
                 conversationToken: "mock-conversation-token",
                 dynamicVariables: ["user_name": .string(profiles[id]?.preferredName ?? "Wim"), "session_claim": .string("mock")],
                 overrides: nil,
-                maxDurationSeconds: minutes * 60
+                maxDurationSeconds: minutes * 60,
+                mode: mode,
+                recording: recording
             )
         }
     }
@@ -991,6 +1052,13 @@ final class MockNoahAPI: NoahAPI {
     func deviceLifeStory(cursor: String?, limit: Int) async throws -> Page<LifeStoryEntry> {
         try await simulate()
         return sync { paginate(sortedStory(deviceElderlyId, category: nil), cursor: cursor, limit: limit) }
+    }
+
+    func deviceConversationAudio(conversationId: String) async throws -> ConversationAudio {
+        try await simulate()
+        return try sync {
+            try audio(for: conversationsByElderly[deviceElderlyId]?.first { $0.id == conversationId })
+        }
     }
 
     func deviceReminders() async throws -> [Reminder] {

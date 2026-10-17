@@ -14,6 +14,12 @@ struct ElderRemindersView: View {
                     .foregroundColor(NoahColor.text)
                     .accessibilityAddTraits(.isHeader)
 
+                // A memory aid next to what the person already uses, never a replacement.
+                Text(verbatim: ProductCopy.elderReminderNote)
+                    .font(NoahFont.Elder.label)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 LoadableView(state: state, large: true, retry: { Task { await load() } }) { reminders in
                     if reminders.isEmpty {
                         EmptyStateView(
@@ -26,10 +32,6 @@ struct ElderRemindersView: View {
                         ForEach(reminders) { reminder in
                             ElderReminderCard(reminder: reminder)
                         }
-                        Text("Noah herinnert u er op tijd aan, in een gesprek of door u te bellen.")
-                            .font(NoahFont.Elder.label)
-                            .foregroundColor(NoahColor.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }

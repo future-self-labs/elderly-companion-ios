@@ -58,6 +58,8 @@ protocol NoahAPI: AnyObject {
     func dashboard(elderlyId: String) async throws -> Dashboard
     func conversations(elderlyId: String, cursor: String?, limit: Int) async throws -> Page<ConversationSummary>
     func conversation(id: String) async throws -> ConversationDetail
+    /// v2.1: signed URL of the recording (`404 geen_opname` when there is none).
+    func conversationAudio(conversationId: String) async throws -> ConversationAudio
     func mood(elderlyId: String, days: Int) async throws -> MoodOverview
 
     // Life story (§3.11)
@@ -78,7 +80,7 @@ protocol NoahAPI: AnyObject {
     func resolveAlert(alertId: String, falseAlarm: Bool, note: String?) async throws -> NoahAlert
 
     // Calls & phone line (§3.14)
-    func callNow(elderlyId: String) async throws -> CallNowResponse
+    func callNow(elderlyId: String, mode: ConversationMode) async throws -> CallNowResponse
     func phoneLine() async throws -> PhoneLine
 
     // Subscription (§3.15)
@@ -87,9 +89,11 @@ protocol NoahAPI: AnyObject {
 
     // Device endpoints (§4)
     func deviceMe() async throws -> DeviceMe
-    func startDeviceConversation() async throws -> ConversationSession
+    func startDeviceConversation(mode: ConversationMode) async throws -> ConversationSession
     func deviceCallMe() async throws
     func deviceLifeStory(cursor: String?, limit: Int) async throws -> Page<LifeStoryEntry>
+    /// v2.1: the older person's own recording, for "Mijn verhaal".
+    func deviceConversationAudio(conversationId: String) async throws -> ConversationAudio
     func deviceReminders() async throws -> [Reminder]
     func registerDevicePushToken(_ token: String, environment: String) async throws
     func unpairThisDevice() async throws

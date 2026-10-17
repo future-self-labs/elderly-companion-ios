@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Home: one big "Praat met Noah" button, last conversation, "Bel mij", the next reminder and
-/// the two big buttons to "Mijn verhaal" and "Herinneringen". Formal "u" throughout.
+/// Home: one big "Praat met Noah" button, last conversation, "Vertel een verhaal" (story mode),
+/// "Bel mij", the next reminder and the two big buttons to "Mijn verhaal" and "Herinneringen".
+/// Formal "u" throughout; every action is one tap.
 struct ElderHomeView: View {
     @Binding var path: [ElderRoute]
 
@@ -41,6 +42,8 @@ struct ElderHomeView: View {
                     .foregroundColor(NoahColor.textSecondary)
                     .multilineTextAlignment(.center)
                     .accessibilityIdentifier("elder.lastConversation")
+
+                storyButton
 
                 callMeButton
 
@@ -119,6 +122,19 @@ struct ElderHomeView: View {
         .accessibilityLabel(Text("Praat met \(session.noahName)"))
         .accessibilityHint(Text("Begint meteen een gesprek"))
         .accessibilityIdentifier("elder.talk")
+    }
+
+    /// Second action, clearly smaller than the orb: a story conversation for the life story.
+    private var storyButton: some View {
+        Button {
+            session.justPaired = false
+            session.requestConversation(mode: .levensverhaal)
+        } label: {
+            NoahButtonLabel(title: "Vertel een verhaal", systemImage: "quote.bubble.fill", iconTint: NoahColor.accent)
+        }
+        .buttonStyle(.noah(.secondary, size: .elder))
+        .accessibilityHint(Text("\(session.noahName) vraagt u naar herinneringen van vroeger"))
+        .accessibilityIdentifier("elder.tellStory")
     }
 
     private var callMeButton: some View {

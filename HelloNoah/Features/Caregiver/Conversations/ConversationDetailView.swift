@@ -29,12 +29,16 @@ struct ConversationDetailView: View {
                 .foregroundColor(NoahColor.text)
                 .accessibilityAddTraits(.isHeader)
             Label {
-                Text(verbatim: "\(c.channel.label) · \(DutchFormat.duration(seconds: c.durationSeconds))")
+                Text(verbatim: "\((c.mode ?? .gesprek).label) · \(c.channel.label) · \(DutchFormat.duration(seconds: c.durationSeconds))")
             } icon: {
-                Image(systemName: c.channel.systemImage)
+                Image(systemName: c.mode == .levensverhaal ? "quote.bubble.fill" : c.channel.systemImage)
             }
             .font(NoahFont.subheadline)
             .foregroundColor(NoahColor.textSecondary)
+        }
+
+        if c.hasAudio {
+            ConversationRecordingCard(conversationId: c.id, name: session.selected?.preferredName ?? "", api: session.api)
         }
 
         if let summary = c.summary {
@@ -177,6 +181,23 @@ struct ConversationDetailView: View {
             let apiError = APIError.from(error)
             if apiError != .cancelled, state.value == nil { state = .failed(apiError) }
         }
+    }
+}
+
+/// The recording of a conversation (v2.1), fetched on tap.
+struct ConversationRecordingCard: View {
+    let name: String
+    @StateObject private var player: RecordingPlayer
+
+    init(conversationId: String, name: String, api: NoahAPI) {
+        self.name = name
+        _player = StateObject(wrappedValue: RecordingPlayer { try await api.conversationAudio(conversationId: conversationId) })
+    }
+
+    var body: some View {
+        RecordingPlayerCard(player: player,
+                            title: name.isEmpty ? "Luister naar het gesprek" : "Luister naar \(name)",
+                            subtitle: "Opgenomen met toestemming van \(name.isEmpty ? "je naaste" : name)")
     }
 }
 

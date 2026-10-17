@@ -18,20 +18,23 @@ At launch the app decides by what is in the Keychain:
 | caregiver tokens | **Caregiver** — informal "je", tab bar |
 | nothing | Welcome: "Ik ben mantelzorger" or "Deze telefoon is voor iemand die met Noah gaat praten" (6-digit pairing code) |
 
-**Older person:** Home (big round "Praat met Noah", last conversation, "Bel mij", next reminder, Mijn verhaal,
-Herinneringen) · Conversation (orb + waveform reacting to who speaks, optional large subtitles, big "Ophangen") ·
-Mijn verhaal (by topic or by period, detail) · Herinneringen · widgets (small, medium, lock-screen circular) that open
+**Older person:** Home (big round "Praat met Noah", last conversation, "Vertel een verhaal" (story mode), "Bel mij",
+next reminder, Mijn verhaal, Herinneringen) · Conversation (orb + waveform reacting to who speaks, optional large
+subtitles, big "Ophangen", calm "Wordt opgenomen als u ja zegt" when the server records) · Mijn verhaal (by topic or
+by period, detail, "Luister naar uw verhaal" with their own voice) · Herinneringen (a memory aid next to what they
+already use) · widgets (small, medium, lock-screen circular) that open
 `hellonoah://praat` and start a conversation at once. A hidden long-press (2 s) on the greeting opens settings for the
 caregiver (unpair this phone).
 
 **Caregiver:** 4 welcome slides · Sign in with Apple / phone + SMS code · start (new profile or invitation code) ·
 9-step profile wizard (name & address form, phone, about, important people, preferences, Noah settings, emergency
 contacts, pairing code, subscription) · dashboard (alerts, latest summary, week stats, 7-day mood chart, upcoming
-reminders, life story, "Laat Noah nu bellen", push pre-prompt, trial/inactive banners) · conversations (paginated) +
-detail with transcript · life story (topics / timeline, add/edit/delete) · reminders (once / daily / weekly, Noah calls
-or mentions it) · mood (7/30/90 days, Swift Charts) · alerts list + detail (acknowledge, resolve, "vals alarm") ·
-Meer: Noah settings, profile, important people, emergency contacts (reorder), Noah's phone number (add to contacts),
-caregivers & invitations, pairing, paired devices, subscription, account (GDPR export, delete with "VERWIJDER"),
+reminders, life story, "Laat Noah nu bellen" as a normal or story call, push pre-prompt, trial/inactive banners) ·
+conversations (paginated, story chip, inline "Luister") + detail with recording player and transcript · life story
+(topics / timeline, add/edit/delete, "Luister naar Wim" from the story's `startSeconds`) · reminders (once / daily /
+weekly, Noah calls or mentions it; always with the memory-aid disclaimer) · mood (7/30/90 days, Swift Charts) · alerts list + detail (acknowledge, resolve, "vals alarm") ·
+Meer: Noah settings (incl. recording: uit / alleen bij levensverhalen / alle gesprekken), profile, important people, emergency contacts (reorder), Noah's phone number (add to contacts),
+caregivers & invitations, pairing, paired devices, subscription (with fair-use usage this month), account (GDPR export, delete with "VERWIJDER"),
 switching between older people. A `lezer` sees no edit controls and none of the beheerder-only screens.
 
 ## Run it
@@ -54,9 +57,12 @@ Uncheck the argument in *Edit Scheme → Run → Arguments* to use the live back
 - Hidden toggle (works in TestFlight too): tap the HelloNoah logo on the welcome screen 5×, or long-press the version
   line in *Meer → Account en privacy*.
 - Handy launch arguments (mock only): `-mockPersona caregiver|new|elder|none`, `-uiRoute <screen>` (e.g.
-  `dashboard`, `conversationDetail`, `alertDetail`, `wizard`, `paywall`, `conversation`, `myStory`; see
-  `CaregiverRootView.applyDebugRoute` / `ElderRootView`), `-mockOffline YES`, `-mockInactive YES`, `-mockLatency 0`.
-- Purchases: run from Xcode to use `Products.storekit` (intro €9,99 × 6, then €59,99). Without a StoreKit
+  `dashboard`, `conversationDetail`, `storyConversationDetail`, `alertDetail`, `wizard`, `paywall`, `conversation`,
+  `storyConversation`, `myStory`, `storyEntry`; see `CaregiverRootView.applyDebugRoute` / `ElderRootView`),
+  `-mockOffline YES`, `-mockInactive YES`, `-mockOverAllowance YES` (fair use used up), `-mockLatency 0`.
+- Recordings (v2.1): Wim's recording setting is "alleen bij levensverhalen"; his story conversations and two life-story
+  entries (trouwdag, Toon Hermans) have a recording. Mock mode plays a generated 40-second demo tune instead of a voice.
+- Purchases: run from Xcode to use `Products.storekit` (`ai.hellonoah.abonnement.maand`, intro €9,99 × 6, then €59,99). Without a StoreKit
   configuration (e.g. launched from the command line) mock mode simulates the purchase.
 
 Mock data lives in memory and resets at each launch.
@@ -73,10 +79,19 @@ Base URL: `Config/HelloNoah.xcconfig` (`API_BASE_URL`, default
 xcodebuild -scheme HelloNoah -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build test
 ```
 
-46+ unit tests: every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
+70+ unit tests: every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
 arrays), request encoding, single-flight token refresh (5 parallel 401s → exactly 1 refresh), sign-out on an invalid
 refresh token, device unpairing on 401, Dutch relative dates and reminder schedules, phone number normalisation,
-role gating (incl. the mock enforcing it) and deep links.
+role gating (incl. the mock enforcing it), deep links, and the v2.1 product corrections (fair use, recording setting,
+story mode, audio URLs and expiry, memory-aid and privacy copy, and a scan of the compiled strings for forbidden claims
+like "onbeperkt" or "geen geluidsopnames").
+
+## Product wording (v2.1)
+
+The plan is named only in `Plan.displayName` ("HelloNoah-abonnement", `Core/Services/SubscriptionStore.swift`). Texts
+that must read the same everywhere live in `ProductCopy` (`Core/Formatting/Labels.swift`): the honest privacy text,
+the reminder disclaimer (short and full), the older person's reminder line and the fair-use sentence. Never claim
+unlimited talking, "geen geluidsopnames" or "alle gegevens in de EU".
 
 ## Structure
 
@@ -127,7 +142,7 @@ files from the build's intermediates.
 ## Release checklist (Apple)
 
 See the report in `LOG.md` (2026-10-11): App ID capabilities (Sign in with Apple, Push, Associated Domains), the
-widget App ID, the auto-renewable subscription `ai.hellonoah.unlimited.monthly` in group "Noah" with the 6-month
+widget App ID, the auto-renewable subscription `ai.hellonoah.abonnement.maand` ("HelloNoah-abonnement") in group "Noah" with the 6-month
 pay-as-you-go intro offer, App Store Server Notifications V2 URL, APNs key for the backend, AASA file on
 hellonoah.ai, TestFlight.
 

@@ -191,7 +191,7 @@ enum ContractFixtures {
     """
 
     static let subscription = """
-    { "status": "intro", "productId": "ai.hellonoah.unlimited.monthly", "renewsAt": "2026-11-11T08:00:00Z", "expiresAt": null, "platform": "app_store", "paidByMe": true }
+    { "status": "intro", "productId": "ai.hellonoah.abonnement.maand", "renewsAt": "2026-11-11T08:00:00Z", "expiresAt": null, "platform": "app_store", "paidByMe": true }
     """
 
     static var deviceMe: String {
@@ -210,6 +210,56 @@ enum ContractFixtures {
                      "tts": { "voiceId": "voice_abc", "speed": 1.0 } },
       "maxDurationSeconds": 1800
     }
+    """
+
+    // MARK: v2.1 (2026-10-17, product corrections from the founder)
+
+    static let subscriptionV21 = """
+    { "status": "actief", "productId": "ai.hellonoah.abonnement.maand", "renewsAt": "2026-11-11T08:00:00Z", "expiresAt": null,
+      "platform": "app_store", "paidByMe": true,
+      "usage": { "minutesThisMonth": 212, "allowanceMinutes": 600, "resetsAt": "2026-11-01T00:00:00+01:00", "overAllowance": false } }
+    """
+
+    static let settingsV21 = """
+    {
+      "noahName": "Noah", "voice": "man", "speakingSpeed": 0.9, "maxConversationMinutes": 20, "noContactAlertDays": 3,
+      "morningCall": { "enabled": true, "time": "09:30", "weekdays": [1,2,3,4,5] },
+      "quietHours": { "start": "21:30", "end": "08:00" },
+      "recording": "levensverhaal"
+    }
+    """
+
+    static let conversationSummaryV21 = """
+    { "id": "conv2", "startedAt": "2026-10-16T14:00:00Z", "durationSeconds": 734, "channel": "telefoon_uit",
+      "summary": "Wim vertelde over de trouwdag.", "moodScore": 5, "topics": ["trouwdag"], "hasConcern": false,
+      "mode": "levensverhaal", "hasAudio": true }
+    """
+
+    static let lifeStoryEntryV21 = """
+    { "id": "ls2", "category": "familie", "title": "De trouwdag met Margriet", "content": "Het regende ...",
+      "year": 1962, "people": ["Margriet"], "places": ["Haarlem"], "quote": null,
+      "conversationId": "conv2", "createdBy": "noah", "createdAt": "2026-10-16T14:20:00Z",
+      "audio": { "conversationId": "conv2", "startSeconds": 312, "durationSeconds": 734 } }
+    """
+
+    static let deviceConversationV21 = """
+    { "agentId": "agent_123", "conversationToken": "eyJ.conversation.token",
+      "dynamicVariables": { "user_name": "Wim", "session_claim": "signed.claim" },
+      "overrides": { "agent": { "firstMessage": "Goedemiddag Wim!", "language": "nl" } },
+      "maxDurationSeconds": 600, "mode": "levensverhaal", "recording": true }
+    """
+
+    static let callNowV21 = """
+    { "status": "gestart", "mode": "levensverhaal", "recording": true }
+    """
+
+    static let verbruikAlert = """
+    { "id": "a7", "type": "verbruik", "severity": "info", "title": "Het redelijk gebruik is bereikt", "body": "Noah blijft bereikbaar.",
+      "conversationId": null, "status": "open", "createdAt": "2026-10-17T08:00:00Z", "acknowledgedBy": null }
+    """
+
+    static let conversationAudio = """
+    { "url": "https://storage.example.eu/audio/conv2.m4a?sig=abc", "durationSeconds": 734, "expiresAt": "2026-10-17T10:15:00Z" }
     """
 
     static let error = """

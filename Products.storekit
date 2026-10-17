@@ -49,14 +49,14 @@
           },
           "localizations" : [
             {
-              "description" : "Onbeperkt praten met Noah, dashboard, levensverhaal en meldingen.",
-              "displayName" : "Noah Unlimited",
+              "description" : "Praten met Noah (redelijk gebruik), dashboard, levensverhaal en meldingen.",
+              "displayName" : "HelloNoah-abonnement",
               "locale" : "nl"
             }
           ],
-          "productID" : "ai.hellonoah.unlimited.monthly",
+          "productID" : "ai.hellonoah.abonnement.maand",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Noah Unlimited (maandelijks)",
+          "referenceName" : "HelloNoah-abonnement (maand)",
           "subscriptionGroupID" : "21500001",
           "type" : "RecurringSubscription",
           "winbackOffers" : [

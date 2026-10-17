@@ -148,9 +148,17 @@ struct LifeStoryRow: View {
 
     var body: some View {
         NoahCard {
-            (Text(verbatim: showsYear ? entry.year.map { "\($0) · " } ?? "" : "").font(NoahFont.captionStrong).foregroundColor(NoahColor.accent)
-                + Text(verbatim: entry.category.label + (entry.createdBy == .noah ? " · door Noah" : "")).font(NoahFont.caption).foregroundColor(NoahColor.textSecondary))
-                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: NoahSpacing.xs) {
+                (Text(verbatim: showsYear ? entry.year.map { "\($0) · " } ?? "" : "").font(NoahFont.captionStrong).foregroundColor(NoahColor.accent)
+                    + Text(verbatim: entry.category.label + (entry.createdBy == .noah ? " · door Noah" : "")).font(NoahFont.caption).foregroundColor(NoahColor.textSecondary))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                if entry.audio != nil {
+                    Label("Met stem", systemImage: "waveform")
+                        .font(NoahFont.captionStrong)
+                        .foregroundColor(NoahColor.accent)
+                }
+            }
             Text(verbatim: entry.title)
                 .font(NoahFont.title3)
                 .noahTitleScaling()
@@ -187,6 +195,9 @@ struct LifeStoryEntryView: View {
                 .foregroundColor(NoahColor.text)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
+            if let audio = entry.audio {
+                LifeStoryListenCard(audio: audio, name: session.selected?.preferredName ?? "", api: session.api)
+            }
             Text(verbatim: entry.content)
                 .font(NoahFont.body(18, relativeTo: .body))
                 .foregroundColor(NoahColor.textSoft)
@@ -263,6 +274,26 @@ struct LifeStoryEntryView: View {
         } catch {
             self.error = APIError.from(error).userMessage
         }
+    }
+}
+
+/// "Luister naar Wim": the voice fragment that belongs to this story, from `startSeconds`.
+struct LifeStoryListenCard: View {
+    let name: String
+    @StateObject private var player: RecordingPlayer
+
+    init(audio: LifeStoryAudio, name: String, api: NoahAPI) {
+        self.name = name
+        _player = StateObject(wrappedValue: RecordingPlayer(startSeconds: audio.startSeconds, durationHint: audio.durationSeconds) {
+            try await api.conversationAudio(conversationId: audio.conversationId)
+        })
+    }
+
+    var body: some View {
+        RecordingPlayerCard(player: player,
+                            title: name.isEmpty ? "Luister naar het verhaal" : "Luister naar \(name)",
+                            subtitle: "Het verhaal in de eigen woorden van \(name.isEmpty ? "je naaste" : name)")
+            .accessibilityIdentifier("lifeStory.listen")
     }
 }
 

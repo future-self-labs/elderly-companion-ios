@@ -45,6 +45,7 @@
 		62A63F3EE59AD55428E7246F /* Coding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1588895F239BEB150426C47 /* Coding.swift */; };
 		62E411582B66A0DC33BA55B6 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A39DF6D0D483E69A169E6D9B /* SignInView.swift */; };
 		63CD5E8FE7288566B4CDEB24 /* PhoneSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAC7A090BAA706AE093C0B3 /* PhoneSignInView.swift */; };
+		6A9E5213DF7E18F589A89F74 /* ProductCorrectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */; };
 		6F30BF7EE1672E3A4B91AB43 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25808448C7465A3FD4DDB18 /* Buttons.swift */; };
 		713F13CA523D67349F86F46A /* ConversationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2FDB0527C7C0F5F67365B3 /* ConversationListView.swift */; };
 		76A45F6E698598A97659525C /* CaregiverRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052D81CAC776EC490A34D59B /* CaregiverRootView.swift */; };
@@ -71,6 +72,7 @@
 		A2F3DC826040B4090A87F486 /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DA63D4A7890C72AEE29C3E /* Appearance.swift */; };
 		A4F16FFD2383B5E6BE8D614C /* CaregiverIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8099692DEB9BD2E0A2CF09E3 /* CaregiverIntroView.swift */; };
 		AB869FF7C32231FF77F11E43 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 9CE704FFB5DD28671AB89AB5 /* ElevenLabs */; };
+		ABFA84471F55BFF591CC0EB7 /* MockRecording.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC47258A2ACB8052CB04C05F /* MockRecording.swift */; };
 		B105B9D32CEA604FF43F1D86 /* MockVoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB51ACE2259645BCCED02A2 /* MockVoiceEngine.swift */; };
 		B620CB93A8392C0C7E67ADBE /* ScheduleMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36933F7A94BECCA0BDA2CE74 /* ScheduleMath.swift */; };
 		B7BB47046506C26C52D0FA2E /* CaregiverStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18833ED34FADD089588D108E /* CaregiverStartView.swift */; };
@@ -80,8 +82,10 @@
 		C4AA081454CE629F372C6734 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477A8D4E84FEA4E610B299FF /* DeepLink.swift */; };
 		C54097D20274CF57F6EC0281 /* Lexend-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 162FD32A3F73359B474DE68B /* Lexend-Regular.ttf */; };
 		C569225888A51EA8CD74C27F /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0336A3D7A8575C21AA75F1D8 /* SubscriptionStore.swift */; };
+		C59367C4B89FE4D73A66919C /* RecordingPlayerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */; };
 		C5D50B7CAB527C520A6BD2C5 /* ElderHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4773FCE8CBFECF814C89F72 /* ElderHomeView.swift */; };
 		CEE0B0DEA8C429DAB51457B4 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3F4840F62561FC1430034B /* AccountView.swift */; };
+		D075AFA01BF65357689EF8C5 /* RecordingPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E439E1FA96DFC6CBA33CA2 /* RecordingPlayer.swift */; };
 		D44B54C3F87854371211FA90 /* MoodOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A172D7BEE7A975B33DE4710 /* MoodOverviewView.swift */; };
 		DBC708313CFCB01341EE242E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9354884D46541C3F0DA2F7 /* WidgetKit.framework */; };
 		DE622274CD96187060BBB1A8 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4428F576D329347D1D38592B /* MockData.swift */; };
@@ -162,6 +166,7 @@
 		551501931F47852F3C865A17 /* HelloNoahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloNoahApp.swift; sourceTree = "<group>"; };
 		5667674571D1457F458678E4 /* NoahSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahSettingsView.swift; sourceTree = "<group>"; };
 		57C2F9382CCF03124FA9A8C4 /* LiveNoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNoahAPI.swift; sourceTree = "<group>"; };
+		5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlayerViews.swift; sourceTree = "<group>"; };
 		5EF6AE8204A9DB296A02B757 /* CodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeField.swift; sourceTree = "<group>"; };
 		5F73611EFE76A07F61E8F244 /* HelloNoah.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HelloNoah.xcconfig; sourceTree = "<group>"; };
 		66EDC62D120F9A96D5C0CE51 /* HelloNoah.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HelloNoah.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -204,9 +209,11 @@
 		CFFB5A662CD45CE9FAB83C1D /* PushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushManager.swift; sourceTree = "<group>"; };
 		D3D63B6A171D166E2ED7C467 /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
 		D526FE25505265B641F5408A /* AlertsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsViews.swift; sourceTree = "<group>"; };
+		D6E439E1FA96DFC6CBA33CA2 /* RecordingPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlayer.swift; sourceTree = "<group>"; };
 		D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenRefreshTests.swift; sourceTree = "<group>"; };
 		DB505E362B943C0B653379FD /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
 		DB8365F7BB480EDACBEABBF4 /* HelloNoahWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloNoahWidget.swift; sourceTree = "<group>"; };
+		DC47258A2ACB8052CB04C05F /* MockRecording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecording.swift; sourceTree = "<group>"; };
 		DD27EF51D104F48DE4FF75CC /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		E07167BA140C8DBA99A7BF02 /* ContractDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractDecodingTests.swift; sourceTree = "<group>"; };
 		EA37B6F44E17F42EE194E8E6 /* Labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Labels.swift; sourceTree = "<group>"; };
@@ -216,6 +223,7 @@
 		F1588895F239BEB150426C47 /* Coding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coding.swift; sourceTree = "<group>"; };
 		F4773FCE8CBFECF814C89F72 /* ElderHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderHomeView.swift; sourceTree = "<group>"; };
 		F652EFBFC4F7459AE0F1B064 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductCorrectionsTests.swift; sourceTree = "<group>"; };
 		F94964109FE5D2748460B7F6 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		FD61E8B0429545A57FB6A909 /* Cards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cards.swift; sourceTree = "<group>"; };
 		FDECCE921AEE9439A6EBF59A /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
@@ -350,6 +358,7 @@
 				32E7311DCC82A4BB3C886700 /* Inputs.swift */,
 				9A62732A7069EFA87CDA14E2 /* ListRows.swift */,
 				2EAB4EB272673D153D92C369 /* NoahOrb.swift */,
+				5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */,
 				C362E028A49037979B1BBBE0 /* States.swift */,
 			);
 			path = Components;
@@ -402,6 +411,7 @@
 				7E118EA164824B2298F8AE5A /* ContractFixtures.swift */,
 				CB7782D5731C2167EBC600DA /* FormattingTests.swift */,
 				483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */,
+				F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */,
 				CDBB429CEAC357FC4DCFA228 /* RoleAndRoutingTests.swift */,
 				D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */,
 			);
@@ -439,6 +449,7 @@
 			children = (
 				CFFB5A662CD45CE9FAB83C1D /* PushManager.swift */,
 				D3D63B6A171D166E2ED7C467 /* Reachability.swift */,
+				D6E439E1FA96DFC6CBA33CA2 /* RecordingPlayer.swift */,
 				0336A3D7A8575C21AA75F1D8 /* SubscriptionStore.swift */,
 			);
 			path = Services;
@@ -561,6 +572,7 @@
 			children = (
 				4428F576D329347D1D38592B /* MockData.swift */,
 				A4ECAE35501EE04A9CB8354F /* MockNoahAPI.swift */,
+				DC47258A2ACB8052CB04C05F /* MockRecording.swift */,
 			);
 			path = Mock;
 			sourceTree = "<group>";
@@ -753,6 +765,7 @@
 				4ECBD3F33933DDEF0E8A756A /* ContractFixtures.swift in Sources */,
 				F00474A8200E9642E7DAD125 /* FormattingTests.swift in Sources */,
 				8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */,
+				6A9E5213DF7E18F589A89F74 /* ProductCorrectionsTests.swift in Sources */,
 				F04D511CCAEE0637DEF9857A /* RoleAndRoutingTests.swift in Sources */,
 				14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */,
 			);
@@ -807,6 +820,7 @@
 				FECD2A4EBC1D00025ABC2CD8 /* LiveNoahAPI.swift in Sources */,
 				DE622274CD96187060BBB1A8 /* MockData.swift in Sources */,
 				22F339851D4A79D20AEF6006 /* MockNoahAPI.swift in Sources */,
+				ABFA84471F55BFF591CC0EB7 /* MockRecording.swift in Sources */,
 				B105B9D32CEA604FF43F1D86 /* MockVoiceEngine.swift in Sources */,
 				0855800B7DBA7DC218954BD0 /* Models.swift in Sources */,
 				8F83CDDBA87E7D5AD4D21D2D /* MoodChart.swift in Sources */,
@@ -822,6 +836,8 @@
 				7E57A98E2F007597507B63F0 /* ProfileWizardView.swift in Sources */,
 				03CA48D56CEEDF11733795F7 /* PushManager.swift in Sources */,
 				07F51953255FB1C57B3E62E5 /* Reachability.swift in Sources */,
+				D075AFA01BF65357689EF8C5 /* RecordingPlayer.swift in Sources */,
+				C59367C4B89FE4D73A66919C /* RecordingPlayerViews.swift in Sources */,
 				0D6039FD6ED5A9EE9C5AA0D7 /* RemindersViews.swift in Sources */,
 				B620CB93A8392C0C7E67ADBE /* ScheduleMath.swift in Sources */,
 				BB704188FD10115E0A435DD2 /* Sessions.swift in Sources */,

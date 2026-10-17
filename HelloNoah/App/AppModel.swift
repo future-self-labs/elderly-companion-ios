@@ -170,9 +170,9 @@ final class AppModel: ObservableObject {
         session.justPaired = justPaired
         elder = session
         mode = .elder
-        if pendingLink == .talk {
+        if pendingLink == .talk || pendingLink == .story {
+            session.requestConversation(mode: pendingLink == .story ? .levensverhaal : .gesprek)
             pendingLink = nil
-            session.requestConversation()
         }
     }
 
@@ -204,11 +204,13 @@ final class AppModel: ObservableObject {
         switch (link, mode) {
         case (.talk, .elder):
             elder?.requestConversation()
+        case (.story, .elder):
+            elder?.requestConversation(mode: .levensverhaal)
         case (.invitation(let code), .caregiver):
             caregiver?.router.present(.acceptInvitation(code: code))
         case (.alert(let id, let elderlyId), .caregiver):
             caregiver?.openAlert(id: id, elderlyId: elderlyId)
-        case (.pair, .welcome), (.invitation, .welcome), (.talk, .welcome), (.talk, .launching):
+        case (.pair, .welcome), (.invitation, .welcome), (.talk, .welcome), (.talk, .launching), (.story, .welcome), (.story, .launching):
             pendingLink = link
         default:
             pendingLink = link

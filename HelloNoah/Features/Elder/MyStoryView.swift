@@ -161,6 +161,11 @@ struct ElderStoryCard: View {
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
                 HStack {
+                    if entry.audio != nil {
+                        Label("Met uw stem", systemImage: "waveform")
+                            .font(NoahFont.Elder.label)
+                            .foregroundColor(NoahColor.textSoft)
+                    }
                     Spacer()
                     Text("Lees verder")
                         .font(NoahFont.Elder.label)
@@ -185,6 +190,8 @@ struct ElderStoryCard: View {
 struct ElderStoryDetailView: View {
     let entry: LifeStoryEntry
 
+    @EnvironmentObject private var session: ElderSession
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
@@ -200,6 +207,9 @@ struct ElderStoryDetailView: View {
                     .foregroundColor(NoahColor.text)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
+                if let audio = entry.audio {
+                    ElderStoryListenButton(audio: audio, api: session.api)
+                }
                 Text(verbatim: entry.content)
                     .font(NoahFont.Elder.body)
                     .foregroundColor(NoahColor.textSoft)
@@ -233,6 +243,28 @@ struct ElderStoryDetailView: View {
             }
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// "Luister naar uw verhaal": the older person's own voice (v2.1), via the device endpoint.
+struct ElderStoryListenButton: View {
+    @StateObject private var player: RecordingPlayer
+
+    init(audio: LifeStoryAudio, api: NoahAPI) {
+        _player = StateObject(wrappedValue: RecordingPlayer(startSeconds: audio.startSeconds, durationHint: audio.durationSeconds) {
+            try await api.deviceConversationAudio(conversationId: audio.conversationId)
+        })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: NoahSpacing.xs) {
+            ElderRecordingPlayer(player: player, title: "Luister naar uw verhaal")
+            if player.state == .idle {
+                Text("U hoort uw eigen stem.")
+                    .font(NoahFont.Elder.label)
+                    .foregroundColor(NoahColor.textSecondary)
+            }
+        }
     }
 }
 

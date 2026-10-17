@@ -14,7 +14,7 @@ struct SubscriptionView: View {
             LoadableView(state: state, retry: { Task { await load() } }) { subscription in
                 let name = session.selected?.preferredName ?? ""
                 NoahCard(padding: NoahSpacing.l) {
-                    NoahEyebrow(text: "Noah Unlimited voor \(name)")
+                    NoahEyebrow(text: "\(Plan.displayName) voor \(name)")
                     Text(verbatim: subscription.status.label)
                         .font(NoahFont.title).noahTitleScaling()
                         .foregroundColor(subscription.status.grantsAccess ? NoahColor.positive : NoahColor.accent)
@@ -45,10 +45,14 @@ struct SubscriptionView: View {
                     }
                 }
 
+                if let usage = subscription.usage {
+                    UsageCard(usage: usage, name: name)
+                }
+
                 if !subscription.isPaidOrBeta {
                     if session.permissions.canManageSubscription, let id = session.selected?.id {
                         Button { router.present(.paywall(elderlyId: id)) } label: {
-                            NoahButtonLabel(title: "Start Noah Unlimited", systemImage: "sparkles")
+                            NoahButtonLabel(title: "Abonnement starten", systemImage: "sparkles")
                         }
                         .buttonStyle(.noah(.primary))
                     } else {
@@ -101,7 +105,40 @@ struct SubscriptionView: View {
     }
 }
 
-/// The paywall: Noah Unlimited, intro €9,99/maand × 6, then €59,99/maand. App Store disclosures.
+/// Minutes this month against the fair-use allowance, and when it resets (contract v2.1).
+struct UsageCard: View {
+    let usage: Subscription.Usage
+    let name: String
+
+    var body: some View {
+        NoahCard(padding: NoahSpacing.l) {
+            NoahEyebrow(text: "Gebruik deze maand")
+            Text(verbatim: "\(Int(usage.minutesThisMonth.rounded())) van \(Int(usage.allowanceMinutes.rounded())) minuten")
+                .font(NoahFont.title2).noahTitleScaling()
+                .foregroundColor(NoahColor.text)
+                .accessibilityIdentifier("subscription.usage")
+            ProgressView(value: usage.fraction)
+                .tint(usage.overAllowance ? NoahColor.textSoft : NoahColor.accent)
+                .accessibilityHidden(true)
+            if let resets = usage.resetsAt {
+                Text("De teller begint opnieuw op \(DutchFormat.shortDate(resets))")
+                    .font(NoahFont.footnote)
+                    .foregroundColor(NoahColor.textSecondary)
+            }
+            if usage.overAllowance {
+                NoahNotice(kind: .info, text: "Het redelijk gebruik van deze maand is bereikt. Noah blijft gewoon bereikbaar voor \(name), met gesprekken van maximaal \(Plan.cappedConversationMinutes) minuten. Volgende maand is alles weer zoals gewoonlijk.")
+            } else {
+                Text("Er geldt een redelijk-gebruikbeleid van \(DutchFormat.hours(minutes: Int(usage.allowanceMinutes.rounded()))) per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken.")
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// The paywall: the HelloNoah-abonnement, intro €9,99/maand × 6, then €59,99/maand, fair use
+/// explained plainly. App Store disclosures. Never claims "onbeperkt".
 struct PaywallView: View {
     let elderlyId: String
     var elderlyName: String?
@@ -174,9 +211,10 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: NoahSpacing.l) {
             HStack(spacing: NoahSpacing.s) {
                 NoahOrb(activity: .idle, diameter: 40).frame(width: 54, height: 54)
-                Text(verbatim: "Noah Unlimited")
-                    .font(NoahFont.largeTitle).noahTitleScaling()
+                Text(verbatim: Plan.displayName)
+                    .font(NoahFont.title).noahTitleScaling()
                     .foregroundColor(NoahColor.text)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Text("Eén plan. Alles inbegrepen.")
                 .font(NoahFont.title3)
@@ -207,13 +245,25 @@ struct PaywallView: View {
                     .foregroundColor(NoahColor.textSecondary)
             }
 
-            VStack(alignment: .leading, spacing: NoahSpacing.s) {
-                feature("Onbeperkt praten met Noah, via de app en een gewoon telefoonnummer")
-                feature("Samenvattingen, stemming en meldingen voor jou en je familie")
-                feature("Het levensverhaal, voor altijd bewaard")
-                feature("Herinneringen voor pillen, afspraken en verjaardagen")
-                feature("Gegevens versleuteld in de EU, geen geluidsopnames")
+            NoahCard {
+                Label("Redelijk gebruik", systemImage: "clock.fill")
+                    .font(NoahFont.headline)
+                    .foregroundColor(NoahColor.text)
+                Text(verbatim: ProductCopy.fairUse(name: name, allowanceMinutes: Int(trial?.usage?.allowanceMinutes ?? Double(Plan.fairUseMonthlyMinutes))))
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("paywall.fairUse")
             }
+
+            VStack(alignment: .leading, spacing: NoahSpacing.s) {
+                feature("Praten met Noah via de app en via een gewoon telefoonnummer")
+                feature("Samenvattingen, stemming en meldingen voor jou en je familie")
+                feature("Het levensverhaal, en als jij dat aanzet ook de eigen stem")
+                feature("Een extra geheugensteuntje voor afspraken, verjaardagen en medicijnen")
+                feature("Versleuteld opgeslagen in de EU")
+            }
+
 
             if let error = store.errorMessage { NoahNotice(kind: .warning, text: error) }
 

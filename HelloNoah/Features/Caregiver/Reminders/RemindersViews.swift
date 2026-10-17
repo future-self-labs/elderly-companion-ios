@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Reminders: once, daily or weekly; Noah calls or mentions it in the next conversation.
+/// A memory aid, never medical care: every screen shows the disclaimer (contract v2.1 point 5).
 struct RemindersListView: View {
     @EnvironmentObject private var session: CaregiverSession
     @State private var state: Loadable<[Reminder]> = .idle
@@ -14,12 +15,13 @@ struct RemindersListView: View {
                 NoElderlySelectedView()
             } else {
                 if !session.permissions.canEditReminders { ReadOnlyNotice() }
+                ReminderDisclaimer()
                 if let error { NoahNotice(kind: .error, text: error) }
                 LoadableView(state: state, retry: { Task { await load() } }) { reminders in
                     if reminders.isEmpty {
                         EmptyStateView(systemImage: "bell.badge",
                                        title: "Nog geen herinneringen",
-                                       message: "Noah kan helpen onthouden: pillen, afspraken, verjaardagen of een vast rondje wandelen.",
+                                       message: "Noah kan een extra geheugensteuntje geven: voor een afspraak, een verjaardag, medicijnen of een vast rondje wandelen.",
                                        actionTitle: session.permissions.canEditReminders ? "Herinnering toevoegen" : nil) { editing = .new }
                     } else {
                         let active = reminders.filter(\.active).sorted { ($0.nextAt ?? .distantFuture) < ($1.nextAt ?? .distantFuture) }
@@ -151,6 +153,28 @@ struct ReminderRow: View {
     }
 }
 
+/// The contract's memory-aid disclaimer, word for word.
+struct ReminderDisclaimer: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: NoahSpacing.s) {
+            Image(systemName: "info.circle")
+                .font(NoahFont.headline)
+                .foregroundColor(NoahColor.textSecondary)
+                .accessibilityHidden(true)
+            Text(verbatim: ProductCopy.reminderDisclaimer)
+                .font(NoahFont.footnote)
+                .foregroundColor(NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(NoahSpacing.s)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surfaceDeep))
+        .overlay(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("reminders.disclaimer")
+    }
+}
+
 enum ReminderEditorTarget: Identifiable {
     case new
     case edit(Reminder)
@@ -176,10 +200,17 @@ struct ReminderEditorView: View {
     @State private var error: String?
     @State private var confirmsDelete = false
     @State private var didLoad = false
+    /// The short disclaimer is shown the first time a reminder is created on this phone.
+    @AppStorage("reminders.createdBefore") private var createdBefore = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
+                if isNew && !createdBefore {
+                    NoahNotice(kind: .info, text: ProductCopy.reminderDisclaimerShort)
+                        .accessibilityIdentifier("reminder.firstNotice")
+                }
+
                 NoahTextField(label: "Waaraan moet Noah herinneren?", text: $input.title, prompt: "Pillen innemen")
                     .accessibilityIdentifier("reminder.title")
 
@@ -229,7 +260,7 @@ struct ReminderEditorView: View {
 
                 NoahField(label: "Hoe herinnert Noah eraan?") {
                     VStack(spacing: NoahSpacing.s) {
-                        NoahOptionCard(title: "Noah belt op dat moment", subtitle: "Handig voor pillen en afspraken.", isSelected: input.delivery == .bellen) {
+                        NoahOptionCard(title: "Noah belt op dat moment", subtitle: "Handig voor iets op een vast tijdstip, zoals een afspraak.", isSelected: input.delivery == .bellen) {
                             input.delivery = .bellen
                         }
                         NoahOptionCard(title: "In het volgende gesprek", subtitle: "Noah brengt het rustig ter sprake.", isSelected: input.delivery == .inGesprek) {
@@ -247,6 +278,8 @@ struct ReminderEditorView: View {
                 .noahInputBox()
 
                 if let error { NoahNotice(kind: .error, text: error) }
+
+                ReminderDisclaimer()
 
                 if case .edit = target {
                     Button(role: .destructive) { confirmsDelete = true } label: {
@@ -326,6 +359,7 @@ struct ReminderEditorView: View {
             case .new:
                 guard let id = session.selected?.id else { return }
                 _ = try await session.api.createReminder(elderlyId: id, input)
+                createdBefore = true
             case .edit(let reminder):
                 _ = try await session.api.updateReminder(reminderId: reminder.id, input)
             }
