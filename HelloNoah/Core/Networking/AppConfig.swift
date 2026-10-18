@@ -14,23 +14,31 @@ struct AppConfig {
     let privacyURL: URL
     let supportURL: URL
 
-    /// Reads Info.plist (from the xcconfig) and launch arguments / user defaults.
+    /// Reads Info.plist (from the xcconfig) and, in Debug builds only, launch arguments / user defaults.
     ///
     /// - `-useMockAPI YES` runs the whole app against the in-app mock (also settable through the
     ///   hidden debug toggle, persisted in UserDefaults).
     /// - `-apiBaseURL https://…` overrides the API base URL.
+    ///
+    /// Release builds (TestFlight, App Store) always talk to the configured backend: no demo mode,
+    /// no URL override (audit H3/M9).
     static func current(bundle: Bundle = .main, defaults: UserDefaults = .standard) -> AppConfig {
         func url(_ key: String, fallback: String) -> URL {
             let raw = (bundle.object(forInfoDictionaryKey: key) as? String) ?? fallback
             return URL(string: raw) ?? URL(string: fallback)!
         }
         var base = url("HNAPIBaseURL", fallback: defaultBaseURL.absoluteString)
+        #if DEBUG
         if let override = defaults.string(forKey: "apiBaseURL"), let overrideURL = URL(string: override), overrideURL.scheme != nil {
             base = overrideURL
         }
+        let useMock = defaults.bool(forKey: mockArgumentKey) || defaults.bool(forKey: mockToggleKey)
+        #else
+        let useMock = false
+        #endif
         return AppConfig(
             baseURL: base,
-            useMock: defaults.bool(forKey: mockArgumentKey) || defaults.bool(forKey: mockToggleKey),
+            useMock: useMock,
             termsURL: url("HNTermsURL", fallback: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"),
             privacyURL: url("HNPrivacyURL", fallback: "https://hellonoah.ai/privacy"),
             supportURL: url("HNSupportURL", fallback: "https://hellonoah.ai/hulp")

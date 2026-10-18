@@ -57,9 +57,11 @@ struct SignInView: View {
                     if isWorking { ProgressView().tint(NoahColor.accent) }
                 }
 
+                #if DEBUG
                 if app.isMock {
                     NoahNotice(kind: .info, text: "Demo: met Apple log je in als Anna (met Wim en Riet). Met een telefoonnummer maak je een nieuw account en loop je de hele inrichting door.")
                 }
+                #endif
 
                 LegalLinksText()
             }

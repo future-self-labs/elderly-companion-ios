@@ -9,27 +9,40 @@ final class AppEnvironment {
     let api: NoahAPI
     let client: APIClient?
 
-    var isMock: Bool { config.useMock }
+    /// Always false in Release builds (the mock and every demo branch are compiled out).
+    var isMock: Bool {
+        #if DEBUG
+        return config.useMock
+        #else
+        return false
+        #endif
+    }
 
     init(config: AppConfig) {
         self.config = config
+        #if DEBUG
         if config.useMock {
             storage = KeychainTokenStorage(namespace: "mock")
             api = MockNoahAPI()
             client = nil
             Self.applyMockPersona(storage: storage)
-        } else {
-            storage = KeychainTokenStorage(namespace: "live")
-            let client = APIClient(baseURL: config.baseURL, storage: storage)
-            self.client = client
-            api = LiveNoahAPI(client: client)
+            return
         }
+        #endif
+        storage = KeychainTokenStorage(namespace: "live")
+        let client = APIClient(baseURL: config.baseURL, storage: storage)
+        self.client = client
+        api = LiveNoahAPI(client: client)
     }
 
     func makeVoiceEngine() -> VoiceEngine {
-        isMock ? MockVoiceEngine() : ElevenLabsVoiceEngine()
+        #if DEBUG
+        if isMock { return MockVoiceEngine() }
+        #endif
+        return ElevenLabsVoiceEngine()
     }
 
+    #if DEBUG
     /// `-mockPersona caregiver|new|elder|none` puts mock mode straight into a state (testing and
     /// screenshots). Only applies to the mock namespace.
     private static func applyMockPersona(storage: TokenStorage) {
@@ -53,6 +66,7 @@ final class AppEnvironment {
             break
         }
     }
+    #endif
 }
 
 /// Root state: which interface is shown, and the sessions behind them.
@@ -89,7 +103,7 @@ final class AppModel: ObservableObject {
     func start() {
         environment.client?.onSessionExpired = { [weak self] in self?.sessionExpired() }
         environment.client?.onDeviceUnpaired = { [weak self] in self?.deviceUnpairedRemotely() }
-        subscriptions.allowsDemoPurchase = environment.isMock
+        subscriptions.usesMockBackend = environment.isMock
         subscriptions.start()
 
         if environment.storage.deviceToken != nil {
@@ -165,7 +179,7 @@ final class AppModel: ObservableObject {
     private func enterElder(justPaired: Bool = false) {
         caregiver = nil
         let session = ElderSession(api: api, reachability: reachability, makeEngine: { [weak self] in
-            self?.environment.makeVoiceEngine() ?? MockVoiceEngine()
+            self?.environment.makeVoiceEngine() ?? ElevenLabsVoiceEngine()
         })
         session.justPaired = justPaired
         elder = session
@@ -217,8 +231,9 @@ final class AppModel: ObservableObject {
         }
     }
 
-    // MARK: Mock mode (hidden debug toggle)
+    // MARK: Mock mode (hidden debug toggle, Debug builds only)
 
+    #if DEBUG
     func setMockMode(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: AppConfig.mockToggleKey)
         environment = AppEnvironment(config: .current())
@@ -231,4 +246,5 @@ final class AppModel: ObservableObject {
         }
         start()
     }
+    #endif
 }

@@ -77,7 +77,9 @@ struct AccountView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
+                #if DEBUG
                 .onLongPressGesture(minimumDuration: 1.5) { showsDebug = true }
+                #endif
         }
         .navigationTitle("Account en privacy")
         .navigationBarTitleDisplayMode(.inline)
@@ -104,12 +106,14 @@ struct AccountView: View {
         } message: {
             Text("Je gegevens blijven bewaard. Je kunt later weer inloggen.")
         }
+        #if DEBUG
         .confirmationDialog("Ontwikkelaarsopties", isPresented: $showsDebug, titleVisibility: .visible) {
             Button(app.isMock ? "Demo-modus uitzetten" : "Demo-modus aanzetten") { app.setMockMode(!app.isMock) }
             Button("Annuleren", role: .cancel) {}
         } message: {
             Text(verbatim: app.isMock ? "De app gebruikt nu voorbeeldgegevens." : "Server: \(app.environment.config.baseURL.absoluteString)")
         }
+        #endif
     }
 
     private func save() async {

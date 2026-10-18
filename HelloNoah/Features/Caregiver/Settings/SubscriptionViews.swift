@@ -272,10 +272,12 @@ struct PaywallView: View {
             }
             .accessibilityIdentifier("paywall.purchase")
 
-            if app.isMock && store.product == nil {
-                Text("Demo-modus: zonder StoreKit-configuratie wordt de aankoop gesimuleerd.")
+            #if DEBUG
+            if app.isMock {
+                Text("Demo-modus: de aankoop wordt gesimuleerd, er wordt niets afgeschreven.")
                     .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
             }
+            #endif
 
             if showsLater {
                 Button("Later starten", action: onDone)

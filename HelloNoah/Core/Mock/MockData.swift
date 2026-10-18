@@ -1,5 +1,8 @@
 import Foundation
 
+// Mock mode exists only in Debug builds: Release (TestFlight, App Store) cannot reach it.
+#if DEBUG
+
 /// Realistic Dutch sample data for mock mode: caregiver Anna de Vries cares for her father Wim
 /// (beheerder) and reads along for her aunt Riet (lezer). Generated relative to "now" so the
 /// dashboard always looks alive.
@@ -259,3 +262,5 @@ enum MockData {
         ]
     }
 }
+
+#endif

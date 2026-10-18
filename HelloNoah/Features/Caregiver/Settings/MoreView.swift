@@ -92,7 +92,9 @@ struct MoreView: View {
             VStack(spacing: NoahSpacing.xxs) {
                 Text("HelloNoah \(AppConfig.appVersion)")
                 Text("Een product van Aldery")
+                #if DEBUG
                 if app.isMock { Text("Demo-modus: voorbeeldgegevens") }
+                #endif
             }
             .font(NoahFont.footnote)
             .foregroundColor(NoahColor.textSecondary)

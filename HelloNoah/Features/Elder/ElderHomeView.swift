@@ -272,9 +272,11 @@ struct ElderHelpSheet: View {
                         .font(NoahFont.Elder.body)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
+                    #if DEBUG
                     if app.isMock {
                         NoahNotice(kind: .warning, text: "Demo-modus staat aan.", large: true)
                     }
+                    #endif
                     Button(role: .destructive) {
                         confirmsUnpair = true
                     } label: {

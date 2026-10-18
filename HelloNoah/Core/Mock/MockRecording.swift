@@ -1,5 +1,8 @@
 import Foundation
 
+// Mock mode exists only in Debug builds: Release (TestFlight, App Store) cannot reach it.
+#if DEBUG
+
 /// A generated demo "recording" for mock mode, so the players can be tried without a backend:
 /// a calm 40-second melody written once as a small WAV file in the temporary directory.
 enum MockRecording {
@@ -48,3 +51,5 @@ enum MockRecording {
         return data
     }
 }
+
+#endif

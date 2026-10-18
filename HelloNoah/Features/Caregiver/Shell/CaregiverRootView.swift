@@ -120,6 +120,7 @@ struct CaregiverRootView: View {
 
     /// `-uiRoute <name>` in mock mode, for screenshots and quick testing.
     private func applyDebugRoute() {
+        #if DEBUG
         guard session.me != nil, let route = DebugRoute.take(scope: "caregiver") else { return }
         if let wim = session.elderly.first(where: { $0.id == MockIDs.wim }) { session.select(wim.id) }
         switch route {
@@ -152,6 +153,7 @@ struct CaregiverRootView: View {
             if let riet = session.elderly.first(where: { $0.id == MockIDs.riet }) { session.select(riet.id) }
         default: break
         }
+        #endif
     }
 }
 

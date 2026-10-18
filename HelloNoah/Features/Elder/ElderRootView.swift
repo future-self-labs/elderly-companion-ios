@@ -38,6 +38,7 @@ struct ElderRootView: View {
     }
 
     private func applyDebugRoute() {
+        #if DEBUG
         guard let route = DebugRoute.take(scope: "elder") else { return }
         switch route {
         case "conversation": session.requestConversation()
@@ -48,6 +49,7 @@ struct ElderRootView: View {
         case "reminders": path = [.reminders]
         default: break
         }
+        #endif
     }
 }
 

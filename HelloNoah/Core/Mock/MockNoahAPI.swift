@@ -1,5 +1,8 @@
 import Foundation
 
+// Mock mode exists only in Debug builds: Release (TestFlight, App Store) cannot reach it.
+#if DEBUG
+
 /// In-memory implementation of API v2 for testing every screen without a backend.
 ///
 /// Behaviour worth knowing when testing:
@@ -1084,3 +1087,5 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
     }
 }
+
+#endif

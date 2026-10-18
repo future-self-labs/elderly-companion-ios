@@ -23,9 +23,11 @@ struct WelcomeFlowView: View {
                     if let notice = app.welcomeNotice {
                         NoahNotice(kind: .info, text: notice)
                     }
+                    #if DEBUG
                     if app.isMock {
                         NoahNotice(kind: .warning, text: "Demo-modus: de app gebruikt voorbeeldgegevens en praat niet met de echte server.")
                     }
+                    #endif
 
                     VStack(spacing: NoahSpacing.m) {
                         WelcomeChoiceCard(
@@ -79,6 +81,7 @@ struct WelcomeFlowView: View {
                 .hidesWhileCovered(ownDepth: (path.firstIndex(of: step) ?? 0) + 1, stackDepth: path.count)
             }
         }
+        #if DEBUG
         .confirmationDialog("Ontwikkelaarsopties", isPresented: $showsDebugToggle, titleVisibility: .visible) {
             Button(app.isMock ? "Demo-modus uitzetten" : "Demo-modus aanzetten") {
                 app.setMockMode(!app.isMock)
@@ -87,6 +90,7 @@ struct WelcomeFlowView: View {
         } message: {
             Text("In de demo-modus werkt de hele app met voorbeeldgegevens, zonder server en zonder ElevenLabs.")
         }
+        #endif
         .onAppear { afterFirstLayout(consumeLinks) }
         .onChange(of: app.pendingLink) { _ in consumeLinks() }
     }
@@ -101,6 +105,8 @@ struct WelcomeFlowView: View {
                     .foregroundColor(NoahColor.text)
             }
             .contentShape(Rectangle())
+            #if DEBUG
+            // Hidden demo toggle: Debug builds only (never in TestFlight or the App Store).
             .onTapGesture {
                 logoTaps += 1
                 if logoTaps >= 5 {
@@ -108,6 +114,7 @@ struct WelcomeFlowView: View {
                     showsDebugToggle = true
                 }
             }
+            #endif
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: "HelloNoah"))
             .accessibilityAddTraits(.isHeader)

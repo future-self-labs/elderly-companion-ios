@@ -67,11 +67,15 @@ func afterFirstLayout(_ action: @escaping @MainActor () -> Void) {
     }
 }
 
-/// Debug/screenshot helper: `-uiRoute <name>` (mock mode only) opens a screen right after launch.
+/// Debug/screenshot helper: `-uiRoute <name>` (mock mode in Debug builds only) opens a screen right after launch.
 enum DebugRoute {
     static var requested: String? {
+        #if DEBUG
         guard UserDefaults.standard.bool(forKey: AppConfig.mockArgumentKey) || UserDefaults.standard.bool(forKey: AppConfig.mockToggleKey) else { return nil }
         return UserDefaults.standard.string(forKey: "uiRoute")
+        #else
+        return nil
+        #endif
     }
 
     private static var consumed = Set<String>()

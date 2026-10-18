@@ -66,3 +66,30 @@ final class SettingsPatchTests: XCTestCase {
         }
     }
 }
+
+/// Security M8: tokens are this-device-only, and items of earlier versions are migrated.
+final class KeychainAccessibilityTests: XCTestCase {
+    func testOldItemsAreMigratedToThisDeviceOnly() {
+        let keychain = Keychain(service: "ai.hellonoah.app.tests.migration")
+        keychain.set(nil, for: "deviceToken")
+        // As written by earlier versions.
+        let add: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychain.service,
+            kSecAttrAccount as String: "deviceToken",
+            kSecValueData as String: Data("hnd_old".utf8),
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+        ]
+        XCTAssertEqual(SecItemAdd(add as CFDictionary, nil), errSecSuccess)
+        XCTAssertEqual(keychain.accessibility(of: "deviceToken"), kSecAttrAccessibleAfterFirstUnlock as String)
+
+        XCTAssertEqual(keychain.migrateAccessibility(), 1)
+        XCTAssertEqual(keychain.accessibility(of: "deviceToken"), kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        XCTAssertEqual(keychain.get("deviceToken"), "hnd_old", "the token survives the migration")
+        XCTAssertEqual(keychain.migrateAccessibility(), 0, "idempotent")
+
+        keychain.set("hnd_new", for: "deviceToken")
+        XCTAssertEqual(keychain.accessibility(of: "deviceToken"), kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+        keychain.set(nil, for: "deviceToken")
+    }
+}

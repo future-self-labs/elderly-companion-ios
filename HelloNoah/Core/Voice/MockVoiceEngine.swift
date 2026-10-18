@@ -1,5 +1,8 @@
 import Foundation
 
+// Mock mode exists only in Debug builds: Release (TestFlight, App Store) cannot reach it.
+#if DEBUG
+
 /// A scripted conversation with fake audio levels, so the conversation screen can be tested
 /// without ElevenLabs (mock mode). No audio is played or recorded.
 @MainActor
@@ -137,3 +140,5 @@ final class MockVoiceEngine: VoiceEngine {
         }
     }
 }
+
+#endif

@@ -2,8 +2,16 @@ import Foundation
 import Security
 
 /// Minimal Keychain wrapper (generic passwords), adapted from the previous Noah app.
+///
+/// Items are `AfterFirstUnlockThisDeviceOnly`: readable after the first unlock (pushes, the
+/// widget, a conversation with the screen locked), never in a backup and never moved to another
+/// phone. A device token (`hnd_`, no expiry) or a refresh token therefore can't travel with an
+/// iCloud/encrypted backup or a device migration (security audit M8). They do survive deleting and
+/// reinstalling the app on the same phone, so an older person's phone stays paired; a beheerder
+/// can always revoke a device in the caregiver app.
 struct Keychain {
     let service: String
+    static let accessibility = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
 
     func set(_ value: String?, for key: String) {
         let base: [String: Any] = [
@@ -15,8 +23,57 @@ struct Keychain {
         guard let value, let data = value.data(using: .utf8) else { return }
         var add = base
         add[kSecValueData as String] = data
-        add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+        add[kSecAttrAccessible as String] = Self.accessibility
         SecItemAdd(add as CFDictionary, nil)
+    }
+
+    /// Moves items written by earlier versions (`AfterFirstUnlock`, backed up) to this-device-only.
+    /// Idempotent; returns the number of items that were rewritten.
+    @discardableResult
+    func migrateAccessibility() -> Int {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll,
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let items = result as? [[String: Any]] else { return 0 }
+        var migrated = 0
+        for item in items {
+            guard let account = item[kSecAttrAccount as String] as? String,
+                  (item[kSecAttrAccessible as String] as? String) != (Self.accessibility as String) else { continue }
+            let match: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account,
+            ]
+            let update: [String: Any] = [kSecAttrAccessible as String: Self.accessibility]
+            if SecItemUpdate(match as CFDictionary, update as CFDictionary) == errSecSuccess {
+                migrated += 1
+            } else if let value = get(account) {
+                // Fallback: rewrite the item (delete + add with the new class).
+                set(value, for: account)
+                migrated += 1
+            }
+        }
+        return migrated
+    }
+
+    /// The accessibility class an item currently has (tests).
+    func accessibility(of key: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let attributes = result as? [String: Any] else { return nil }
+        return attributes[kSecAttrAccessible as String] as? String
     }
 
     func get(_ key: String) -> String? {
@@ -67,6 +124,7 @@ final class KeychainTokenStorage: TokenStorage {
 
     init(namespace: String) {
         keychain = Keychain(service: "ai.hellonoah.app.\(namespace)")
+        keychain.migrateAccessibility()
     }
 
     var caregiverTokens: CaregiverTokens? {

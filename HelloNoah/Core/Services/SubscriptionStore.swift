@@ -32,8 +32,9 @@ final class SubscriptionStore: ObservableObject {
     var submit: ((_ elderlyId: String, _ jws: String) async throws -> Subscription)?
     /// Known elderly ids, to map an `appAccountToken` back to the id casing the backend uses.
     var knownElderlyIds: [String] = []
-    /// Mock mode without a StoreKit configuration (e.g. launched from the command line).
-    var allowsDemoPurchase = false
+    /// Mock mode (Debug builds only): purchases are always simulated and real StoreKit
+    /// transactions are never sent to, or finished against, the mock backend (audit H3/M9).
+    var usesMockBackend = false
 
     private var updatesTask: Task<Void, Never>?
 
@@ -85,8 +86,10 @@ final class SubscriptionStore: ObservableObject {
     /// Buys the subscription for one elderly profile. Returns the backend subscription on success.
     func purchase(elderlyId: String) async -> Subscription? {
         errorMessage = nil
+        #if DEBUG
+        if usesMockBackend { return await demoPurchase(elderlyId: elderlyId) }
+        #endif
         guard let product else {
-            if allowsDemoPurchase { return await demoPurchase(elderlyId: elderlyId) }
             await loadProduct()
             if self.product == nil {
                 errorMessage = "Het abonnement kan nu niet worden geladen. Controleer je internetverbinding en probeer het opnieuw."
@@ -126,6 +129,12 @@ final class SubscriptionStore: ObservableObject {
     /// Restores purchases and re-sends every current entitlement to the backend.
     func restore() async -> Int {
         errorMessage = nil
+        #if DEBUG
+        if usesMockBackend {
+            errorMessage = "Demo-modus: er worden geen echte aankopen hersteld."
+            return 0
+        }
+        #endif
         do {
             try await AppStore.sync()
         } catch {
@@ -144,6 +153,7 @@ final class SubscriptionStore: ObservableObject {
         return restored
     }
 
+    #if DEBUG
     private func demoPurchase(elderlyId: String) async -> Subscription? {
         isPurchasing = true
         defer { isPurchasing = false }
@@ -154,6 +164,7 @@ final class SubscriptionStore: ObservableObject {
             return nil
         }
     }
+    #endif
 
     private func redeem(_ transaction: Transaction, jws: String, elderlyId: String) async -> Subscription? {
         guard let submit else { return nil }
@@ -174,6 +185,8 @@ final class SubscriptionStore: ObservableObject {
     }
 
     private func handle(_ result: VerificationResult<Transaction>) async {
+        // Real transactions stay unfinished until the real backend has them.
+        guard !usesMockBackend else { return }
         guard case .verified(let transaction) = result, transaction.productID == Self.productID else { return }
         if transaction.revocationDate != nil {
             await transaction.finish()
