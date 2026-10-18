@@ -93,3 +93,34 @@ final class KeychainAccessibilityTests: XCTestCase {
         keychain.set(nil, for: "deviceToken")
     }
 }
+
+/// H4/M6: only a temporary problem may say "betaling ontvangen, we activeren zodra…".
+final class SubscriptionOutcomeTests: XCTestCase {
+    func testRedeemOutcomes() {
+        let offline = SubscriptionStore.redeemOutcome(for: .offline)
+        XCTAssertFalse(offline.finish)
+        XCTAssertTrue(offline.message.hasPrefix("Betaling ontvangen"))
+        XCTAssertFalse(SubscriptionStore.redeemOutcome(for: .server(status: 503, code: "niet_beschikbaar", message: nil)).finish)
+
+        let otherProfile = SubscriptionStore.redeemOutcome(for: .server(status: 400, code: "abonnement_ander_profiel", message: "Dit abonnement hoort bij een ander profiel."))
+        XCTAssertTrue(otherProfile.finish)
+        XCTAssertFalse(otherProfile.message.contains("Betaling ontvangen"))
+        XCTAssertTrue(otherProfile.message.contains("één naaste"))
+
+        let invalid = SubscriptionStore.redeemOutcome(for: .server(status: 400, code: "ongeldig_abonnement", message: nil))
+        XCTAssertTrue(invalid.finish)
+        XCTAssertFalse(invalid.message.contains("Betaling ontvangen"))
+
+        XCTAssertFalse(SubscriptionStore.redeemOutcome(for: .sessionExpired).finish)
+    }
+
+    func testExistingEntitlementExplainsWhoIsPaidFor() {
+        let existing = SubscriptionStore.ExistingEntitlement(elderlyId: "a", elderlyName: "Wim", isForThisProfile: false)
+        let text = existing.explanation(for: "Riet")
+        XCTAssertTrue(text.contains("voor Wim"))
+        XCTAssertTrue(text.contains("voor Riet"))
+        XCTAssertTrue(text.contains("niets afgeschreven"))
+        XCTAssertTrue(SubscriptionStore.ExistingEntitlement(elderlyId: nil, elderlyName: nil, isForThisProfile: false)
+            .explanation(for: nil).contains("een ander profiel"))
+    }
+}

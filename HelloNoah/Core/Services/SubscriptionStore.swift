@@ -17,7 +17,17 @@ enum Plan {
 ///
 /// - `appAccountToken` is the elderly profile id, so the backend knows which profile was paid for.
 /// - A transaction is only finished after `POST /subscriptions/app-store` accepted its JWS; if that
-///   fails (no connection) it stays unfinished and is retried from `Transaction.unfinished`/`updates`.
+///   fails (no connection, server error) it stays unfinished and is retried from
+///   `Transaction.unfinished`/`updates`. A definitive rejection (4xx) is finished, so it is not
+///   re-delivered forever.
+/// - One Apple ID can hold one subscription in group "Noah". Until product decides how a second
+///   profile is paid, buying for another profile while one is active is blocked up front with a
+///   clear explanation (StoreKit would otherwise return the existing transaction of the first
+///   profile, which the backend rejects with `abonnement_ander_profiel`).
+/// - Transactions without `appAccountToken` (offer codes, resubscribing from iOS Settings, Family
+///   Sharing) can't be mapped to a profile. The backend learns about them through App Store Server
+///   Notifications; they are finished once a profile of this caregiver shows an active App Store
+///   subscription.
 @MainActor
 final class SubscriptionStore: ObservableObject {
     nonisolated static let productID = Plan.productID
@@ -32,6 +42,11 @@ final class SubscriptionStore: ObservableObject {
     var submit: ((_ elderlyId: String, _ jws: String) async throws -> Subscription)?
     /// Known elderly ids, to map an `appAccountToken` back to the id casing the backend uses.
     var knownElderlyIds: [String] = []
+    /// First names of the known profiles (to say for whom this Apple ID already pays).
+    var knownElderlyNames: [String: String] = [:]
+    /// Whether one of this caregiver's profiles has an active App Store subscription (used to
+    /// finish transactions that carry no `appAccountToken`). Set by the caregiver session.
+    var hasActiveAppStoreSubscription: (() async -> Bool)?
     /// Mock mode (Debug builds only): purchases are always simulated and real StoreKit
     /// transactions are never sent to, or finished against, the mock backend (audit H3/M9).
     var usesMockBackend = false
@@ -79,7 +94,9 @@ final class SubscriptionStore: ObservableObject {
                 isEligibleForIntro = await subscription.isEligibleForIntroOffer
             }
         } catch {
+            #if DEBUG
             NSLog("[StoreKit] product load failed: %@", error.localizedDescription)
+            #endif
         }
     }
 
@@ -99,6 +116,12 @@ final class SubscriptionStore: ObservableObject {
         }
         guard let token = UUID(uuidString: elderlyId) else {
             errorMessage = "Dit profiel kan niet worden gekoppeld aan een abonnement."
+            return nil
+        }
+        // One Apple ID, one subscription: never let StoreKit hand back another profile's purchase
+        // as if it were a new payment.
+        if let existing = await existingEntitlement(for: elderlyId), !existing.isForThisProfile {
+            errorMessage = existing.explanation(for: knownElderlyNames[elderlyId.lowercased()])
             return nil
         }
 
@@ -153,6 +176,44 @@ final class SubscriptionStore: ObservableObject {
         return restored
     }
 
+    /// An active HelloNoah-abonnement of this Apple ID.
+    struct ExistingEntitlement: Equatable {
+        /// The profile it was bought for (`appAccountToken`), nil when the transaction has none.
+        let elderlyId: String?
+        let elderlyName: String?
+        let isForThisProfile: Bool
+
+        /// Caregiver copy ("je") for the paywall.
+        func explanation(for name: String?) -> String {
+            let other = elderlyName.map { "voor \($0)" } ?? "voor een ander profiel"
+            let target = name ?? "deze naaste"
+            return "Met deze Apple ID betaal je al het \(Plan.displayName) \(other). Met één Apple ID kun je op dit moment voor één naaste betalen, dus een tweede abonnement voor \(target) kan nog niet. Er is niets afgeschreven."
+        }
+    }
+
+    /// The current entitlement of this Apple ID, if any, seen from the profile on the paywall.
+    func existingEntitlement(for elderlyId: String) async -> ExistingEntitlement? {
+        #if DEBUG
+        if usesMockBackend {
+            // `-mockAppleIDPaysFor <elderlyId>` simulates an Apple ID that already pays for a profile.
+            guard let paidFor = UserDefaults.standard.string(forKey: "mockAppleIDPaysFor")?.lowercased() else { return nil }
+            return ExistingEntitlement(elderlyId: paidFor, elderlyName: knownElderlyNames[paidFor], isForThisProfile: paidFor == elderlyId.lowercased())
+        }
+        #endif
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result, transaction.productID == Self.productID,
+                  transaction.revocationDate == nil else { continue }
+            if let expiry = transaction.expirationDate, expiry < Date() { continue }
+            let token = transaction.appAccountToken?.uuidString.lowercased()
+            return ExistingEntitlement(
+                elderlyId: token,
+                elderlyName: token.flatMap { knownElderlyNames[$0] },
+                isForThisProfile: token == elderlyId.lowercased()
+            )
+        }
+        return nil
+    }
+
     #if DEBUG
     private func demoPurchase(elderlyId: String) async -> Subscription? {
         isPurchasing = true
@@ -173,9 +234,36 @@ final class SubscriptionStore: ObservableObject {
             await transaction.finish()
             return subscription
         } catch {
-            NSLog("[StoreKit] not redeemed yet: %@", error.localizedDescription)
-            errorMessage = "Betaling ontvangen. We activeren Noah zodra er verbinding is met HelloNoah."
+            let apiError = APIError.from(error)
+            #if DEBUG
+            NSLog("[StoreKit] not redeemed: %@", String(describing: apiError))
+            #endif
+            let outcome = Self.redeemOutcome(for: apiError)
+            if outcome.finish { await transaction.finish() }
+            errorMessage = outcome.message
             return nil
+        }
+    }
+
+    /// What to tell the caregiver when the backend did not accept a transaction, and whether the
+    /// transaction is done with. Only a temporary problem keeps it for a retry — and only then
+    /// is "betaling ontvangen, we activeren zodra er verbinding is" true.
+    nonisolated static func redeemOutcome(for error: APIError) -> (message: String, finish: Bool) {
+        switch error {
+        case .offline, .unexpected, .decoding, .cancelled:
+            return ("Betaling ontvangen. We activeren Noah zodra er weer verbinding is met HelloNoah.", false)
+        case .server(let status, _, _) where status >= 500 || status == 429 || status == 408:
+            return ("Betaling ontvangen. We activeren Noah zodra HelloNoah weer bereikbaar is.", false)
+        case .sessionExpired, .server(401, _, _):
+            return ("Log opnieuw in om je abonnement te activeren. Je betaling blijft bewaard.", false)
+        case .server(_, "abonnement_ander_profiel", _):
+            return ("Dit abonnement van je Apple ID hoort al bij een ander profiel. Met één Apple ID kun je op dit moment voor één naaste betalen. Er is niets extra afgeschreven.", true)
+        case .server(_, "ongeldig_abonnement", _):
+            return ("Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam als er wel is afgeschreven.", true)
+        case .server(let status, _, _) where (400..<500).contains(status):
+            return (error.userMessage, true)
+        default:
+            return (error.userMessage, false)
         }
     }
 
@@ -192,7 +280,12 @@ final class SubscriptionStore: ObservableObject {
             await transaction.finish()
             return
         }
-        guard let elderlyId = elderlyId(for: transaction) else { return }
+        guard let elderlyId = elderlyId(for: transaction) else {
+            // No profile id on it (offer code, resubscribed in iOS Settings, Family Sharing): the
+            // backend links it through App Store Server Notifications. Finish it once it shows up.
+            if let check = hasActiveAppStoreSubscription, await check() { await transaction.finish() }
+            return
+        }
         _ = await redeem(transaction, jws: result.jwsRepresentation, elderlyId: elderlyId)
     }
 }

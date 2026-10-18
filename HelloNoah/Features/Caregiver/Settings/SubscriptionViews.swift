@@ -152,6 +152,8 @@ struct PaywallView: View {
     @EnvironmentObject private var app: AppModel
     @State private var activated = false
     @State private var trial: Subscription?
+    /// This Apple ID already pays for a profile (H4: one Apple ID, one subscription for now).
+    @State private var existing: SubscriptionStore.ExistingEntitlement?
 
     private var name: String {
         elderlyName ?? session.elderly.first { $0.id == elderlyId }?.preferredName ?? "je naaste"
@@ -176,6 +178,7 @@ struct PaywallView: View {
     private func prepare() async {
         async let product: Void = store.loadProduct()
         trial = try? await session.api.subscription(elderlyId: elderlyId)
+        existing = await store.existingEntitlement(for: elderlyId)
         await product
     }
 
@@ -265,12 +268,16 @@ struct PaywallView: View {
             }
 
 
-            if let error = store.errorMessage { NoahNotice(kind: .warning, text: error) }
+            if let existing {
+                existingSubscriptionCard(existing)
+            } else {
+                if let error = store.errorMessage { NoahNotice(kind: .warning, text: error) }
 
-            NoahAsyncButton(kind: .primary, action: purchase) {
-                Text(store.isEligibleForIntro ? "Start voor \(store.introPriceText) per maand" : "Start voor \(store.regularPriceText) per maand")
+                NoahAsyncButton(kind: .primary, action: purchase) {
+                    Text(store.isEligibleForIntro ? "Start voor \(store.introPriceText) per maand" : "Start voor \(store.regularPriceText) per maand")
+                }
+                .accessibilityIdentifier("paywall.purchase")
             }
-            .accessibilityIdentifier("paywall.purchase")
 
             #if DEBUG
             if app.isMock {
@@ -288,6 +295,45 @@ struct PaywallView: View {
 
             disclosures
         }
+    }
+
+    /// Explains up front why this Apple ID can't start a second subscription, instead of letting
+    /// StoreKit return the existing one and showing a false "Betaling ontvangen".
+    @ViewBuilder
+    private func existingSubscriptionCard(_ existing: SubscriptionStore.ExistingEntitlement) -> some View {
+        NoahCard(padding: NoahSpacing.l) {
+            Label {
+                Text(existing.isForThisProfile ? "Je hebt al een abonnement voor \(name)" : "Je betaalt al met deze Apple ID")
+                    .font(NoahFont.headline)
+                    .foregroundColor(NoahColor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "info.circle.fill").foregroundColor(NoahColor.accent)
+            }
+            if existing.isForThisProfile {
+                Text("Met deze Apple ID loopt het \(Plan.displayName) voor \(name) al. Tik op Aankopen herstellen om Noah voor \(name) te activeren. Er wordt niets extra afgeschreven.")
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text(verbatim: existing.explanation(for: name))
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Wat wel kan: een andere mantelzorger van \(name) wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Vragen? Ons supportteam helpt je graag.")
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+                Link(destination: app.environment.config.supportURL) {
+                    Text("Hulp en contact")
+                }
+                .font(NoahFont.semibold(15, relativeTo: .subheadline))
+                .foregroundColor(NoahColor.accent)
+                .frame(minHeight: NoahSize.minTap)
+            }
+        }
+        .accessibilityIdentifier("paywall.existingSubscription")
+        if let error = store.errorMessage { NoahNotice(kind: .info, text: error) }
     }
 
     private func feature(_ text: LocalizedStringKey) -> some View {

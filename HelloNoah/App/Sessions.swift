@@ -153,6 +153,18 @@ final class CaregiverSession: ObservableObject {
             await self.reloadMe()
             return subscription
         }
+        subscriptions.hasActiveAppStoreSubscription = { [weak self] in
+            guard let self else { return false }
+            if self.me == nil { await self.reloadMe() }
+            for profile in self.elderly where profile.role == .beheerder {
+                if let subscription = try? await self.api.subscription(elderlyId: profile.id),
+                   subscription.status == .actief || subscription.status == .intro,
+                   subscription.platform == "app_store", subscription.paidByMe != false {
+                    return true
+                }
+            }
+            return false
+        }
         push.tokenHandler = { [weak self] token in
             try? await self?.api.registerPushToken(token, environment: AppConfig.pushEnvironment)
         }
@@ -183,6 +195,7 @@ final class CaregiverSession: ObservableObject {
             meError = nil
             if selected?.id != selectedElderlyId { selectedElderlyId = selected?.id }
             subscriptions.knownElderlyIds = response.elderly.map(\.id)
+            subscriptions.knownElderlyNames = Dictionary(response.elderly.map { ($0.id.lowercased(), $0.preferredName) }, uniquingKeysWith: { first, _ in first })
         } catch {
             let apiError = APIError.from(error)
             if apiError != .cancelled { meError = apiError }
