@@ -102,6 +102,8 @@ final class AppModel: ObservableObject {
     var isMock: Bool { environment.isMock }
 
     func start() {
+        // GDPR exports never stay on disk.
+        ExportFile.removeAll()
         environment.client?.onSessionExpired = { [weak self] in self?.sessionExpired() }
         environment.client?.onDeviceUnpaired = { [weak self] in self?.deviceUnpairedRemotely() }
         subscriptions.usesMockBackend = environment.isMock

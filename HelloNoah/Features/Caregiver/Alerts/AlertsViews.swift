@@ -64,6 +64,7 @@ struct AlertsListView: View {
     @State private var items: [NoahAlert] = []
     @State private var nextCursor: String?
     @State private var state: Loadable<Void> = .idle
+    @State private var loadMoreFailed = false
 
     var body: some View {
         NoahScrollScreen(spacing: NoahSpacing.m) {
@@ -87,10 +88,16 @@ struct AlertsListView: View {
                         .buttonStyle(.plain)
                 }
                 if nextCursor != nil {
-                    ProgressView()
-                        .tint(NoahColor.accent)
-                        .frame(maxWidth: .infinity, minHeight: 60)
-                        .task { await loadMore() }
+                    if loadMoreFailed {
+                        // One failure must not leave an endless spinner (audit L3).
+                        NoahAsyncButton(kind: .quiet, action: loadMore) { Text("Meer meldingen laden") }
+                            .accessibilityIdentifier("alerts.loadMore")
+                    } else {
+                        ProgressView()
+                            .tint(NoahColor.accent)
+                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .task { await loadMore() }
+                    }
                 }
             }
         }
@@ -115,9 +122,13 @@ struct AlertsListView: View {
 
     private func loadMore() async {
         guard let id = session.selected?.id, let cursor = nextCursor else { return }
-        if let page = try? await session.api.alerts(elderlyId: id, status: filter, cursor: cursor, limit: 20) {
+        do {
+            let page = try await session.api.alerts(elderlyId: id, status: filter, cursor: cursor, limit: 20)
             items += page.items
             nextCursor = page.nextCursor
+            loadMoreFailed = false
+        } catch {
+            if APIError.from(error) != .cancelled { loadMoreFailed = true }
         }
     }
 }

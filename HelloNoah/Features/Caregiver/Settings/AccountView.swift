@@ -87,7 +87,7 @@ struct AccountView: View {
             name = session.caregiver?.name ?? ""
             phone = PhoneNumberFormat.display(session.caregiver?.phoneNumber)
         }
-        .sheet(item: $share) { item in ActivityView(items: item.items) }
+        .sheet(item: $share, onDismiss: ExportFile.removeAll) { item in ActivityView(items: item.items) }
         .sheet(isPresented: $showsDelete) {
             NavigationStack {
                 TypedConfirmationView(

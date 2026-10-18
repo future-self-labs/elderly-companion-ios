@@ -148,7 +148,7 @@ struct ElderlyProfileView: View {
         .navigationTitle("Profiel")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: session.reloadKey) { await load() }
-        .sheet(item: $share) { item in ActivityView(items: item.items) }
+        .sheet(item: $share, onDismiss: ExportFile.removeAll) { item in ActivityView(items: item.items) }
         .sheet(isPresented: $showsDelete) {
             if let profile = state.value {
                 NavigationStack {

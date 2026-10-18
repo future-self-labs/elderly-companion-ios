@@ -229,12 +229,24 @@ struct NewContactView: UIViewControllerRepresentable {
     }
 }
 
-/// Writes export data to a temporary, nicely named JSON file for the share sheet.
+/// Writes export data to a protected, nicely named JSON file for the share sheet. The file only
+/// exists while it is being shared: it is deleted when the share sheet closes, and leftovers are
+/// removed at launch (security audit L10).
 enum ExportFile {
+    private static var directory: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("exports", isDirectory: true)
+    }
+
     static func write(_ data: Data, name: String) throws -> URL {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(name)-\(DutchFormat.dayString(Date())).json")
-        try data.write(to: url, options: .atomic)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("\(name)-\(DutchFormat.dayString(Date())).json")
+        try data.write(to: url, options: [.atomic, .completeFileProtection])
         return url
+    }
+
+    /// Deletes every export file (after sharing, and at launch).
+    static func removeAll() {
+        try? FileManager.default.removeItem(at: directory)
     }
 }
 
