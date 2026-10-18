@@ -238,20 +238,33 @@ enum ScheduleFormatter {
 // MARK: - Phone numbers
 
 enum PhoneNumberFormat {
-    /// Normalises Dutch input to E.164: "06 1234 5678" → "+31612345678", "0031 6…" → "+316…".
-    /// Returns nil when it doesn't look like a valid number.
+    /// Shown whenever a number is not accepted. HelloNoah only calls and texts Dutch (+31) and
+    /// Belgian (+32) numbers.
+    static let invalidMessage = "Vul een Nederlands of Belgisch telefoonnummer in, bijvoorbeeld 06 12345678. Een Belgisch nummer begint met +32."
+
+    /// Normalises Dutch input to E.164: "06 1234 5678" → "+31612345678", "0031 6…" → "+316…",
+    /// "+32 470 12 34 56" → "+32470123456". Returns nil unless it is a plausible Dutch (+31, 9
+    /// digits after the country code) or Belgian (+32, 8 or 9 digits) number.
     static func e164(_ input: String) -> String? {
         var digits = input.filter { $0.isNumber || $0 == "+" }
         if digits.hasPrefix("00") { digits = "+" + digits.dropFirst(2) }
         if digits.hasPrefix("0") { digits = "+31" + digits.dropFirst() }
         if !digits.hasPrefix("+") { digits = "+31" + digits }
         let body = digits.dropFirst()
-        guard body.allSatisfy(\.isNumber), (8...15).contains(body.count) else { return nil }
-        if digits.hasPrefix("+31"), body.count != 11 { return nil }
-        return digits
+        guard body.allSatisfy(\.isNumber) else { return nil }
+        if digits.hasPrefix("+31") {
+            // "+31 06…" typed with the trunk zero.
+            if digits.hasPrefix("+310") { digits = "+31" + digits.dropFirst(4) }
+            return digits.count == 12 ? digits : nil
+        }
+        if digits.hasPrefix("+32") {
+            if digits.hasPrefix("+320") { digits = "+32" + digits.dropFirst(4) }
+            return (11...12).contains(digits.count) ? digits : nil
+        }
+        return nil
     }
 
-    /// "+31612345678" → "06 12345678"; other countries are left as they are.
+    /// "+31612345678" → "06 12345678", "+32470123456" → "+32 470 12 34 56".
     static func display(_ e164: String?) -> String {
         guard let e164, !e164.isEmpty else { return "" }
         if e164.hasPrefix("+316"), e164.count == 12 {
@@ -260,6 +273,10 @@ enum PhoneNumberFormat {
         if e164.hasPrefix("+31"), e164.count == 12 {
             let national = "0" + e164.dropFirst(3)
             return String(national.prefix(3)) + " " + String(national.dropFirst(3))
+        }
+        if e164.hasPrefix("+324"), e164.count == 12 {
+            let n = Array(e164.dropFirst(3))
+            return "+32 \(String(n[0..<3])) \(String(n[3..<5])) \(String(n[5..<7])) \(String(n[7..<9]))"
         }
         return e164
     }

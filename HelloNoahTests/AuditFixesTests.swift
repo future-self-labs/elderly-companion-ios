@@ -159,3 +159,37 @@ final class LinkSafetyTests: XCTestCase {
         XCTAssertFalse(session.conversationNeedsConfirmation)
     }
 }
+
+/// Audit M1: caregivers never see the server's "u"-texts meant for the older person.
+final class CaregiverErrorCopyTests: XCTestCase {
+    func testKnownCodesUseCaregiverCopy() {
+        let inactive = APIError.server(status: 409, code: "inactive", message: "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+        XCTAssertEqual(inactive.userMessage, "Noah is nog niet actief voor dit profiel. Start eerst het abonnement.")
+        XCTAssertEqual(inactive.elderMessage, "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+        XCTAssertEqual(APIError.server(status: 403, code: "alleen_lezen", message: "U kunt dit alleen bekijken.").userMessage,
+                       "Je kijkt mee als lezer. Alleen een beheerder kan dit doen.")
+        XCTAssertEqual(APIError.server(status: 401, code: "niet_ingelogd", message: "U bent niet (meer) ingelogd.").userMessage,
+                       "Je bent uitgelogd. Log opnieuw in om verder te gaan.")
+    }
+
+    func testUnknownCodesUseNeutralServerTextOrFallback() {
+        XCTAssertEqual(APIError.server(status: 400, code: "ongeldige_invoer", message: "Spreektempo moet tussen 0.8 en 1.2 liggen.").userMessage,
+                       "Spreektempo moet tussen 0.8 en 1.2 liggen.")
+        XCTAssertEqual(APIError.server(status: 409, code: "iets_nieuws", message: "Dit kunt u nu niet doen.").userMessage, "Dit kan nu niet.")
+        XCTAssertTrue(APIError.isFormal("Vraag uw mantelzorger"))
+        XCTAssertTrue(APIError.isFormal("U bent uitgelogd"))
+        XCTAssertFalse(APIError.isFormal("Uitnodiging verlopen, vraag een nieuwe"))
+    }
+
+    func testCopyDoesNotOverclaim() throws {
+        let bundle = Bundle(for: MockNoahAPI.self)
+        let path = try XCTUnwrap(bundle.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: "nl")
+                                    ?? bundle.path(forResource: "Localizable", ofType: "strings"))
+        let dictionary = try XCTUnwrap(NSDictionary(contentsOfFile: path) as? [String: String])
+        let texts = (Array(dictionary.keys) + Array(dictionary.values)).map { $0.lowercased() }
+        for forbidden in ["alles inbegrepen", "blijft bij een noodgeval aan de lijn", "helpt noah om beter te leren", "pillen innemen"] {
+            XCTAssertFalse(texts.contains { $0.contains(forbidden) }, forbidden)
+        }
+        XCTAssertFalse(texts.contains("versleuteld opgeslagen in de eu"), "privacy line needs the honest wording")
+    }
+}

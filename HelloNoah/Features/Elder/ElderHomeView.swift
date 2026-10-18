@@ -21,13 +21,13 @@ struct ElderHomeView: View {
                 header
 
                 if !reachability.isOnline {
-                    NoahNotice(kind: .warning, text: "Er is nu geen internet. Praten met Noah lukt weer zodra de verbinding terug is.", large: true)
+                    NoahNotice(kind: .warning, text: "Er is nu geen internet. Praten met \(session.noahName) lukt weer zodra de verbinding terug is.", large: true)
                 }
                 if session.justPaired {
                     NoahNotice(kind: .success, text: "Gelukt! Deze telefoon is gekoppeld. U kunt nu met \(session.noahName) praten.", large: true)
                 }
                 if session.me.value?.access == .inactive {
-                    NoahNotice(kind: .warning, text: "Noah is nog niet actief. Vraag uw mantelzorger om hulp.", large: true)
+                    NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Vraag uw mantelzorger om hulp.", large: true)
                 }
                 if case .failed(let error) = session.me {
                     NoahNotice(kind: .warning, text: error.elderMessage, large: true, actionTitle: "Opnieuw proberen") {
@@ -41,6 +41,7 @@ struct ElderHomeView: View {
                     .font(NoahFont.Elder.label)
                     .foregroundColor(NoahColor.textSecondary)
                     .multilineTextAlignment(.center)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .accessibilityIdentifier("elder.lastConversation")
 
                 storyButton
@@ -81,6 +82,8 @@ struct ElderHomeView: View {
             Text(verbatim: DutchFormat.longDay(Date()).capitalizedFirst)
                 .font(NoahFont.Elder.label)
                 .foregroundColor(NoahColor.textSecondary)
+                // Secondary lines never grow past the (capped) greeting above them.
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, NoahSpacing.s)
@@ -149,7 +152,7 @@ struct ElderHomeView: View {
             }
             .buttonStyle(.noah(.secondary, size: .elder))
             .allowsHitTesting(!isCalling)
-            .accessibilityHint(Text("Noah belt u op uw telefoon"))
+            .accessibilityHint(Text("\(session.noahName) belt u op uw telefoon"))
             .accessibilityIdentifier("elder.callMe")
 
             if let callMessage {
@@ -163,7 +166,18 @@ struct ElderHomeView: View {
     }
 
     private func nextReminderCard(_ reminder: Reminder) -> some View {
-        NoahCard(padding: NoahSpacing.l) {
+        Button { path.append(.reminders) } label: {
+            nextReminderContent(reminder)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Text("Toont al uw herinneringen"))
+        .accessibilityIdentifier("elder.nextReminder")
+    }
+
+    private func nextReminderContent(_ reminder: Reminder) -> some View {
+        NoahCard(padding: NoahSpacing.l, border: NoahColor.border) {
             NoahEyebrow(text: "Volgende herinnering")
             AdaptiveStack(spacing: NoahSpacing.m) {
                 NoahIconBadge(systemName: reminder.type.systemImage, size: 52)
@@ -180,8 +194,7 @@ struct ElderHomeView: View {
                 }
             }
         }
-        .accessibilityElement(children: .combine)
-        .onTapGesture { path.append(.reminders) }
+        .contentShape(RoundedRectangle(cornerRadius: NoahRadius.card))
     }
 
     private var navigationButtons: some View {
@@ -268,7 +281,7 @@ struct ElderHelpSheet: View {
                     Text("Voor de mantelzorger")
                         .font(NoahFont.Elder.title).noahElderTitleScaling()
                         .foregroundColor(NoahColor.text)
-                    Text("Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzigt u in de HelloNoah-app van de mantelzorger.")
+                    Text("Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzig je in de HelloNoah-app op je eigen telefoon.")
                         .font(NoahFont.Elder.body)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)

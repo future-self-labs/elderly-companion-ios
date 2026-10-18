@@ -93,6 +93,13 @@ final class FormattingTests: XCTestCase {
         XCTAssertEqual(PhoneNumberFormat.e164("+32 470 12 34 56"), "+32470123456")
         XCTAssertNil(PhoneNumberFormat.e164("12345"))
         XCTAssertNil(PhoneNumberFormat.e164("06 1234"))
+        // Only Dutch and Belgian numbers (security audit C2, backend v2.2).
+        XCTAssertNil(PhoneNumberFormat.e164("+49 151 12345678"))
+        XCTAssertNil(PhoneNumberFormat.e164("+1 415 555 0100"))
+        XCTAssertEqual(PhoneNumberFormat.e164("+32 2 123 45 67"), "+3221234567")
+        XCTAssertEqual(PhoneNumberFormat.e164("+31 06 12345678"), "+31612345678")
+        XCTAssertNil(PhoneNumberFormat.e164("+31 6 1234567"))
+        XCTAssertEqual(PhoneNumberFormat.display("+32470123456"), "+32 470 12 34 56")
         XCTAssertEqual(PhoneNumberFormat.display("+31612345678"), "06 12345678")
         XCTAssertEqual(PhoneNumberFormat.display("+31231234567"), "023 1234567")
     }

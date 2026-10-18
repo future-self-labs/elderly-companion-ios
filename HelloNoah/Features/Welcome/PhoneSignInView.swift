@@ -70,7 +70,7 @@ struct PhoneSignInView: View {
     private func start() async {
         error = nil
         guard let number = e164 ?? PhoneNumberFormat.e164(phone) else {
-            error = "Dit lijkt geen geldig telefoonnummer. Gebruik bijvoorbeeld 06 12345678."
+            error = PhoneNumberFormat.invalidMessage
             return
         }
         do {

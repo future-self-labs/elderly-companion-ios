@@ -755,10 +755,15 @@ struct Reminder: Codable, Hashable, Identifiable {
 struct ReminderInput: Encodable, Equatable {
     var title = ""
     var notes: String?
-    var type: ReminderType = .medicatie
+    /// Neutral default: a reminder is a memory aid, not medication management (v2.1 point 5).
+    var type: ReminderType = .overig
     var schedule: ReminderSchedule = .daily(time: "08:00")
     var delivery: ReminderDelivery = .inGesprek
     var active = true
+    /// Editing without touching the schedule: leave it out of the PATCH, so a past one-off
+    /// reminder can still be renamed or switched off and a schedule kind this app doesn't know is
+    /// never overwritten.
+    var omitsSchedule = false
 
     enum CodingKeys: String, CodingKey { case title, notes, type, schedule, delivery, active }
 
@@ -767,7 +772,7 @@ struct ReminderInput: Encodable, Equatable {
         try c.encode(title, forKey: .title)
         try c.encode(notes.nilIfBlank, forKey: .notes)
         try c.encode(type, forKey: .type)
-        try c.encode(schedule, forKey: .schedule)
+        if !omitsSchedule { try c.encode(schedule, forKey: .schedule) }
         try c.encode(delivery, forKey: .delivery)
         try c.encode(active, forKey: .active)
     }

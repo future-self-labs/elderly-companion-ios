@@ -25,7 +25,7 @@ struct ElderRemindersView: View {
                         EmptyStateView(
                             systemImage: "bell.slash.fill",
                             title: "Geen herinneringen",
-                            message: "Er staan nu geen herinneringen klaar. U kunt Noah vragen om u ergens aan te herinneren.",
+                            message: "Er staan nu geen herinneringen klaar. U kunt \(session.noahName) vragen om u ergens aan te herinneren.",
                             large: true
                         )
                     } else {

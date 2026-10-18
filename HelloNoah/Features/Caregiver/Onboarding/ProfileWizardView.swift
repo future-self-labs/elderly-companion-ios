@@ -83,7 +83,7 @@ final class ProfileWizardModel: ObservableObject {
             case .phone:
                 phoneError = nil
                 guard let e164 = PhoneNumberFormat.e164(phone) else {
-                    phoneError = "Dit lijkt geen geldig telefoonnummer. Gebruik bijvoorbeeld 06 12345678."
+                    phoneError = PhoneNumberFormat.invalidMessage
                     return
                 }
                 input.phoneNumber = e164

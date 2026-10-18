@@ -188,7 +188,7 @@ struct AlertDetailView: View {
         }
 
         if alert.severity == .nood || alert.type == .noodgeval {
-            NoahNotice(kind: .error, text: "Is er direct gevaar? Bel 112. Noah blijft bij een noodgeval aan de lijn en waarschuwt alle mantelzorgers.")
+            NoahNotice(kind: .error, text: "Is er direct gevaar? Bel 112. HelloNoah is geen alarmdienst. Bij een noodgeval krijgen alle mantelzorgers een melding, en sturen en bellen we de noodcontacten één voor één, tot iemand reageert.")
             if let url = URL(string: "tel://112") {
                 Link(destination: url) { NoahButtonLabel(title: "Bel 112", systemImage: "phone.fill") }
                     .buttonStyle(.noah(.destructive))
@@ -275,7 +275,7 @@ struct ResolveAlertView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
-                Text("Wat is er gebeurd? Je notitie helpt de andere mantelzorgers, en helpt Noah om beter te leren wat wel en niet zorgelijk is.")
+                Text("Wat is er gebeurd? Met je notitie zien de andere mantelzorgers wat er al gedaan is.")
                     .font(NoahFont.callout)
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)

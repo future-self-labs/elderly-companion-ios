@@ -24,6 +24,16 @@
         }
       }
     },
+    "%@ belt u op uw telefoon": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ belt u op uw telefoon"
+          }
+        }
+      }
+    },
     "%@ doet mee aan de bètatest. Noah is in die periode gratis.": {
       "localizations": {
         "nl": {
@@ -484,6 +494,16 @@
         }
       }
     },
+    "Begint het gesprek en zet de microfoon aan": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begint het gesprek en zet de microfoon aan"
+          }
+        }
+      }
+    },
     "Begint meteen een gesprek": {
       "localizations": {
         "nl": {
@@ -644,16 +664,6 @@
         }
       }
     },
-    "Bijvoorbeeld: de witte na het ontbijt": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bijvoorbeeld: de witte na het ontbijt"
-          }
-        }
-      }
-    },
     "Bijvoorbeeld: dinsdag een afspraak bij de huisarts": {
       "localizations": {
         "nl": {
@@ -690,6 +700,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bijvoorbeeld: oud-onderwijzer, houdt van tuinieren, weduwnaar sinds 2019"
+          }
+        }
+      }
+    },
+    "Bijvoorbeeld: ze neemt de kleinkinderen mee": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijvoorbeeld: ze neemt de kleinkinderen mee"
           }
         }
       }
@@ -740,16 +760,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Code opnieuw sturen"
-          }
-        }
-      }
-    },
-    "Code van %lld cijfers": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Code van %lld cijfers"
           }
         }
       }
@@ -884,22 +894,22 @@
         }
       }
     },
+    "Demo-modus: de aankoop wordt gesimuleerd, er wordt niets afgeschreven.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-modus: de aankoop wordt gesimuleerd, er wordt niets afgeschreven."
+          }
+        }
+      }
+    },
     "Demo-modus: voorbeeldgegevens": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
             "value": "Demo-modus: voorbeeldgegevens"
-          }
-        }
-      }
-    },
-    "Demo-modus: zonder StoreKit-configuratie wordt de aankoop gesimuleerd.": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demo-modus: zonder StoreKit-configuratie wordt de aankoop gesimuleerd."
           }
         }
       }
@@ -934,12 +944,12 @@
         }
       }
     },
-    "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzigt u in de HelloNoah-app van de mantelzorger.": {
+    "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzig je in de HelloNoah-app op je eigen telefoon.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzigt u in de HelloNoah-app van de mantelzorger."
+            "value": "Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzig je in de HelloNoah-app op je eigen telefoon."
           }
         }
       }
@@ -980,6 +990,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dit gesprek wordt opgenomen als u ja zegt"
+          }
+        }
+      }
+    },
+    "Dit schema is ingesteld op een manier die deze versie van de app niet kent. Het blijft zoals het is, tenzij je hierboven iets anders kiest.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit schema is ingesteld op een manier die deze versie van de app niet kent. Het blijft zoals het is, tenzij je hierboven iets anders kiest."
           }
         }
       }
@@ -1124,12 +1144,12 @@
         }
       }
     },
-    "Er staan nu geen herinneringen klaar. U kunt Noah vragen om u ergens aan te herinneren.": {
+    "Er staan nu geen herinneringen klaar. U kunt %@ vragen om u ergens aan te herinneren.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er staan nu geen herinneringen klaar. U kunt Noah vragen om u ergens aan te herinneren."
+            "value": "Er staan nu geen herinneringen klaar. U kunt %@ vragen om u ergens aan te herinneren."
           }
         }
       }
@@ -1164,12 +1184,12 @@
         }
       }
     },
-    "Eén plan. Alles inbegrepen.": {
+    "Eén plan, maandelijks opzegbaar.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eén plan. Alles inbegrepen."
+            "value": "Eén plan, maandelijks opzegbaar."
           }
         }
       }
@@ -1390,6 +1410,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gesprekken"
+          }
+        }
+      }
+    },
+    "Gesprekken en gegevens versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprekken en gegevens versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten."
           }
         }
       }
@@ -1664,6 +1694,16 @@
         }
       }
     },
+    "Hulp en contact": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hulp en contact"
+          }
+        }
+      }
+    },
     "Iemand in je familie heeft Noah al ingesteld en je een code gestuurd.": {
       "localizations": {
         "nl": {
@@ -1814,6 +1854,16 @@
         }
       }
     },
+    "Je betaalt al met deze Apple ID": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je betaalt al met deze Apple ID"
+          }
+        }
+      }
+    },
     "Je gegevens blijven bewaard. Je kunt later weer inloggen.": {
       "localizations": {
         "nl": {
@@ -1830,6 +1880,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Je gegevens worden geladen…"
+          }
+        }
+      }
+    },
+    "Je hebt al een abonnement voor %@": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt al een abonnement voor %@"
           }
         }
       }
@@ -2314,6 +2374,16 @@
         }
       }
     },
+    "Met deze Apple ID loopt het %@ voor %@ al. Tik op Aankopen herstellen om Noah voor %@ te activeren. Er wordt niets extra afgeschreven.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Met deze Apple ID loopt het %1$@ voor %2$@ al. Tik op Aankopen herstellen om Noah voor %3$@ te activeren. Er wordt niets extra afgeschreven."
+          }
+        }
+      }
+    },
     "Met stem": {
       "localizations": {
         "nl": {
@@ -2574,16 +2644,6 @@
         }
       }
     },
-    "Noah belt u op uw telefoon": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noah belt u op uw telefoon"
-          }
-        }
-      }
-    },
     "Noah gebruikt deze naam in de gesprekken.": {
       "localizations": {
         "nl": {
@@ -2770,6 +2830,16 @@
           "stringUnit": {
             "state": "new",
             "value": "Nog %1$lld:%2$@ geldig, één keer te gebruiken."
+          }
+        }
+      }
+    },
+    "Nog 1 minuut": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog 1 minuut"
           }
         }
       }
@@ -3074,12 +3144,22 @@
         }
       }
     },
-    "Opnames worden versleuteld opgeslagen in de EU. Alleen %@ zelf en de mantelzorgers van %@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.": {
+    "Opname als u ja zegt": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opname als u ja zegt"
+          }
+        }
+      }
+    },
+    "Opnames worden versleuteld opgeslagen in de EU en meteen verwijderd bij de spraakdienst. Alleen %@ zelf en de mantelzorgers van %@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "new",
-            "value": "Opnames worden versleuteld opgeslagen in de EU. Alleen %1$@ zelf en de mantelzorgers van %2$@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames."
+            "value": "Opnames worden versleuteld opgeslagen in de EU en meteen verwijderd bij de spraakdienst. Alleen %1$@ zelf en de mantelzorgers van %2$@ kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames."
           }
         }
       }
@@ -3250,16 +3330,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Persoon toevoegen"
-          }
-        }
-      }
-    },
-    "Pillen innemen": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pillen innemen"
           }
         }
       }
@@ -3520,6 +3590,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sara"
+          }
+        }
+      }
+    },
+    "Sara komt op bezoek": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sara komt op bezoek"
           }
         }
       }
@@ -3844,6 +3924,16 @@
         }
       }
     },
+    "Tik op de knop om het gesprek te beginnen. Pas dan gaat de microfoon aan.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik op de knop om het gesprek te beginnen. Pas dan gaat de microfoon aan."
+          }
+        }
+      }
+    },
     "Titel": {
       "localizations": {
         "nl": {
@@ -3860,6 +3950,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toevoegen"
+          }
+        }
+      }
+    },
+    "Toont al uw herinneringen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont al uw herinneringen"
           }
         }
       }
@@ -4104,22 +4204,12 @@
         }
       }
     },
-    "Versleuteld opgeslagen in de EU": {
+    "Vertel %@ over vroeger: uw jeugd, uw werk, mooie reizen. %@ schrijft het hier voor u op.": {
       "localizations": {
         "nl": {
           "stringUnit": {
-            "state": "translated",
-            "value": "Versleuteld opgeslagen in de EU"
-          }
-        }
-      }
-    },
-    "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op.": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op."
+            "state": "new",
+            "value": "Vertel %1$@ over vroeger: uw jeugd, uw werk, mooie reizen. %2$@ schrijft het hier voor u op."
           }
         }
       }
@@ -4234,12 +4324,12 @@
         }
       }
     },
-    "Voor %@. Maandelijks opzegbaar.": {
+    "Voor %@.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voor %@. Maandelijks opzegbaar."
+            "value": "Voor %@."
           }
         }
       }
@@ -4464,12 +4554,12 @@
         }
       }
     },
-    "Wat is er gebeurd? Je notitie helpt de andere mantelzorgers, en helpt Noah om beter te leren wat wel en niet zorgelijk is.": {
+    "Wat is er gebeurd? Met je notitie zien de andere mantelzorgers wat er al gedaan is.": {
       "localizations": {
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wat is er gebeurd? Je notitie helpt de andere mantelzorgers, en helpt Noah om beter te leren wat wel en niet zorgelijk is."
+            "value": "Wat is er gebeurd? Met je notitie zien de andere mantelzorgers wat er al gedaan is."
           }
         }
       }
@@ -4480,6 +4570,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wat jij ziet"
+          }
+        }
+      }
+    },
+    "Wat wel kan: een andere mantelzorger van %@ wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Vragen? Ons supportteam helpt je graag.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat wel kan: een andere mantelzorger van %@ wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Vragen? Ons supportteam helpt je graag."
           }
         }
       }

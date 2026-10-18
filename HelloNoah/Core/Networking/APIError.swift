@@ -29,11 +29,16 @@ enum APIError: Error, Equatable {
     var isOffline: Bool { self == .offline }
 
     /// Text for the caregiver interface (informal "je").
+    ///
+    /// The server's messages are written for the older person ("u", "vraag uw mantelzorger"), so
+    /// every known code gets the app's own caregiver text; the server message is only used for
+    /// unknown codes, and only when it doesn't address the reader with "u" (audit M1).
     var userMessage: String {
         switch self {
         case .server(let status, let code, let message):
-            if let message, !message.isEmpty { return message }
-            return Self.fallbackMessage(status: status, code: code)
+            if let known = Self.caregiverMessage(code: code) { return known }
+            if let message, !message.isEmpty, !Self.isFormal(message) { return message }
+            return Self.statusMessage(status)
         case .offline:
             return "Er is geen internetverbinding. Controleer je wifi of mobiele data en probeer het opnieuw."
         case .sessionExpired:
@@ -63,8 +68,26 @@ enum APIError: Error, Equatable {
         }
     }
 
+    /// True when a text addresses the reader formally ("u", "uw").
+    static func isFormal(_ text: String) -> Bool {
+        text.range(of: "\\b([Uu]|[Uu]w)\\b", options: .regularExpression) != nil
+    }
+
     static func fallbackMessage(status: Int, code: String) -> String {
+        caregiverMessage(code: code) ?? statusMessage(status)
+    }
+
+    /// The app's caregiver text for a known error code.
+    static func caregiverMessage(code: String) -> String? {
         switch code {
+        case "niet_ingelogd", "ongeldige_sessie", "invalid_refresh_token": return "Je bent uitgelogd. Log opnieuw in om verder te gaan."
+        case "apparaat_niet_gekoppeld": return "Deze telefoon is niet meer gekoppeld."
+        case "niet_gevonden": return "Dit bestaat niet (meer), of je hebt er geen toegang toe."
+        case "sms_mislukt": return "De sms kon niet worden verstuurd. Controleer het nummer en probeer het opnieuw."
+        case "telefoonnummer_is_inlog": return "Je logt in met dit telefoonnummer. Dat nummer kun je hier daarom niet wijzigen."
+        case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel. Met één Apple ID kun je op dit moment voor één naaste betalen."
+        case "ongeldig_abonnement": return "Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam."
+        case "link_verlopen": return "Deze link is verlopen. Probeer het opnieuw."
         case "alleen_lezen": return "Je kijkt mee als lezer. Alleen een beheerder kan dit doen."
         case "koppelcode_ongeldig": return "Deze koppelcode klopt niet of is verlopen. Maak een nieuwe code."
         case "ongeldige_code": return "Deze code klopt niet of is verlopen. Probeer het opnieuw."
@@ -80,8 +103,12 @@ enum APIError: Error, Equatable {
         case "geen_opname": return "Er is geen opname van dit gesprek."
         case "invalid_code", "code_expired": return "Deze code klopt niet of is verlopen. Vraag een nieuwe code."
         case "rate_limited": return "Even geduld: te veel pogingen. Probeer het over een paar minuten opnieuw."
-        default: break
+        default: return nil
         }
+    }
+
+    /// Neutral text by HTTP status, when the code is unknown.
+    static func statusMessage(_ status: Int) -> String {
         switch status {
         case 400, 422: return "Niet alle gegevens zijn goed ingevuld."
         case 401: return "Je bent uitgelogd. Log opnieuw in."

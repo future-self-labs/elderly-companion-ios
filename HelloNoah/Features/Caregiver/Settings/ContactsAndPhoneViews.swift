@@ -216,7 +216,7 @@ struct EmergencyContactEditorView: View {
     private func save() async {
         phoneError = nil
         guard let e164 = PhoneNumberFormat.e164(phone) else {
-            phoneError = "Dit lijkt geen geldig telefoonnummer."
+            phoneError = PhoneNumberFormat.invalidMessage
             return
         }
         guard let id = elderlyId ?? session.selected?.id else { return }

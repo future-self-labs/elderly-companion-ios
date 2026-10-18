@@ -219,7 +219,7 @@ struct PaywallView: View {
                     .foregroundColor(NoahColor.text)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Eén plan. Alles inbegrepen.")
+            Text("Eén plan, maandelijks opzegbaar.")
                 .font(NoahFont.title3)
                 .foregroundColor(NoahColor.accent)
             if let free = trial?.freeConversationsLeft, free > 0, trial?.isPaidOrBeta == false {
@@ -243,7 +243,7 @@ struct PaywallView: View {
                         .font(NoahFont.display(36, relativeTo: .largeTitle)).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
                 }
-                Text("Voor \(name). Maandelijks opzegbaar.")
+                Text("Voor \(name).")
                     .font(NoahFont.footnote)
                     .foregroundColor(NoahColor.textSecondary)
             }
@@ -264,7 +264,7 @@ struct PaywallView: View {
                 feature("Samenvattingen, stemming en meldingen voor jou en je familie")
                 feature("Het levensverhaal, en als jij dat aanzet ook de eigen stem")
                 feature("Een extra geheugensteuntje voor afspraken, verjaardagen en medicijnen")
-                feature("Versleuteld opgeslagen in de EU")
+                feature("Gesprekken en gegevens versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten.")
             }
 
 

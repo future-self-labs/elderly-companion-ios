@@ -200,6 +200,9 @@ struct ReminderEditorView: View {
     @State private var error: String?
     @State private var confirmsDelete = false
     @State private var didLoad = false
+    /// The schedule as loaded (edit), to leave it alone when it wasn't changed.
+    @State private var originalSchedule: ReminderSchedule?
+    @State private var scheduleTouched = false
     /// The short disclaimer is shown the first time a reminder is created on this phone.
     @AppStorage("reminders.createdBefore") private var createdBefore = false
 
@@ -211,7 +214,7 @@ struct ReminderEditorView: View {
                         .accessibilityIdentifier("reminder.firstNotice")
                 }
 
-                NoahTextField(label: "Waaraan moet Noah herinneren?", text: $input.title, prompt: "Pillen innemen")
+                NoahTextField(label: "Waaraan moet Noah herinneren?", text: $input.title, prompt: "Sara komt op bezoek")
                     .accessibilityIdentifier("reminder.title")
 
                 NoahField(label: "Soort") {
@@ -233,7 +236,7 @@ struct ReminderEditorView: View {
 
                         switch kind {
                         case .eenmalig:
-                            DatePicker("Datum en tijd", selection: $onceDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                            DatePicker("Datum en tijd", selection: $onceDate, in: min(onceDate, Date())..., displayedComponents: [.date, .hourAndMinute])
                                 .noahInputBox()
                         case .dagelijks:
                             DatePicker("Tijd", selection: $time, displayedComponents: .hourAndMinute)
@@ -250,12 +253,23 @@ struct ReminderEditorView: View {
                                 }
                             }
                         }
-                        Text(verbatim: ScheduleFormatter.describe(schedule))
-                            .font(NoahFont.subheadline)
-                            .foregroundColor(NoahColor.accent)
+                        if case .unknown = originalSchedule, !scheduleTouched {
+                            Text("Dit schema is ingesteld op een manier die deze versie van de app niet kent. Het blijft zoals het is, tenzij je hierboven iets anders kiest.")
+                                .font(NoahFont.subheadline)
+                                .foregroundColor(NoahColor.textSoft)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text(verbatim: ScheduleFormatter.describe(schedule))
+                                .font(NoahFont.subheadline)
+                                .foregroundColor(NoahColor.accent)
+                        }
                     }
                     .environment(\.timeZone, DutchFormat.timeZone)
                     .environment(\.locale, DutchFormat.locale)
+                    .onChange(of: kind) { _ in markScheduleTouched() }
+                    .onChange(of: time) { _ in markScheduleTouched() }
+                    .onChange(of: weekdays) { _ in markScheduleTouched() }
+                    .onChange(of: onceDate) { _ in markScheduleTouched() }
                 }
 
                 NoahField(label: "Hoe herinnert Noah eraan?") {
@@ -270,7 +284,7 @@ struct ReminderEditorView: View {
                 }
 
                 NoahTextField(label: "Notitie (optioneel)", text: Binding(get: { input.notes ?? "" }, set: { input.notes = $0 }),
-                              prompt: "Bijvoorbeeld: de witte na het ontbijt", multiline: true)
+                              prompt: "Bijvoorbeeld: ze neemt de kleinkinderen mee", multiline: true)
 
                 Toggle(isOn: $input.active) {
                     Text("Actief").font(NoahFont.bodyStrong).foregroundColor(NoahColor.text)
@@ -331,6 +345,7 @@ struct ReminderEditorView: View {
         didLoad = true
         guard case .edit(let reminder) = target else { return }
         input = ReminderInput(reminder: reminder)
+        originalSchedule = reminder.schedule
         switch reminder.schedule {
         case .once(let at):
             kind = .eenmalig
@@ -347,13 +362,28 @@ struct ReminderEditorView: View {
         }
     }
 
+    private func markScheduleTouched() {
+        // Populating the editor also changes these values; only later edits count.
+        if didLoad, originalSchedule != nil { scheduleTouched = true }
+    }
+
+    /// Editing a reminder without changing when it is.
+    private var scheduleUnchanged: Bool {
+        guard let originalSchedule else { return false }
+        if case .unknown = originalSchedule { return !scheduleTouched }
+        return originalSchedule == schedule
+    }
+
     private func save() async {
         error = nil
-        if kind == .eenmalig, onceDate < Date() {
+        let unchanged = !isNew && scheduleUnchanged
+        // A past one-off reminder can still be renamed or switched off; only a new moment must be in the future.
+        if kind == .eenmalig, onceDate < Date(), !unchanged {
             error = "Kies een moment in de toekomst."
             return
         }
-        input.schedule = schedule
+        input.schedule = unchanged ? (originalSchedule ?? schedule) : schedule
+        input.omitsSchedule = unchanged
         do {
             switch target {
             case .new:

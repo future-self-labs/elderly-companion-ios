@@ -24,7 +24,7 @@ struct MyStoryView: View {
                         EmptyStateView(
                             systemImage: "book.closed.fill",
                             title: "Uw verhaal begint hier",
-                            message: "Vertel Noah over vroeger: uw jeugd, uw werk, mooie reizen. Noah schrijft het hier voor u op.",
+                            message: "Vertel \(session.noahName) over vroeger: uw jeugd, uw werk, mooie reizen. \(session.noahName) schrijft het hier voor u op.",
                             large: true
                         )
                     } else {

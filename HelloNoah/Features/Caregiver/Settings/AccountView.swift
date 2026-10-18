@@ -121,7 +121,7 @@ struct AccountView: View {
         var e164: String?
         if !phone.trimmingCharacters(in: .whitespaces).isEmpty {
             guard let normalized = PhoneNumberFormat.e164(phone) else {
-                phoneError = "Dit lijkt geen geldig telefoonnummer."
+                phoneError = PhoneNumberFormat.invalidMessage
                 return
             }
             e164 = normalized

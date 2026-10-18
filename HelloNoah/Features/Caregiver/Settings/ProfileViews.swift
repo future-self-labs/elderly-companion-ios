@@ -193,7 +193,7 @@ struct ElderlyProfileView: View {
     private func save(_ profile: ElderlyProfile) async {
         phoneError = nil
         guard let e164 = PhoneNumberFormat.e164(phone) else {
-            phoneError = "Dit lijkt geen geldig telefoonnummer. Gebruik bijvoorbeeld 06 12345678."
+            phoneError = PhoneNumberFormat.invalidMessage
             return
         }
         guard !input.firstName.trimmingCharacters(in: .whitespaces).isEmpty, !input.preferredName.trimmingCharacters(in: .whitespaces).isEmpty else {

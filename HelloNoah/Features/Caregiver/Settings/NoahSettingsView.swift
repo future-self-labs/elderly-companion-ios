@@ -186,7 +186,7 @@ struct NoahSettingsForm: View {
                         .font(NoahFont.callout)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Opnames worden versleuteld opgeslagen in de EU. Alleen \(name) zelf en de mantelzorgers van \(name) kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.")
+                    Text("Opnames worden versleuteld opgeslagen in de EU en meteen verwijderd bij de spraakdienst. Alleen \(name) zelf en de mantelzorgers van \(name) kunnen ze beluisteren. Verwijder je het profiel, dan verdwijnen ook de opnames.")
                         .font(NoahFont.footnote)
                         .foregroundColor(NoahColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
