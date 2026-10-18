@@ -267,7 +267,8 @@ struct PhoneLineView: View {
                 NoahCard {
                     stepRow(1, "Zet het nummer in de telefoon van \(name), bijvoorbeeld onder de naam \u{201C}Noah\u{201D}.")
                     stepRow(2, "\(name) belt het nummer, wanneer hij of zij maar wil. Ook \u{2019}s nachts.")
-                    stepRow(3, "Noah herkent het nummer van \(name) en neemt meteen op. Bellen vanaf een ander nummer werkt niet.")
+                    stepRow(3, "Noah neemt meteen op als \(name) belt vanaf het nummer in het profiel. Bellen vanaf een ander nummer werkt niet.")
+                    stepRow(4, "Aan de telefoon kan Noah niet zien wie er belt. Daarom praat Noah dan niet over persoonlijke dingen zoals het levensverhaal of herinneringen. Het volledige gesprek is er in de app.")
                 }
                 if session.selected?.access != .active {
                     NoahNotice(kind: .warning, text: "Het nummer werkt pas als het abonnement van \(name) actief is.")
@@ -280,7 +281,7 @@ struct PhoneLineView: View {
                     NoahButtonLabel(title: "Zet in contacten", systemImage: "person.crop.circle.badge.plus")
                 }
                 .buttonStyle(.noah(.secondary))
-                ShareLink(item: "Je kunt Noah altijd bellen op \(line.displayNumber ?? line.phoneNumber). Noah herkent je nummer en neemt meteen op.") {
+                ShareLink(item: "Je kunt Noah altijd bellen op \(line.displayNumber ?? line.phoneNumber). Noah neemt meteen op.") {
                     NoahButtonLabel(title: "Stuur het nummer naar \(name)", systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.noah(.secondary))

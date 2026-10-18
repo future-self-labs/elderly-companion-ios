@@ -255,14 +255,23 @@ enum PhoneNumberFormat {
         if digits.hasPrefix("+31") {
             // "+31 06…" typed with the trunk zero.
             if digits.hasPrefix("+310") { digits = "+31" + digits.dropFirst(4) }
-            return digits.count == 12 ? digits : nil
+            let national = digits.dropFirst(3)
+            guard digits.count == 12, !dutchSpecialPrefixes.contains(where: { national.hasPrefix($0) }) else { return nil }
+            return digits
         }
         if digits.hasPrefix("+32") {
             if digits.hasPrefix("+320") { digits = "+32" + digits.dropFirst(4) }
-            return (11...12).contains(digits.count) ? digits : nil
+            let national = digits.dropFirst(3)
+            guard (11...12).contains(digits.count), !belgianSpecialPrefixes.contains(where: { national.hasPrefix($0) }) else { return nil }
+            return digits
         }
         return nil
     }
+
+    /// Premium, information, M2M and free-phone ranges Noah never calls (backend v2.2):
+    /// NL 0900/0906/0909, 084, 087, 097, 0800; BE 070, 077, 078, 090x.
+    private static let dutchSpecialPrefixes = ["900", "906", "909", "84", "87", "97", "800"]
+    private static let belgianSpecialPrefixes = ["70", "77", "78", "90"]
 
     /// "+31612345678" → "06 12345678", "+32470123456" → "+32 470 12 34 56".
     static func display(_ e164: String?) -> String {

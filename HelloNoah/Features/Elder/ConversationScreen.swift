@@ -192,7 +192,8 @@ struct ConversationScreen: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
 
-            HStack(spacing: NoahSpacing.m) {
+            // Stacked, so the honest recording line is never cut off.
+            VStack(spacing: NoahSpacing.xxs) {
                 if controller.mode == .levensverhaal {
                     Label("Verhaal", systemImage: "quote.bubble.fill")
                         .foregroundColor(NoahColor.accent)

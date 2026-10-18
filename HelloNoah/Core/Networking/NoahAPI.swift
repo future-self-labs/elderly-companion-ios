@@ -23,6 +23,10 @@ protocol NoahAPI: AnyObject {
     func createElderly(_ input: ElderlyProfileInput) async throws -> ElderlyProfile
     func elderly(id: String) async throws -> ElderlyProfile
     func updateElderly(id: String, _ input: ElderlyProfileInput) async throws -> ElderlyProfile
+    /// v2.2: send a code to the older person's number (SMS, or read out in a call).
+    func startPhoneVerification(elderlyId: String, channel: PhoneVerificationChannel) async throws -> PhoneVerificationStart
+    /// v2.2: confirm the number with that code. Wrong/expired: `400 ongeldige_code`.
+    func verifyPhone(elderlyId: String, code: String) async throws -> ElderlyProfile
     func deleteElderly(id: String) async throws
     func exportElderly(id: String) async throws -> Data
 

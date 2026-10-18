@@ -59,6 +59,12 @@ enum APIError: Error, Equatable {
             return "Er is nu geen internet. Probeert u het straks nog eens."
         case .server(_, "inactive", _):
             return "Noah is nog niet actief. Vraag uw mantelzorger om hulp."
+        case .server(_, "telefoonnummer_niet_bevestigd", _):
+            return "Noah kan u nog niet opbellen, want uw telefoonnummer is nog niet bevestigd. Vraag uw mantelzorger om hulp. Hier in de app kunt u wel met Noah praten."
+        case .server(_, "telefoonnummer_niet_ondersteund", _):
+            return "Noah kan dit telefoonnummer niet bellen. Vraag uw mantelzorger om hulp. Hier in de app kunt u wel met Noah praten."
+        case .server(_, "belgrens_bereikt", _):
+            return "Noah heeft vandaag al vaak gebeld. Hier in de app kunt u wel met Noah praten."
         case .server(_, _, let message?) where !message.isEmpty:
             return message
         case .deviceUnpaired:
@@ -88,6 +94,13 @@ enum APIError: Error, Equatable {
         case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel. Met één Apple ID kun je op dit moment voor één naaste betalen."
         case "ongeldig_abonnement": return "Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam."
         case "link_verlopen": return "Deze link is verlopen. Probeer het opnieuw."
+        // v2.2
+        case "telefoonnummer_niet_bevestigd": return "Noah belt pas naar dit nummer als het is bevestigd. Bevestig het nummer bij Meer › Profiel."
+        case "telefoonnummer_niet_ondersteund": return "Noah kan alleen Nederlandse en Belgische nummers bellen. Pas het nummer aan bij Meer › Profiel."
+        case "belgrens_bereikt": return "Noah heeft vandaag al vaak gebeld. Morgen kan het weer. In de app praten kan altijd."
+        case "te_veel_profielen": return "Je kunt voor maximaal 5 naasten een profiel maken."
+        case "demo_account": return "Dit is een demo-account: deze functie staat uit."
+        case "te_groot": return "Dit is te veel tekst in één keer. Maak het wat korter en probeer het opnieuw."
         case "alleen_lezen": return "Je kijkt mee als lezer. Alleen een beheerder kan dit doen."
         case "koppelcode_ongeldig": return "Deze koppelcode klopt niet of is verlopen. Maak een nieuwe code."
         case "ongeldige_code": return "Deze code klopt niet of is verlopen. Probeer het opnieuw."

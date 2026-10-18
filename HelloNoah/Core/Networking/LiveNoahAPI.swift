@@ -86,6 +86,14 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("PATCH", "/elderly/\(esc(id))", body: input, auth: .caregiver)
     }
 
+    func startPhoneVerification(elderlyId: String, channel: PhoneVerificationChannel) async throws -> PhoneVerificationStart {
+        try await client.send("POST", "/elderly/\(esc(elderlyId))/phone/verify-start", body: ["channel": channel.rawValue], auth: .caregiver)
+    }
+
+    func verifyPhone(elderlyId: String, code: String) async throws -> ElderlyProfile {
+        try await client.send("POST", "/elderly/\(esc(elderlyId))/phone/verify", body: ["code": code], auth: .caregiver)
+    }
+
     func deleteElderly(id: String) async throws {
         try await client.sendVoid("DELETE", "/elderly/\(esc(id))", body: ["confirm": "VERWIJDER"], auth: .caregiver)
     }

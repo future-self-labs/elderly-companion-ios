@@ -193,3 +193,75 @@ final class CaregiverErrorCopyTests: XCTestCase {
         XCTAssertFalse(texts.contains("versleuteld opgeslagen in de eu"), "privacy line needs the honest wording")
     }
 }
+
+/// Backend v2.2: phone number confirmation, new error codes, agent-side session cap.
+final class ContractV22Tests: XCTestCase {
+    private func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
+        try NoahJSON.decoder.decode(T.self, from: Data(json.utf8))
+    }
+
+    func testProfileCarriesPhoneConfirmation() throws {
+        let verified = try decode(ElderlyProfile.self, ContractFixtures.elderlyProfile.replacingOccurrences(
+            of: "\"isBeta\": false", with: "\"isBeta\": false, \"phoneVerified\": false, \"phoneVerifiedAt\": null, \"phoneVerifiedVia\": null"))
+        XCTAssertEqual(verified.phoneVerified, false)
+        XCTAssertTrue(verified.needsPhoneConfirmation)
+        // An older backend without the field never asks for confirmation.
+        let old = try decode(ElderlyProfile.self, ContractFixtures.elderlyProfile)
+        XCTAssertNil(old.phoneVerified)
+        XCTAssertFalse(old.needsPhoneConfirmation)
+        XCTAssertEqual(try decode(PhoneVerificationStart.self, #"{ "status": "verstuurd", "channel": "sms" }"#).isAlreadyConfirmed, false)
+        XCTAssertTrue(try decode(PhoneVerificationStart.self, #"{ "status": "al_bevestigd" }"#).isAlreadyConfirmed)
+    }
+
+    func testConversationOverrideCarriesMaxDuration() throws {
+        let json = #"{ "conversationToken": "t", "overrides": { "conversation": { "maxDurationSeconds": 600 } } }"#
+        XCTAssertEqual(try decode(ConversationSession.self, json).overrides?.conversation?.maxDurationSeconds, 600)
+    }
+
+    func testMockConfirmsNumbersAndOnlyCallsConfirmedOnes() async throws {
+        let defaults = UserDefaults(suiteName: "ContractV22Tests")!
+        defaults.removePersistentDomain(forName: "ContractV22Tests")
+        defaults.set(0.0, forKey: "mockLatency")
+        defaults.set(MockIDs.anna, forKey: "mock.currentCaregiver")
+        defaults.set(true, forKey: "mockPhoneUnverified")
+        let api = MockNoahAPI(defaults: defaults)
+
+        let profile = try await api.elderly(id: MockIDs.wim)
+        XCTAssertTrue(profile.needsPhoneConfirmation)
+        do {
+            _ = try await api.callNow(elderlyId: MockIDs.wim, mode: .gesprek)
+            XCTFail("unconfirmed numbers are not called")
+        } catch let error as APIError {
+            XCTAssertEqual(error.code, "telefoonnummer_niet_bevestigd")
+            XCTAssertTrue(error.userMessage.contains("Bevestig het nummer"))
+            XCTAssertFalse(APIError.isFormal(error.userMessage))
+        }
+        let sent = try await api.startPhoneVerification(elderlyId: MockIDs.wim, channel: .sms)
+        XCTAssertEqual(sent.status, "verstuurd")
+        do {
+            _ = try await api.verifyPhone(elderlyId: MockIDs.wim, code: "000000")
+            XCTFail("wrong code")
+        } catch let error as APIError {
+            XCTAssertEqual(error.status, 400, "a wrong code must not look like a sign-out (401)")
+            XCTAssertEqual(error.code, "ongeldige_code")
+        }
+        let confirmed = try await api.verifyPhone(elderlyId: MockIDs.wim, code: "123456")
+        XCTAssertEqual(confirmed.phoneVerified, true)
+        XCTAssertEqual(confirmed.phoneVerifiedVia, "code")
+
+        // A new number must be confirmed again.
+        var input = ElderlyProfileInput(profile: confirmed)
+        input.phoneNumber = "+31687654321"
+        let changed = try await api.updateElderly(id: MockIDs.wim, input)
+        XCTAssertEqual(changed.phoneVerified, false)
+    }
+
+    func testNewErrorCodesHaveCopyForBothAudiences() {
+        for code in ["telefoonnummer_niet_bevestigd", "telefoonnummer_niet_ondersteund", "belgrens_bereikt", "te_veel_profielen", "demo_account", "te_groot"] {
+            let message = APIError.server(status: 409, code: code, message: "Uw verzoek kan niet.").userMessage
+            XCTAssertFalse(message.isEmpty)
+            XCTAssertFalse(APIError.isFormal(message), code)
+        }
+        XCTAssertTrue(APIError.server(status: 409, code: "telefoonnummer_niet_bevestigd", message: nil).elderMessage.contains("in de app"))
+    }
+}

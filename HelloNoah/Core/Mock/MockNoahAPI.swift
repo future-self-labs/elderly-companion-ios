@@ -75,7 +75,11 @@ final class MockNoahAPI: NoahAPI {
             routines: "Staat om 7:30 op, koffie om 10:00, wandelt na de lunch.",
             caregiverNotes: "Heeft dinsdag een afspraak bij de huisarts.",
             access: inactive ? .inactive : .active, isBeta: false, myRole: .beheerder,
-            createdAt: now.addingTimeInterval(-86_400 * 40)
+            createdAt: now.addingTimeInterval(-86_400 * 40),
+            // `-mockPhoneUnverified YES`: Wim's number still needs confirming (v2.2).
+            phoneVerified: !defaults.bool(forKey: "mockPhoneUnverified"),
+            phoneVerifiedAt: defaults.bool(forKey: "mockPhoneUnverified") ? nil : now.addingTimeInterval(-86_400 * 39),
+            phoneVerifiedVia: defaults.bool(forKey: "mockPhoneUnverified") ? nil : "inbound"
         )
         profiles[MockIDs.riet] = ElderlyProfile(
             id: MockIDs.riet, firstName: "Hendrika", lastName: "Jansen", preferredName: "Riet",
@@ -83,7 +87,8 @@ final class MockNoahAPI: NoahAPI {
             livingSituation: .alleen, about: "Tante van Anna. Vroeger naaister bij V&D. Houdt van bingo en puzzels.",
             likes: ["bingo", "puzzels", "Zeeland"], dislikes: [], topicsToRaise: ["haar zus in Zeeland"], topicsToAvoid: [],
             routines: nil, caregiverNotes: nil, access: .active, isBeta: true, myRole: .lezer,
-            createdAt: now.addingTimeInterval(-86_400 * 20)
+            createdAt: now.addingTimeInterval(-86_400 * 20),
+            phoneVerified: true, phoneVerifiedAt: now.addingTimeInterval(-86_400 * 19), phoneVerifiedVia: "code"
         )
         memberships[MockIDs.wim] = [MockIDs.anna: .beheerder, MockIDs.mark: .lezer]
         memberships[MockIDs.riet] = [MockIDs.anna: .lezer, MockIDs.mark: .beheerder]
@@ -415,7 +420,7 @@ final class MockNoahAPI: NoahAPI {
                 city: input.city, livingSituation: input.livingSituation, about: input.about, likes: input.likes,
                 dislikes: input.dislikes, topicsToRaise: input.topicsToRaise, topicsToAvoid: input.topicsToAvoid,
                 routines: input.routines, caregiverNotes: input.caregiverNotes, access: .active, isBeta: false,
-                myRole: .beheerder, createdAt: Date()
+                myRole: .beheerder, createdAt: Date(), phoneVerified: false
             )
             profiles[id] = profile
             memberships[id] = [currentCaregiverId: .beheerder]
@@ -423,6 +428,33 @@ final class MockNoahAPI: NoahAPI {
             settingsByElderly[id] = NoahSettings.defaults
             // Free trial (backend changelog): active while free conversations are left.
             subscriptions[id] = Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 1)
+            return profile
+        }
+    }
+
+    func startPhoneVerification(elderlyId: String, channel: PhoneVerificationChannel) async throws -> PhoneVerificationStart {
+        try await simulate()
+        return try sync {
+            try requireBeheerder(elderlyId)
+            if profiles[elderlyId]?.phoneVerified == true { return PhoneVerificationStart(status: "al_bevestigd", channel: channel.rawValue) }
+            return PhoneVerificationStart(status: "verstuurd", channel: channel.rawValue)
+        }
+    }
+
+    /// Any 6 digits confirm the number, except `000000`.
+    func verifyPhone(elderlyId: String, code: String) async throws -> ElderlyProfile {
+        try await simulate()
+        return try sync {
+            try requireBeheerder(elderlyId)
+            guard code.count == 6, code != "000000" else {
+                throw fail(400, "ongeldige_code", "Deze code klopt niet of is verlopen.")
+            }
+            var profile = profiles[elderlyId]!
+            profile.phoneVerified = true
+            profile.phoneVerifiedAt = Date()
+            profile.phoneVerifiedVia = "code"
+            profiles[elderlyId] = profile
+            profile.myRole = .beheerder
             return profile
         }
     }
@@ -451,6 +483,12 @@ final class MockNoahAPI: NoahAPI {
             profile.addressForm = input.addressForm
             profile.gender = input.gender
             profile.birthYear = input.birthYear
+            // Like the backend: a new number must be confirmed again.
+            if profile.phoneNumber != input.phoneNumber {
+                profile.phoneVerified = false
+                profile.phoneVerifiedAt = nil
+                profile.phoneVerifiedVia = nil
+            }
             profile.phoneNumber = input.phoneNumber
             profile.city = input.city.nilIfBlank
             profile.livingSituation = input.livingSituation
@@ -954,6 +992,10 @@ final class MockNoahAPI: NoahAPI {
             guard profiles[elderlyId]?.access == .active else {
                 throw fail(409, "inactive", "Noah is nog niet actief voor dit profiel. Start eerst het abonnement.")
             }
+            // v2.2: Noah only calls confirmed numbers.
+            if profiles[elderlyId]?.phoneVerified == false {
+                throw fail(409, "telefoonnummer_niet_bevestigd", "Het telefoonnummer is nog niet bevestigd.")
+            }
             let quiet = settingsByElderly[elderlyId]?.quietHours ?? NoahSettings.defaults.quietHours
             let now = DutchFormat.timeString(from: Date())
             let inQuiet = quiet.start > quiet.end ? (now >= quiet.start || now < quiet.end) : (now >= quiet.start && now < quiet.end)
@@ -1056,6 +1098,9 @@ final class MockNoahAPI: NoahAPI {
         try sync {
             guard profiles[deviceElderlyId]?.access == .active else {
                 throw fail(409, "inactive", "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+            }
+            if profiles[deviceElderlyId]?.phoneVerified == false {
+                throw fail(409, "telefoonnummer_niet_bevestigd", "Uw telefoonnummer is nog niet bevestigd.")
             }
         }
     }

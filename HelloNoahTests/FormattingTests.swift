@@ -100,6 +100,13 @@ final class FormattingTests: XCTestCase {
         XCTAssertEqual(PhoneNumberFormat.e164("+31 06 12345678"), "+31612345678")
         XCTAssertNil(PhoneNumberFormat.e164("+31 6 1234567"))
         XCTAssertEqual(PhoneNumberFormat.display("+32470123456"), "+32 470 12 34 56")
+        // No premium/special ranges (backend v2.2).
+        XCTAssertNil(PhoneNumberFormat.e164("0900 1234567"))
+        XCTAssertNil(PhoneNumberFormat.e164("087 1234567"))
+        XCTAssertNil(PhoneNumberFormat.e164("097 012345678"))
+        XCTAssertNil(PhoneNumberFormat.e164("+32 70 12 34 56"))
+        XCTAssertEqual(PhoneNumberFormat.e164("085 1234567"), "+31851234567")
+        XCTAssertEqual(PhoneNumberFormat.e164("088 1234567"), "+31881234567")
         XCTAssertEqual(PhoneNumberFormat.display("+31612345678"), "06 12345678")
         XCTAssertEqual(PhoneNumberFormat.display("+31231234567"), "023 1234567")
     }

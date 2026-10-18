@@ -40,7 +40,7 @@ struct ProfilePhoneField: View {
 
     var body: some View {
         NoahTextField(label: "Mobiel of vast nummer van \(name.isEmpty ? "je naaste" : name)", text: $phone, prompt: "06 12345678",
-                      footnote: "Noah herkent dit nummer als er gebeld wordt, en belt naar dit nummer voor herinneringen en het ochtendgesprek.",
+                      footnote: "Noah belt naar dit nummer voor herinneringen en het ochtendgesprek, zodra het nummer is bevestigd. Alleen Nederlandse en Belgische nummers.",
                       error: error, keyboard: .phonePad, contentType: .telephoneNumber, autocapitalization: .never)
             .accessibilityIdentifier("profile.phone")
     }
@@ -117,7 +117,23 @@ struct ElderlyProfileView: View {
             LoadableView(state: state, retry: { Task { await load() } }) { profile in
                 VStack(alignment: .leading, spacing: NoahSpacing.xl) {
                     section("Naam en aanspreekvorm") { ProfileNameFields(input: $input) }
-                    section("Telefoonnummer") { ProfilePhoneField(phone: $phone, error: phoneError, name: input.preferredName) }
+                    section("Telefoonnummer") {
+                        ProfilePhoneField(phone: $phone, error: phoneError, name: input.preferredName)
+                        // v2.2: Noah only calls a confirmed number (shown for the saved number only).
+                        if session.permissions.canEditProfile, phone == PhoneNumberFormat.display(profile.phoneNumber) {
+                            if profile.needsPhoneConfirmation {
+                                PhoneConfirmationCard(profile: profile) { updated in
+                                    state = .loaded(updated)
+                                    session.dataChanged()
+                                }
+                            } else if profile.phoneVerified == true {
+                                Label("Nummer bevestigd", systemImage: "checkmark.seal.fill")
+                                    .font(NoahFont.subheadline)
+                                    .foregroundColor(NoahColor.positive)
+                                    .accessibilityIdentifier("profile.phoneVerified")
+                            }
+                        }
+                    }
                     section("Over \(input.preferredName)") { ProfileAboutFields(input: $input) }
                     section("Voorkeuren") { ProfilePreferenceFields(input: $input) }
                 }
@@ -220,6 +236,88 @@ struct ElderlyProfileView: View {
             share = ShareItem(items: [try ExportFile.write(data, name: "HelloNoah-\(profile.preferredName)")])
         } catch {
             message = (APIError.from(error).userMessage, true)
+        }
+    }
+}
+
+/// "Bevestig het nummer" (v2.2): Noah only calls out to a confirmed number. Confirmed by one
+/// inbound call to Noah, or by a code sent to the number (SMS, or read out for a landline).
+struct PhoneConfirmationCard: View {
+    let profile: ElderlyProfile
+    let onConfirmed: (ElderlyProfile) -> Void
+
+    @EnvironmentObject private var session: CaregiverSession
+    @State private var sentVia: PhoneVerificationChannel?
+    @State private var code = ""
+    @State private var error: String?
+
+    private var number: String { PhoneNumberFormat.display(profile.phoneNumber) }
+
+    var body: some View {
+        NoahCard(padding: NoahSpacing.l, border: NoahColor.accent.opacity(0.7)) {
+            Label("Bevestig het nummer", systemImage: "checkmark.shield.fill")
+                .font(NoahFont.headline)
+                .foregroundColor(NoahColor.text)
+            Text("Noah belt alleen naar een bevestigd nummer, zodat Noah nooit iemand anders belt. Bevestigen kan op twee manieren: \(profile.preferredName) belt één keer zelf naar het telefoonnummer van Noah, of je stuurt een code naar \(number).")
+                .font(NoahFont.callout)
+                .foregroundColor(NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let sentVia {
+                Text(sentVia == .call
+                     ? "Noah belt \(number) en leest een code van 6 cijfers voor. Vul die hieronder in."
+                     : "Er is een sms met een code van 6 cijfers gestuurd naar \(number). Vraag \(profile.preferredName) om de code, of kijk samen op de telefoon.")
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                NoahCodeField(code: $code) { Task { await verify() } }
+                    .accessibilityIdentifier("profile.phoneCode")
+                NoahAsyncButton("Bevestigen", action: verify)
+                    .disabled(code.count != 6)
+                    .accessibilityIdentifier("profile.phoneVerify")
+                Button("Opnieuw versturen") {
+                    self.sentVia = nil
+                    code = ""
+                    error = nil
+                }
+                .buttonStyle(.noah(.quiet))
+            } else {
+                NoahAsyncButton(kind: .secondary, action: { await send(.sms) }) {
+                    NoahButtonLabel(title: "Stuur een code per sms", systemImage: "message.fill")
+                }
+                .accessibilityIdentifier("profile.phoneSendSms")
+                NoahAsyncButton(kind: .quiet, action: { await send(.call) }) {
+                    Text("Vaste lijn? Laat de code voorlezen")
+                }
+            }
+            if let error { NoahNotice(kind: .error, text: error) }
+        }
+        .accessibilityIdentifier("profile.phoneConfirmation")
+    }
+
+    private func send(_ channel: PhoneVerificationChannel) async {
+        error = nil
+        do {
+            let result = try await session.api.startPhoneVerification(elderlyId: profile.id, channel: channel)
+            if result.isAlreadyConfirmed {
+                onConfirmed(try await session.api.elderly(id: profile.id))
+            } else {
+                sentVia = channel
+            }
+        } catch {
+            self.error = APIError.from(error).userMessage
+        }
+    }
+
+    private func verify() async {
+        guard code.count == 6 else { return }
+        error = nil
+        do {
+            onConfirmed(try await session.api.verifyPhone(elderlyId: profile.id, code: code))
+        } catch {
+            let apiError = APIError.from(error)
+            self.error = apiError.code == "ongeldige_code" ? "Deze code klopt niet of is verlopen. Probeer het opnieuw of stuur een nieuwe code." : apiError.userMessage
+            code = ""
         }
     }
 }

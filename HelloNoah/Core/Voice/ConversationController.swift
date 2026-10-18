@@ -153,7 +153,9 @@ final class ConversationController: ObservableObject {
         }
         // Hung up while the session was being prepared: don't open the microphone at all.
         guard !isFinished, !Task.isCancelled else { return }
-        if let seconds = session.maxDurationSeconds, seconds > 0 { maxDuration = TimeInterval(seconds) }
+        if let seconds = session.maxDurationSeconds ?? session.overrides?.conversation?.maxDurationSeconds, seconds > 0 {
+            maxDuration = TimeInterval(seconds)
+        }
         isRecording = session.recording
 
         phase = .connecting

@@ -153,6 +153,14 @@ struct ElderlyProfile: Codable, Hashable, Identifiable {
     @DefaultFalse var isBeta: Bool = false
     var myRole: Role?
     var createdAt: Date?
+    /// v2.2: Noah only calls out to a confirmed number. nil = older backend (don't ask).
+    var phoneVerified: Bool? = nil
+    var phoneVerifiedAt: Date? = nil
+    /// `"inbound"` | `"code"` | nil
+    var phoneVerifiedVia: String? = nil
+
+    /// The number still needs confirming before Noah can call it (v2.2).
+    var needsPhoneConfirmation: Bool { phoneVerified == false && !(phoneNumber ?? "").isEmpty }
 
     var fullName: String {
         [firstName, lastName].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
@@ -435,6 +443,21 @@ extension NoahSettings {
         let rounded = (speed * 100).rounded() / 100
         return min(max(rounded, speedRange.lowerBound), speedRange.upperBound)
     }
+}
+
+/// v2.2 `POST /elderly/:id/phone/verify-start`.
+enum PhoneVerificationChannel: String, Encodable {
+    case sms
+    /// The code is read out in a call (landlines).
+    case call
+}
+
+struct PhoneVerificationStart: Decodable, Equatable {
+    /// `"verstuurd"` or `"al_bevestigd"`.
+    var status: String
+    var channel: String?
+
+    var isAlreadyConfirmed: Bool { status == "al_bevestigd" }
 }
 
 // MARK: - Emergency contacts
@@ -939,8 +962,14 @@ struct ConversationSession: Decodable {
             let voiceId: String?
             let speed: Double?
         }
+        /// v2.2: `conversation.maxDurationSeconds` (agent-side cap). Swift SDK 3.x can't pass it
+        /// yet, so the app keeps its own timer with this value as a fallback.
+        struct ConversationOverride: Decodable {
+            let maxDurationSeconds: Int?
+        }
         let agent: Agent?
         let tts: TTS?
+        var conversation: ConversationOverride? = nil
     }
 
     let agentId: String?

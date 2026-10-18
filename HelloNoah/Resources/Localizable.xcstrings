@@ -584,6 +584,26 @@
         }
       }
     },
+    "Bevestig het nummer": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestig het nummer"
+          }
+        }
+      }
+    },
+    "Bevestigen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevestigen"
+          }
+        }
+      }
+    },
     "Bewaar": {
       "localizations": {
         "nl": {
@@ -1140,6 +1160,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Er geldt een redelijk-gebruikbeleid van %@ per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken."
+          }
+        }
+      }
+    },
+    "Er is een sms met een code van 6 cijfers gestuurd naar %@. Vraag %@ om de code, of kijk samen op de telefoon.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Er is een sms met een code van 6 cijfers gestuurd naar %1$@. Vraag %2$@ om de code, of kijk samen op de telefoon."
           }
         }
       }
@@ -2634,6 +2664,26 @@
         }
       }
     },
+    "Noah belt %@ en leest een code van 6 cijfers voor. Vul die hieronder in.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah belt %@ en leest een code van 6 cijfers voor. Vul die hieronder in."
+          }
+        }
+      }
+    },
+    "Noah belt alleen naar een bevestigd nummer, zodat Noah nooit iemand anders belt. Bevestigen kan op twee manieren: %@ belt één keer zelf naar het telefoonnummer van Noah, of je stuurt een code naar %@.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Noah belt alleen naar een bevestigd nummer, zodat Noah nooit iemand anders belt. Bevestigen kan op twee manieren: %1$@ belt één keer zelf naar het telefoonnummer van Noah, of je stuurt een code naar %2$@."
+          }
+        }
+      }
+    },
     "Noah belt dan elke gekozen dag om een goedemorgen te wensen en de dag door te nemen.": {
       "localizations": {
         "nl": {
@@ -2650,6 +2700,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noah belt elke ochtend"
+          }
+        }
+      }
+    },
+    "Noah belt naar dit nummer voor herinneringen en het ochtendgesprek, zodra het nummer is bevestigd. Alleen Nederlandse en Belgische nummers.": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noah belt naar dit nummer voor herinneringen en het ochtendgesprek, zodra het nummer is bevestigd. Alleen Nederlandse en Belgische nummers."
           }
         }
       }
@@ -2680,16 +2740,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Noah helpt u herinneren, naast wat u al gebruikt, zoals uw medicijndoos of de kalender."
-          }
-        }
-      }
-    },
-    "Noah herkent dit nummer als er gebeld wordt, en belt naar dit nummer voor herinneringen en het ochtendgesprek.": {
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noah herkent dit nummer als er gebeld wordt, en belt naar dit nummer voor herinneringen en het ochtendgesprek."
           }
         }
       }
@@ -3014,6 +3064,16 @@
         }
       }
     },
+    "Nummer bevestigd": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nummer bevestigd"
+          }
+        }
+      }
+    },
     "Ochtendgesprek": {
       "localizations": {
         "nl": {
@@ -3200,6 +3260,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opnieuw sturen over %lld s"
+          }
+        }
+      }
+    },
+    "Opnieuw versturen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw versturen"
           }
         }
       }
@@ -3814,6 +3884,16 @@
         }
       }
     },
+    "Stuur een code per sms": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuur een code per sms"
+          }
+        }
+      }
+    },
     "Stuur het nummer naar %@": {
       "localizations": {
         "nl": {
@@ -4150,6 +4230,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vaste gewoontes"
+          }
+        }
+      }
+    },
+    "Vaste lijn? Laat de code voorlezen": {
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaste lijn? Laat de code voorlezen"
           }
         }
       }
