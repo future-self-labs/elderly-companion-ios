@@ -20,10 +20,13 @@ At launch the app decides by what is in the Keychain:
 
 **Older person:** Home (big round "Praat met Noah", last conversation, "Vertel een verhaal" (story mode), "Bel mij",
 next reminder, Mijn verhaal, Herinneringen) · Conversation (orb + waveform reacting to who speaks, optional large
-subtitles, big "Ophangen", calm "Wordt opgenomen als u ja zegt" when the server records) · Mijn verhaal (by topic or
-by period, detail, "Luister naar uw verhaal" with their own voice) · Herinneringen (a memory aid next to what they
-already use) · widgets (small, medium, lock-screen circular) that open
-`hellonoah://praat` and start a conversation at once. A hidden long-press (2 s) on the greeting opens settings for the
+subtitles, big "Ophangen", calm "Wordt opgenomen als u ja zegt" when the server records; at accessibility text sizes a
+compact one-line header, the latest subtitle line and controls pinned above the home indicator) · Mijn verhaal (by
+topic or by period, detail, "Luister naar uw verhaal" with their own voice) · Herinneringen (a memory aid next to what
+they already use) · widgets (small, medium, lock-screen circular) that start a conversation at once. Any other
+`hellonoah://praat|verhaal` link (web page, message, another app) opens the conversation screen with one big start
+button: the microphone only opens after a visible tap. The widget proves it is the widget with a per-install token in
+the shared Keychain group `<team>.ai.hellonoah.shared` (`Shared/WidgetLaunch.swift`). A hidden long-press (2 s) on the greeting opens settings for the
 caregiver (unpair this phone).
 
 **Caregiver:** 4 welcome slides · Sign in with Apple / phone + SMS code · start (new profile or invitation code) ·
@@ -53,17 +56,25 @@ conversations, mood, life story, reminders and alerts, plus a scripted conversat
 Uncheck the argument in *Edit Scheme → Run → Arguments* to use the live backend.
 
 - Sign in with Apple → Anna. Phone number + any 6-digit code → a brand-new caregiver (walk through the wizard).
-- Pairing: any 6 digits pair the phone with Wim. `000000` is always rejected (error states).
-- Hidden toggle (works in TestFlight too): tap the HelloNoah logo on the welcome screen 5×, or long-press the version
-  line in *Meer → Account en privacy*.
+- Pairing: any 6 digits pair the phone with Wim. `000000` is always rejected (error states). A code from a
+  `hellonoah://koppel/…` link is only filled in; pairing needs a tap on "Koppelen". Invitation links likewise only fill
+  in the code.
+- Hidden toggle (**Debug builds only**; the mock, the toggle and all launch arguments are compiled out of Release, so
+  TestFlight and the App Store always use the real backend): tap the HelloNoah logo on the welcome screen 5×, or
+  long-press the version line in *Meer → Account en privacy*.
 - Handy launch arguments (mock only): `-mockPersona caregiver|new|elder|none`, `-uiRoute <screen>` (e.g.
   `dashboard`, `conversationDetail`, `storyConversationDetail`, `alertDetail`, `wizard`, `paywall`, `conversation`,
   `storyConversation`, `myStory`, `storyEntry`; see `CaregiverRootView.applyDebugRoute` / `ElderRootView`),
-  `-mockOffline YES`, `-mockInactive YES`, `-mockOverAllowance YES` (fair use used up), `-mockLatency 0`.
+  `-mockOffline YES`, `-mockInactive YES`, `-mockOverAllowance YES` (fair use used up), `-mockLatency 0`,
+  `-mockMaxDurationSeconds 70` (short sessions: Noah is asked to say goodbye a minute before the end),
+  `-mockRecordingUnavailable YES` (recording changes answer 503), `-mockAppleIDPaysFor <elderlyId>` (this Apple ID
+  already pays for that profile: the paywall explains instead of selling), `-mockPhoneUnverified YES` (Wim's number
+  still needs confirming; any 6 digits except `000000` confirm it).
 - Recordings (v2.1): Wim's recording setting is "alleen bij levensverhalen"; his story conversations and two life-story
   entries (trouwdag, Toon Hermans) have a recording. Mock mode plays a generated 40-second demo tune instead of a voice.
-- Purchases: run from Xcode to use `Products.storekit` (`ai.hellonoah.abonnement.maand`, intro €9,99 × 6, then €59,99). Without a StoreKit
-  configuration (e.g. launched from the command line) mock mode simulates the purchase.
+- Purchases: mock mode always simulates the purchase and never touches StoreKit (no real charge, nothing finished
+  against the mock). `Products.storekit` (`ai.hellonoah.abonnement.maand`, intro €9,99 × 6, then €59,99) is used when
+  running live from Xcode.
 
 Mock data lives in memory and resets at each launch.
 
@@ -79,7 +90,7 @@ Base URL: `Config/HelloNoah.xcconfig` (`API_BASE_URL`, default
 xcodebuild -scheme HelloNoah -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build test
 ```
 
-70+ unit tests: every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
+90+ unit tests (incl. `AuditFixesTests` and `ConversationControllerTests` for the 2026-10-18 audit fixes): every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
 arrays), request encoding, single-flight token refresh (5 parallel 401s → exactly 1 refresh), sign-out on an invalid
 refresh token, device unpairing on 401, Dutch relative dates and reminder schedules, phone number normalisation,
 role gating (incl. the mock enforcing it), deep links, and the v2.1 product corrections (fair use, recording setting,

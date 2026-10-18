@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ---
 
@@ -418,6 +418,60 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - **Status**: Investigating via Railway logs.
 
 ---
+
+## 2026-10-18 — Audit fixes (iOS review + security audit, API v2.2), iOS
+
+Fixes the confirmed findings of `audit/2026-10-18-ios.md` and the iOS items of `audit/2026-10-18-security.md`, and
+follows the backend's "audit fixes (v2.2)" changelog entry.
+
+- **Voice session (H1, M2, M3, M4).** Hanging up while Noah is still being called always ends the session: the engine
+  remembers the stop and ends a conversation that connects later; the controller never returns to "active" and stops a
+  late engine again (microphone, agent session, idle timer released). A failed start gives the audio session back.
+  `onDisconnect` is passed as the SDK argument. A minute before the maximum duration Noah gets a contextual update
+  to say goodbye; at the limit the app waits up to 30 s while Noah is still talking. Status line uses the configured name.
+- **Settings (H2, M11).** PATCH sends only changed fields (`NoahSettingsPatch`), so `recording` is only sent when it
+  changed; a 503 on a recording change saves the rest and says so. Speaking speed rounded to 2 decimals.
+- **Demo mode (H3, sec. M9).** Mock backend, mock voice, sample data, the hidden toggles and the `-useMockAPI`,
+  `-apiBaseURL`, `-uiRoute` arguments exist only in Debug builds (Release binary checked: no mock symbols or demo
+  strings). In mock mode StoreKit is never used.
+- **One Apple ID, several profiles (H4).** Until product decides, the paywall checks this Apple ID's entitlement and
+  explains that it already pays for another profile (nothing charged; another caregiver can pay with their own Apple
+  ID) instead of the false "Betaling ontvangen". That text is now only shown for offline/5xx; 4xx rejections finish
+  the transaction. Transactions without `appAccountToken` are finished once a profile shows an active App Store
+  subscription (M6).
+- **Links (sec. H4, M10, M11).** Pairing and invitation links only fill in the code and need a tap; the share text
+  no longer contains the pairing link; invitation codes are validated. `hellonoah://praat|verhaal` from outside opens
+  a start button; only the app's own widget (per-install token in the shared Keychain group) starts directly.
+  Links not meant for the current interface are dropped; signing out on a paired phone shows the older person's home.
+- **Keychain (sec. M8).** `AfterFirstUnlockThisDeviceOnly`, existing items migrated at launch. Conscious choice: tokens
+  survive a reinstall on the same phone (an older person's phone stays paired; a beheerder can revoke it), never a
+  backup or a new phone.
+- **Accessibility (H6, M8).** Conversation screen fits at AX5 (compact header, latest subtitle line, pinned
+  controls); secondary home lines no longer outgrow the greeting; next-reminder card is a button. Component borders
+  #6B7FA6 (≥ 3:1), `dangerText` #F29580 for danger text (≥ 4.5:1, also on `dangerSoft`); `cardBorder` for decorative
+  outlines.
+- **Push (M5).** Time Sensitive Notifications entitlement (urgent/nood). App ID capability is enabled by automatic
+  signing. Universal links also for `www.hellonoah.ai`.
+- **Playback (M7).** RecordingPlayer follows the real player state, handles interruptions, refetches on stalls after
+  expiry and on 403/410; a conversation pauses any recording.
+- **Copy (M1, M10, L1, L9).** Caregiver errors use the app's own "je" text per code (server text only for unknown
+  codes and only when it isn't in "u"); no "Alles inbegrepen", honest EU/AI-services wording on the paywall, no
+  "Noah blijft aan de lijn", no "helpt Noah leren"; reminders default to "Overig" with a neutral example; u/je slips
+  and hard-coded "Noah" fixed.
+- **Privacy manifest (M9).** Also declares Health (mood, cognitive clarity, concerning signals) and Contacts
+  (emergency contacts, important people). App Store Connect labels must match.
+- **v2.2.** Phone numbers only +31/+32 without premium/special ranges, one Dutch message. "Bevestig het nummer" on the
+  profile (code by SMS or read out; `400 ongeldige_code` never signs out). Texts for the new codes
+  (`telefoonnummer_niet_bevestigd`, `_niet_ondersteund`, `belgrens_bereikt`, `te_veel_profielen`, `demo_account`,
+  `te_groot`). `overrides.conversation.maxDurationSeconds` decoded (SDK can't pass it yet; client timer stays).
+- **Low.** Reminder editor: past one-off reminders can be renamed/switched off, unknown schedule kinds are left
+  alone. Alerts paging retries. GDPR export files protected and deleted after sharing (sec. L10). Release logging
+  gated behind DEBUG (sec. L11).
+- **Not changed (product/backend decisions).** iPad stays enabled (older people use tablets; App Store needs iPad
+  screenshots). Device name still "iPhone" (needs the user-assigned-device-name entitlement). No UI yet to delete one
+  recording. `aps-environment` stays `development` in the file (signing rewrites it on export; check the archive).
+  Pairing/invitation previews (profile name before confirming) need a backend preview endpoint.
+- Screenshots in `docs/screenshots/` refreshed (mock mode), new: 06, 18, 19, 51–55, 63–65.
 
 ## 2026-10-17 — Product corrections from the founder (API v2.1), iOS
 
