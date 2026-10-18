@@ -155,7 +155,7 @@ struct ElderHomeView: View {
             if let callMessage {
                 Text(verbatim: callMessage)
                     .font(NoahFont.Elder.label)
-                    .foregroundColor(callFailed ? NoahColor.danger : NoahColor.positive)
+                    .foregroundColor(callFailed ? NoahColor.dangerText : NoahColor.positive)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }

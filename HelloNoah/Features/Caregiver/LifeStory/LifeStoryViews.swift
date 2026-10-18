@@ -235,7 +235,7 @@ struct LifeStoryEntryView: View {
                     NoahButtonLabel(title: "Verwijderen", systemImage: "trash")
                 }
                 .buttonStyle(.noah(.quiet))
-                .foregroundColor(NoahColor.danger)
+                .foregroundColor(NoahColor.dangerText)
             }
         }
         .navigationBarTitleDisplayMode(.inline)

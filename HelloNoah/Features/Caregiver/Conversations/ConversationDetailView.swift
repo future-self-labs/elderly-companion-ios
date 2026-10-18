@@ -228,7 +228,7 @@ struct TranscriptView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous)
-                            .strokeBorder(NoahColor.border, lineWidth: 1)
+                            .strokeBorder(NoahColor.cardBorder, lineWidth: 1)
                     )
                     if isNoah { Spacer(minLength: NoahSpacing.xl) }
                 }

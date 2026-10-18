@@ -3,7 +3,7 @@ import SwiftUI
 extension AlertSeverity {
     var color: Color {
         switch self {
-        case .nood, .urgent: return NoahColor.danger
+        case .nood, .urgent: return NoahColor.dangerText
         case .waarschuwing: return NoahColor.accent
         case .info, .unknown: return NoahColor.textSoft
         }

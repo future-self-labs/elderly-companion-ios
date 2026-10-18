@@ -64,7 +64,7 @@ struct AccountView: View {
                     NoahButtonLabel(title: "Account verwijderen", systemImage: "trash")
                 }
                 .buttonStyle(.noah(.quiet))
-                .foregroundColor(NoahColor.danger)
+                .foregroundColor(NoahColor.dangerText)
                 .accessibilityIdentifier("account.delete")
             }
 

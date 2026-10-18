@@ -4,7 +4,7 @@ import SwiftUI
 struct NoahCard<Content: View>: View {
     var padding: CGFloat = NoahSpacing.m
     var background: Color = NoahColor.surface
-    var border: Color = NoahColor.border
+    var border: Color = NoahColor.cardBorder
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -111,7 +111,7 @@ struct NoahNotice: View {
         switch kind {
         case .info: return NoahColor.textSoft
         case .warning: return NoahColor.accent
-        case .error: return NoahColor.danger
+        case .error: return NoahColor.dangerText
         case .success: return NoahColor.positive
         }
     }

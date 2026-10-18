@@ -68,7 +68,7 @@ struct MoreView: View {
                             NoahButtonLabel(title: "Stoppen met meekijken bij \(selected.preferredName)", systemImage: "person.badge.minus")
                         }
                         .buttonStyle(.noah(.quiet))
-                        .foregroundColor(NoahColor.danger)
+                        .foregroundColor(NoahColor.dangerText)
                     }
                 }
             } else {

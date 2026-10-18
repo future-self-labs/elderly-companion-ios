@@ -45,7 +45,7 @@ struct PairingView: View {
                 if let error {
                     Text(verbatim: error)
                         .font(NoahFont.Elder.body)
-                        .foregroundColor(NoahColor.danger)
+                        .foregroundColor(NoahColor.dangerText)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isStaticText)
                 }

@@ -169,7 +169,7 @@ struct ReminderDisclaimer: View {
         .padding(NoahSpacing.s)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surfaceDeep))
-        .overlay(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).strokeBorder(NoahColor.cardBorder, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("reminders.disclaimer")
     }
@@ -286,7 +286,7 @@ struct ReminderEditorView: View {
                         NoahButtonLabel(title: "Herinnering verwijderen", systemImage: "trash")
                     }
                     .buttonStyle(.noah(.quiet))
-                    .foregroundColor(NoahColor.danger)
+                    .foregroundColor(NoahColor.dangerText)
                 }
             }
             .padding(NoahSpacing.screen)

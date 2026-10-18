@@ -208,7 +208,7 @@ struct RecordingIndicator: View {
         .padding(.horizontal, NoahSpacing.m)
         .padding(.vertical, NoahSpacing.xs)
         .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
-        .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.cardBorder, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Dit gesprek wordt opgenomen als u ja zegt"))
         .accessibilityIdentifier("conversation.recording")

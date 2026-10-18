@@ -16,8 +16,13 @@ enum NoahColor {
     static let surface = Color(hex: 0x1D2D4D)
     /// Recessed areas: conversation background, tab bar, sheets.
     static let surfaceDeep = Color(hex: 0x0E182D)
-    /// Outlines of cards and inputs.
-    static let border = Color(hex: 0x34466B)
+    /// Boundary of interactive components: inputs, option cards, secondary buttons, chips,
+    /// toggles, tappable cards. ≥ 3:1 against ground (4.0), surface (3.4) and surfaceDeep (4.4)
+    /// (WCAG 1.4.11).
+    static let border = Color(hex: 0x6B7FA6)
+    /// Decorative outline of non-interactive containers (cards, transcript bubbles). Not a
+    /// component boundary, so no contrast requirement.
+    static let cardBorder = Color(hex: 0x34466B)
     /// Hairlines between rows.
     static let divider = Color(hex: 0x2A3C60)
 
@@ -35,8 +40,11 @@ enum NoahColor {
     static let accentDeep = Color(hex: 0xD99630)
     /// Text and icons placed on `accent`.
     static let onAccent = Color(hex: 0x13203A)
-    /// Hang up, destructive actions, urgent alerts.
+    /// Hang up, destructive actions, urgent alerts: fills and icons on fills.
     static let danger = Color(hex: 0xE2725B)
+    /// Danger as text or a thin mark (errors, "Urgent"/"Nood" labels): ≥ 4.5:1 on ground (7.3),
+    /// surface (6.1), surfaceDeep (7.9) and on `dangerSoft` (4.9).
+    static let dangerText = Color(hex: 0xF29580)
     /// Text and icons placed on `danger`.
     static let onDanger = Color(hex: 0x13203A)
     /// The red dot of "Wordt opgenomen" during a recorded conversation.

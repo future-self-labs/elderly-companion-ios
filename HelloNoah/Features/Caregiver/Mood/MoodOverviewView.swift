@@ -81,7 +81,7 @@ struct MoodOverviewView: View {
     private func trendColor(_ trend: MoodTrend?) -> Color {
         switch trend {
         case .stijgend: return NoahColor.positive
-        case .dalend: return NoahColor.danger
+        case .dalend: return NoahColor.dangerText
         default: return NoahColor.accent
         }
     }

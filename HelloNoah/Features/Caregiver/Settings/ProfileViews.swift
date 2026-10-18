@@ -140,7 +140,7 @@ struct ElderlyProfileView: View {
                             NoahButtonLabel(title: "Profiel verwijderen", systemImage: "trash")
                         }
                         .buttonStyle(.noah(.quiet))
-                        .foregroundColor(NoahColor.danger)
+                        .foregroundColor(NoahColor.dangerText)
                     }
                 }
             }
@@ -242,7 +242,7 @@ struct TypedConfirmationView: View {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 44))
-                    .foregroundColor(NoahColor.danger)
+                    .foregroundColor(NoahColor.dangerText)
                     .accessibilityHidden(true)
                 Text(verbatim: title)
                     .font(NoahFont.title).noahTitleScaling()
@@ -400,7 +400,7 @@ struct PersonEditorView: View {
                 if case .edit = target {
                     Button(role: .destructive) { confirmsDelete = true } label: { NoahButtonLabel(title: "Verwijderen", systemImage: "trash") }
                         .buttonStyle(.noah(.quiet))
-                        .foregroundColor(NoahColor.danger)
+                        .foregroundColor(NoahColor.dangerText)
                 }
             }
             .padding(NoahSpacing.screen)

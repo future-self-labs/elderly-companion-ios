@@ -223,7 +223,7 @@ struct DevicesView: View {
                                 if session.permissions.canManageDevices {
                                     Button("Ontkoppel") { confirmUnpair = device }
                                         .font(NoahFont.subheadline)
-                                        .foregroundColor(NoahColor.danger)
+                                        .foregroundColor(NoahColor.dangerText)
                                         .frame(minHeight: NoahSize.minTap)
                                 }
                             }
@@ -327,7 +327,7 @@ struct PairingCodePanel: View {
                                 .foregroundColor(NoahColor.textSecondary)
                         } else {
                             Text("Deze code is verlopen. Maak een nieuwe code.")
-                                .foregroundColor(NoahColor.danger)
+                                .foregroundColor(NoahColor.dangerText)
                         }
                     }
                     .font(NoahFont.footnote)

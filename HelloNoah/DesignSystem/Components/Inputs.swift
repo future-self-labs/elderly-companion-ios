@@ -20,7 +20,7 @@ struct NoahField<Content: View>: View {
                     Image(systemName: "exclamationmark.circle.fill")
                 }
                 .font(NoahFont.footnote)
-                .foregroundColor(NoahColor.danger)
+                .foregroundColor(NoahColor.dangerText)
             } else if let footnote {
                 Text(footnote)
                     .font(NoahFont.footnote)
@@ -46,7 +46,7 @@ struct NoahInputBox: ViewModifier {
             .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surface))
             .overlay(
                 RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous)
-                    .strokeBorder(hasError ? NoahColor.danger : (isFocused ? NoahColor.accent : NoahColor.border), lineWidth: isFocused || hasError ? 2 : 1)
+                    .strokeBorder(hasError ? NoahColor.dangerText : (isFocused ? NoahColor.accent : NoahColor.border), lineWidth: isFocused || hasError ? 2 : 1)
             )
     }
 }
