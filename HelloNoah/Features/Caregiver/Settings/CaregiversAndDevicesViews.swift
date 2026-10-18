@@ -345,7 +345,7 @@ struct PairingCodePanel: View {
                 step(3, "Vul de koppelcode in. Klaar: \(name) hoeft nooit in te loggen.")
             }
             if let code {
-                ShareLink(item: "Koppelcode voor HelloNoah: \(code.code). Open de app, kies \u{201C}Deze telefoon is voor iemand die met Noah gaat praten\u{201D} en vul de code in. Of tik op: hellonoah://koppel/\(code.code)") {
+                ShareLink(item: "Koppelcode voor HelloNoah: \(code.code). Open de app, kies \u{201C}Deze telefoon is voor iemand die met Noah gaat praten\u{201D} en vul de code in.") {
                     NoahButtonLabel(title: "Stuur de code", systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.noah(.secondary))

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import WidgetKit
 
 /// The live or mock wiring of the app.
 @MainActor
@@ -141,7 +142,7 @@ final class AppModel: ObservableObject {
         environment.storage.caregiverTokens = nil
         push.tokenHandler = nil
         caregiver = nil
-        mode = environment.storage.deviceToken != nil ? .elder : .welcome
+        if environment.storage.deviceToken != nil { enterElder() } else { mode = .welcome }
     }
 
     /// Account deleted: tokens are already invalid on the server.
@@ -184,9 +185,12 @@ final class AppModel: ObservableObject {
         session.justPaired = justPaired
         elder = session
         mode = .elder
-        if pendingLink == .talk || pendingLink == .story {
-            session.requestConversation(mode: pendingLink == .story ? .levensverhaal : .gesprek)
+        // The widget token lets the app's own widget start a conversation with one tap.
+        if WidgetLaunch.ensureToken() { WidgetCenter.shared.reloadAllTimelines() }
+        if let link = pendingLink {
             pendingLink = nil
+            // Right after pairing nothing starts by itself.
+            if !justPaired { handle(link) }
         }
     }
 
@@ -210,24 +214,28 @@ final class AppModel: ObservableObject {
     // MARK: Links
 
     func handle(url: URL) {
-        guard let link = DeepLink(url: url) else { return }
+        guard let link = DeepLink(url: url, widgetToken: WidgetLaunch.storedToken()) else { return }
         handle(link)
     }
 
     func handle(_ link: DeepLink) {
         switch (link, mode) {
-        case (.talk, .elder):
-            elder?.requestConversation()
+        case (.talk(let verified), .elder):
+            // Only the app's own widget may open the microphone without a visible tap (M11).
+            elder?.requestConversation(needsConfirmation: !verified)
         case (.story, .elder):
-            elder?.requestConversation(mode: .levensverhaal)
+            elder?.requestConversation(mode: .levensverhaal, needsConfirmation: true)
         case (.invitation(let code), .caregiver):
             caregiver?.router.present(.acceptInvitation(code: code))
         case (.alert(let id, let elderlyId), .caregiver):
             caregiver?.openAlert(id: id, elderlyId: elderlyId)
-        case (.pair, .welcome), (.invitation, .welcome), (.talk, .welcome), (.talk, .launching), (.story, .welcome), (.story, .launching):
+        case (_, .welcome), (_, .launching):
+            // Kept until the right interface is ready (pairing, sign-in).
             pendingLink = link
         default:
-            pendingLink = link
+            // Not for this interface (e.g. a pairing link on a paired phone, the widget on a
+            // caregiver's phone): ignore it instead of keeping it around.
+            pendingLink = nil
         }
     }
 

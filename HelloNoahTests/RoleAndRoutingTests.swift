@@ -110,7 +110,7 @@ final class RoleGatingTests: XCTestCase {
 
 final class DeepLinkTests: XCTestCase {
     func testLinks() {
-        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://praat")!), .talk)
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://praat")!), .talk(verified: false))
         XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://koppel/482913")!), .pair(code: "482913"))
         XCTAssertNil(DeepLink(url: URL(string: "hellonoah://koppel/12")!))
         XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://uitnodiging/k7p-2qx")!), .invitation(code: "K7P-2QX"))

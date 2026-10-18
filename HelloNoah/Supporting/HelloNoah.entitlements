@@ -11,6 +11,14 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:hellonoah.ai</string>
+		<string>applinks:www.hellonoah.ai</string>
+	</array>
+	<key>com.apple.developer.usernotifications.time-sensitive</key>
+	<true/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)ai.hellonoah.app</string>
+		<string>$(AppIdentifierPrefix)ai.hellonoah.shared</string>
 	</array>
 </dict>
 </plist>

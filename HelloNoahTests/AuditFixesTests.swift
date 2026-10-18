@@ -124,3 +124,38 @@ final class SubscriptionOutcomeTests: XCTestCase {
             .explanation(for: nil).contains("een ander profiel"))
     }
 }
+
+/// Security H4/M10/M11: links never act on their own.
+final class LinkSafetyTests: XCTestCase {
+    func testOnlyTheWidgetTokenStartsAConversationDirectly() {
+        let token = "0123456789abcdef0123456789abcdef0123456789abcdef"
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://praat")!, widgetToken: token), .talk(verified: false))
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://praat?bron=widget")!, widgetToken: token), .talk(verified: false))
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://praat?bron=widget&t=wrong")!, widgetToken: token), .talk(verified: false))
+        XCTAssertEqual(DeepLink(url: WidgetLaunch.talkURL(token: token), widgetToken: token), .talk(verified: true))
+        // Without a stored token nothing is verified.
+        XCTAssertEqual(DeepLink(url: WidgetLaunch.talkURL(token: token), widgetToken: nil), .talk(verified: false))
+        // Story links always wait for the tap.
+        XCTAssertEqual(DeepLink(url: URL(string: "hellonoah://verhaal")!, widgetToken: token), .story)
+    }
+
+    func testInvitationCodesAreValidated() {
+        XCTAssertEqual(DeepLink(url: URL(string: "https://www.hellonoah.ai/uitnodiging/k7p2qx")!), .invitation(code: "K7P-2QX"))
+        XCTAssertNil(DeepLink(url: URL(string: "hellonoah://uitnodiging/<script>")!))
+        XCTAssertNil(DeepLink(url: URL(string: "hellonoah://uitnodiging/K7P-2QX-EXTRA")!))
+        XCTAssertNil(DeepLink.normalizedInvitationCode("K7"))
+        XCTAssertEqual(DeepLink.normalizedInvitationCode(" k7p-2qx "), "K7P-2QX")
+    }
+
+    @MainActor
+    func testExternalTalkLinkNeedsConfirmation() {
+        let session = ElderSession(api: MockNoahAPI(), reachability: Reachability(), makeEngine: { MockVoiceEngine() })
+        session.requestConversation(needsConfirmation: true)
+        XCTAssertTrue(session.isConversationPresented)
+        XCTAssertTrue(session.conversationNeedsConfirmation)
+        session.isConversationPresented = false
+        // The big button on the home screen is itself the tap.
+        session.requestConversation()
+        XCTAssertFalse(session.conversationNeedsConfirmation)
+    }
+}

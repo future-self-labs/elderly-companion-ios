@@ -16,6 +16,7 @@
 		0D6039FD6ED5A9EE9C5AA0D7 /* RemindersViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 886D0EBC966AAB0527E80630 /* RemindersViews.swift */; };
 		0D6A3897D39909C21F2AD2BC /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 543A7F21B3473462F53184AD /* LiveKit */; };
 		10DC0CFDBE32C439E77319F3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B8DBC8445A30AC45FED9FEB /* Assets.xcassets */; };
+		11A0F8C40F1E671C4F9F52EA /* WidgetLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6D298589280307A63F04B3 /* WidgetLaunch.swift */; };
 		14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */; };
 		14F5057347B2661FF1D4AC1D /* OFL-Lexend.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20A641E00D52284031FAD338 /* OFL-Lexend.txt */; };
 		18B5F4DA01C0C23BF169C09F /* SubscriptionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F97E64CE8569EF508A8FCD /* SubscriptionViews.swift */; };
@@ -53,6 +54,7 @@
 		7797FBC1A6AF66C5F6DCECB1 /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDECCE921AEE9439A6EBF59A /* Tokens.swift */; };
 		787960854B639E99B19B451D /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC66844EE088BEE673BF981 /* AppConfig.swift */; };
 		7E57A98E2F007597507B63F0 /* ProfileWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24565C77FC779982A00BEE2F /* ProfileWizardView.swift */; };
+		7EA9EFC3C5CF730C1E7A83C8 /* WidgetLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6D298589280307A63F04B3 /* WidgetLaunch.swift */; };
 		805AD41998FB33BD1D5E5C29 /* DMSerifDisplay-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C11AA97EE32F2F4073F498FE /* DMSerifDisplay-Regular.ttf */; };
 		81B5FD43EDF846645E1DC0DA /* NoahAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19C8570CACD47FA3DC66B4CA /* NoahAPI.swift */; };
 		86841686210995186A5A74EC /* ContactsAndPhoneViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EAEC3BDB9238961ED60BBEB /* ContactsAndPhoneViews.swift */; };
@@ -163,6 +165,7 @@
 		477A8D4E84FEA4E610B299FF /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelShaperTests.swift; sourceTree = "<group>"; };
 		4A172D7BEE7A975B33DE4710 /* MoodOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodOverviewView.swift; sourceTree = "<group>"; };
+		4A6D298589280307A63F04B3 /* WidgetLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLaunch.swift; sourceTree = "<group>"; };
 		4D9354884D46541C3F0DA2F7 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		54A05BFD2690AA6B76C432DE /* CaregiversAndDevicesViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaregiversAndDevicesViews.swift; sourceTree = "<group>"; };
 		551501931F47852F3C865A17 /* HelloNoahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloNoahApp.swift; sourceTree = "<group>"; };
@@ -428,6 +431,7 @@
 			isa = PBXGroup;
 			children = (
 				FDECCE921AEE9439A6EBF59A /* Tokens.swift */,
+				4A6D298589280307A63F04B3 /* WidgetLaunch.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -785,6 +789,7 @@
 			files = (
 				96F46AEFACE4D4DB70E03FA6 /* HelloNoahWidget.swift in Sources */,
 				FA342ECE5831DA359A57E2B4 /* Tokens.swift in Sources */,
+				7EA9EFC3C5CF730C1E7A83C8 /* WidgetLaunch.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -857,6 +862,7 @@
 				7797FBC1A6AF66C5F6DCECB1 /* Tokens.swift in Sources */,
 				8B45BA67587E9D6890892808 /* VoiceEngine.swift in Sources */,
 				76C97C15C2A23410A522137C /* WelcomeFlowView.swift in Sources */,
+				11A0F8C40F1E671C4F9F52EA /* WidgetLaunch.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -880,6 +886,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HelloNoahWidget/HelloNoahWidget.entitlements;
 				INFOPLIST_FILE = HelloNoahWidget/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -898,6 +905,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HelloNoahWidget/HelloNoahWidget.entitlements;
 				INFOPLIST_FILE = HelloNoahWidget/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

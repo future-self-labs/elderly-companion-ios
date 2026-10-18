@@ -167,7 +167,28 @@ struct ElderRecordingPlayer: View {
 /// records. Noah asks permission itself as its first message; the app cannot see the answer, so the
 /// wording stays conditional (backend v2.1 note).
 struct RecordingIndicator: View {
+    /// One short line for accessibility text sizes.
+    var compact = false
+
     var body: some View {
+        if compact {
+            HStack(spacing: NoahSpacing.xs) {
+                Circle()
+                    .fill(NoahColor.recording)
+                    .frame(width: 10, height: 10)
+                    .accessibilityHidden(true)
+                Text("Opname als u ja zegt")
+                    .foregroundColor(NoahColor.text)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Dit gesprek wordt opgenomen als u ja zegt"))
+            .accessibilityIdentifier("conversation.recording")
+        } else {
+            full
+        }
+    }
+
+    private var full: some View {
         HStack(spacing: NoahSpacing.xs) {
             Circle()
                 .fill(NoahColor.recording)

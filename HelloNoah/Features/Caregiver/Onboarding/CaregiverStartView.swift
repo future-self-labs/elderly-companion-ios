@@ -73,6 +73,9 @@ struct CaregiverStartView: View {
 }
 
 /// Join an older person's circle with an invitation code (also opened from invitation links).
+///
+/// A code from a link is only filled in; joining always needs a tap on "Accepteren" (security
+/// audit M10).
 struct AcceptInvitationView: View {
     var initialCode: String?
 
@@ -81,6 +84,7 @@ struct AcceptInvitationView: View {
     @State private var code = ""
     @State private var error: String?
     @State private var accepted: AcceptInvitationResponse?
+    @State private var isFromLink = false
 
     var body: some View {
         ScrollView {
@@ -108,10 +112,15 @@ struct AcceptInvitationView: View {
                         .font(NoahFont.bodyText)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
+                    if isFromLink {
+                        NoahNotice(kind: .info, text: "Deze uitnodiging kwam binnen via een link. Accepteer alleen als je weet van wie hij komt: je kijkt daarna mee bij die naaste en je naam is zichtbaar voor de andere mantelzorgers.")
+                            .accessibilityIdentifier("invite.fromLink")
+                    }
                     NoahTextField(label: "Uitnodigingscode", text: $code, prompt: "K7P-2QX", error: error, autocapitalization: .characters)
                         .accessibilityIdentifier("invite.code")
                     NoahAsyncButton("Accepteren") { await accept() }
-                        .disabled(code.filter { $0.isLetter || $0.isNumber }.count < 4)
+                        .disabled(DeepLink.normalizedInvitationCode(code.replacingOccurrences(of: " ", with: "")) == nil)
+                        .accessibilityIdentifier("invite.accept")
                 }
             }
             .padding(.horizontal, NoahSpacing.screen)
@@ -126,16 +135,20 @@ struct AcceptInvitationView: View {
             }
         }
         .onAppear {
+            // Fill in only; the caregiver decides with a tap.
             if let initialCode, code.isEmpty {
                 code = initialCode
-                Task { await accept() }
+                isFromLink = true
             }
         }
     }
 
     private func accept() async {
         error = nil
-        let cleaned = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard let cleaned = DeepLink.normalizedInvitationCode(code.replacingOccurrences(of: " ", with: "")) else {
+            error = "Een uitnodigingscode bestaat uit 6 letters en cijfers, bijvoorbeeld K7P-2QX."
+            return
+        }
         do {
             let response = try await session.api.acceptInvitation(code: cleaned)
             await session.didAddElderly(id: response.elderly.id)

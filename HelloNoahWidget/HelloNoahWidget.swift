@@ -1,26 +1,31 @@
 import SwiftUI
 import WidgetKit
 
-// One-tap "Praat met Noah" widgets. Tapping opens `hellonoah://praat`, which starts a
-// conversation right away in the older person's interface. Static content: no App Group needed.
+// One-tap "Praat met Noah" widgets. Tapping opens `hellonoah://praat?bron=widget&t=<token>`;
+// with the app's per-install token (shared Keychain group, see `WidgetLaunch`) the conversation
+// starts right away. Without it the app shows one big start button first, like for any other link.
 
 struct NoahEntry: TimelineEntry {
     let date: Date
+    let talkURL: URL
 }
 
 struct NoahProvider: TimelineProvider {
-    func placeholder(in context: Context) -> NoahEntry { NoahEntry(date: Date()) }
+    private func entry() -> NoahEntry {
+        NoahEntry(date: Date(), talkURL: WidgetLaunch.talkURL(token: WidgetLaunch.storedToken()))
+    }
+
+    func placeholder(in context: Context) -> NoahEntry { NoahEntry(date: Date(), talkURL: WidgetLaunch.talkURL(token: nil)) }
 
     func getSnapshot(in context: Context, completion: @escaping (NoahEntry) -> Void) {
-        completion(NoahEntry(date: Date()))
+        completion(entry())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<NoahEntry>) -> Void) {
-        completion(Timeline(entries: [NoahEntry(date: Date())], policy: .never))
+        // The app reloads the timeline when it creates the token.
+        completion(Timeline(entries: [entry()], policy: .never))
     }
 }
-
-private let talkURL = URL(string: "hellonoah://praat")!
 
 struct NoahWidgetView: View {
     @Environment(\.widgetFamily) private var family
@@ -38,7 +43,7 @@ struct NoahWidgetView: View {
                         .font(.system(size: 11, weight: .semibold))
                 }
             }
-            .widgetURL(talkURL)
+            .widgetURL(entry.talkURL)
             .accessibilityLabel(Text("Praat met Noah"))
         case .systemMedium:
             HStack(spacing: NoahSpacing.m) {
@@ -56,7 +61,7 @@ struct NoahWidgetView: View {
                 Spacer(minLength: 0)
             }
             .padding(NoahSpacing.m)
-            .widgetURL(talkURL)
+            .widgetURL(entry.talkURL)
             .noahWidgetBackground()
         default:
             VStack(spacing: NoahSpacing.s) {
@@ -68,7 +73,7 @@ struct NoahWidgetView: View {
                     .minimumScaleFactor(0.7)
             }
             .padding(NoahSpacing.s)
-            .widgetURL(talkURL)
+            .widgetURL(entry.talkURL)
             .noahWidgetBackground()
         }
     }

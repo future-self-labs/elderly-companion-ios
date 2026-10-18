@@ -94,6 +94,7 @@ targets:
       - path: HelloNoahWidget
         excludes:
           - "Info.plist"
+          - "HelloNoahWidget.entitlements"
       - path: Shared
       - path: HelloNoah/Resources/Fonts
         buildPhase: resources
@@ -102,6 +103,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: ai.hellonoah.app.widget
         PRODUCT_NAME: HelloNoahWidget
         INFOPLIST_FILE: HelloNoahWidget/Info.plist
+        CODE_SIGN_ENTITLEMENTS: HelloNoahWidget/HelloNoahWidget.entitlements
         SKIP_INSTALL: YES
         ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
     dependencies:

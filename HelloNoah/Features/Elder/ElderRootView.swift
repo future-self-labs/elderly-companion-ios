@@ -29,7 +29,8 @@ struct ElderRootView: View {
                 }
         }
         .fullScreenCover(isPresented: $session.isConversationPresented) {
-            ConversationScreen(controller: session.makeConversationController(), noahName: session.noahName) {
+            ConversationScreen(controller: session.makeConversationController(), noahName: session.noahName,
+                               needsConfirmation: session.conversationNeedsConfirmation) {
                 session.isConversationPresented = false
                 Task { await session.load() }
             }

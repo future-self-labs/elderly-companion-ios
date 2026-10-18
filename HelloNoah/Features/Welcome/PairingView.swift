@@ -2,6 +2,10 @@ import SwiftUI
 import UIKit
 
 /// The older person's phone: enter the 6-digit code from the caregiver. No login, no password.
+///
+/// A code that arrives through a `hellonoah://koppel/…` link is only filled in: pairing always
+/// needs a tap on "Koppelen", so nobody can bind this phone to their own profile by sending a
+/// link (security audit H4).
 struct PairingView: View {
     var initialCode: String?
 
@@ -9,6 +13,8 @@ struct PairingView: View {
     @State private var code = ""
     @State private var isPairing = false
     @State private var error: String?
+    /// The code came from a link: never pair automatically.
+    @State private var isFromLink = false
 
     var body: some View {
         ScrollView {
@@ -24,7 +30,14 @@ struct PairingView: View {
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)
 
+                if isFromLink {
+                    NoahNotice(kind: .warning, text: "Deze code komt uit een link. Koppel alleen als u de code van uw eigen mantelzorger heeft gekregen. Tik daarna op Koppelen.", large: true)
+                        .accessibilityIdentifier("pairing.fromLink")
+                }
+
                 NoahCodeField(code: $code, large: true) {
+                    // Typing the last digit pairs at once; a code from a link waits for the tap.
+                    guard !isFromLink else { return }
                     Task { await pair() }
                 }
                 .accessibilityIdentifier("pairing.code")
@@ -70,7 +83,10 @@ struct PairingView: View {
         // either, so nothing animates in during the push) and a big "Terug" button instead.
         .elderSubscreen()
         .onAppear {
-            if let initialCode, code.isEmpty { code = initialCode }
+            if let initialCode, code.isEmpty {
+                isFromLink = true
+                code = initialCode
+            }
         }
     }
 

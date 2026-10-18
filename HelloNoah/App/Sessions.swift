@@ -14,6 +14,8 @@ final class ElderSession: ObservableObject {
     @Published var isConversationPresented = false
     /// What the next conversation is: "Praat met Noah" or "Vertel een verhaal" (v2.1).
     @Published private(set) var conversationMode: ConversationMode = .gesprek
+    /// Opened by a link from outside the app: wait for a tap before the microphone starts (M11).
+    @Published private(set) var conversationNeedsConfirmation = false
     @Published var justPaired = false
 
     init(api: NoahAPI, reachability: Reachability, makeEngine: @escaping () -> VoiceEngine) {
@@ -36,9 +38,12 @@ final class ElderSession: ObservableObject {
         }
     }
 
-    func requestConversation(mode: ConversationMode = .gesprek) {
+    /// - Parameter needsConfirmation: true for links from outside the app (not the big button,
+    ///   not the app's own widget): the screen opens, the conversation starts after a tap.
+    func requestConversation(mode: ConversationMode = .gesprek, needsConfirmation: Bool = false) {
         guard !isConversationPresented else { return }
         conversationMode = mode
+        conversationNeedsConfirmation = needsConfirmation
         isConversationPresented = true
     }
 
