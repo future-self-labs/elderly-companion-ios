@@ -97,12 +97,12 @@ final class ProductCorrectionsTests: XCTestCase {
 
         var settings = try await api.settings(elderlyId: MockIDs.wim)
         settings.recording = .alleGesprekken
-        _ = try await api.updateSettings(elderlyId: MockIDs.wim, settings)
+        _ = try await api.updateSettings(elderlyId: MockIDs.wim, NoahSettingsPatch(settings))
         let everything = try await api.startDeviceConversation(mode: .gesprek)
         XCTAssertTrue(everything.recording)
 
         settings.recording = .uit
-        _ = try await api.updateSettings(elderlyId: MockIDs.wim, settings)
+        _ = try await api.updateSettings(elderlyId: MockIDs.wim, NoahSettingsPatch(settings))
         let nothing = try await api.startDeviceConversation(mode: .levensverhaal)
         XCTAssertFalse(nothing.recording)
     }
@@ -113,7 +113,7 @@ final class ProductCorrectionsTests: XCTestCase {
         var settings = NoahSettings.defaults
         settings.recording = .alleGesprekken
         do {
-            _ = try await api.updateSettings(elderlyId: MockIDs.riet, settings)
+            _ = try await api.updateSettings(elderlyId: MockIDs.riet, NoahSettingsPatch(settings))
             XCTFail("a lezer must not change recording")
         } catch let error as APIError {
             XCTAssertEqual(error.code, "alleen_lezen")

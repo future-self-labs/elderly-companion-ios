@@ -350,13 +350,90 @@ extension NoahSettings {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(noahName, forKey: .noahName)
         try c.encode(voice, forKey: .voice)
-        try c.encode(speakingSpeed, forKey: .speakingSpeed)
+        try c.encode(NoahSettings.roundedSpeed(speakingSpeed), forKey: .speakingSpeed)
         try c.encode(maxConversationMinutes, forKey: .maxConversationMinutes)
         try c.encode(noContactAlertDays, forKey: .noContactAlertDays)
         try c.encode(morningCall, forKey: .morningCall)
         try c.encode(quietHours, forKey: .quietHours)
         // Never send back a value this app doesn't know.
         if recording != .unknown { try c.encode(recording, forKey: .recording) }
+    }
+}
+
+/// `PATCH /elderly/:id/settings` is partial: only what changed is sent. Re-sending an unchanged
+/// `recording` would run the server's recording checks (and write an audit entry) on every save,
+/// so one unavailable feature could block saving everything else.
+struct NoahSettingsPatch: Encodable, Equatable {
+    var noahName: String?
+    var voice: NoahVoice?
+    var speakingSpeed: Double?
+    var maxConversationMinutes: Int?
+    var noContactAlertDays: Int?
+    var morningCall: NoahSettings.MorningCall?
+    var quietHours: NoahSettings.QuietHours?
+    var recording: RecordingSetting?
+
+    init() {}
+
+    /// Every field (e.g. for tests).
+    init(_ settings: NoahSettings) {
+        self.init(from: nil, to: settings)
+    }
+
+    /// Only the fields of `new` that differ from `old` (all of them when `old` is nil).
+    init(from old: NoahSettings?, to new: NoahSettings) {
+        if new.noahName != old?.noahName { noahName = new.noahName }
+        if new.voice != old?.voice, new.voice != .unknown { voice = new.voice }
+        let speed = NoahSettings.roundedSpeed(new.speakingSpeed)
+        if old.map({ NoahSettings.roundedSpeed($0.speakingSpeed) }) != speed { speakingSpeed = speed }
+        if new.maxConversationMinutes != old?.maxConversationMinutes { maxConversationMinutes = new.maxConversationMinutes }
+        if new.noContactAlertDays != old?.noContactAlertDays { noContactAlertDays = new.noContactAlertDays }
+        if new.morningCall != old?.morningCall { morningCall = new.morningCall }
+        if new.quietHours != old?.quietHours { quietHours = new.quietHours }
+        // Never send back a value this app doesn't know.
+        if new.recording != old?.recording, new.recording != .unknown { recording = new.recording }
+    }
+
+    var isEmpty: Bool { self == NoahSettingsPatch() }
+    var changesRecording: Bool { recording != nil }
+
+    /// The patch applied to `settings` (the mock uses this like the server).
+    func applied(to settings: NoahSettings) -> NoahSettings {
+        var result = settings
+        if let noahName { result.noahName = noahName }
+        if let voice { result.voice = voice }
+        if let speakingSpeed { result.speakingSpeed = speakingSpeed }
+        if let maxConversationMinutes { result.maxConversationMinutes = maxConversationMinutes }
+        if let noContactAlertDays { result.noContactAlertDays = noContactAlertDays }
+        if let morningCall { result.morningCall = morningCall }
+        if let quietHours { result.quietHours = quietHours }
+        if let recording { result.recording = recording }
+        return result
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(noahName, forKey: .noahName)
+        try c.encodeIfPresent(voice, forKey: .voice)
+        try c.encodeIfPresent(speakingSpeed, forKey: .speakingSpeed)
+        try c.encodeIfPresent(maxConversationMinutes, forKey: .maxConversationMinutes)
+        try c.encodeIfPresent(noContactAlertDays, forKey: .noContactAlertDays)
+        try c.encodeIfPresent(morningCall, forKey: .morningCall)
+        try c.encodeIfPresent(quietHours, forKey: .quietHours)
+        try c.encodeIfPresent(recording, forKey: .recording)
+    }
+}
+
+extension NoahSettings {
+    /// The slider steps by 0.05 in floating point (0.8 + 8 × 0.05 = 1.2000000000000002), which
+    /// the server's 0.8–1.2 check rejects: always send two decimals, inside the range.
+    static func roundedSpeed(_ speed: Double) -> Double {
+        let rounded = (speed * 100).rounded() / 100
+        return min(max(rounded, speedRange.lowerBound), speedRange.upperBound)
     }
 }
 

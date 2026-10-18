@@ -44,13 +44,32 @@ struct NoahSettingsView: View {
 
     private func save() async {
         guard let id = session.selected?.id else { return }
+        let patch = NoahSettingsPatch(from: saved, to: draft)
+        guard !patch.isEmpty else { return }
         do {
-            let settings = try await session.api.updateSettings(elderlyId: id, draft)
+            let settings = try await session.api.updateSettings(elderlyId: id, patch)
             saved = settings
             draft = settings
             message = ("Opgeslagen. Noah gebruikt de nieuwe instellingen vanaf het volgende gesprek.", false)
         } catch {
-            message = (APIError.from(error).userMessage, true)
+            let apiError = APIError.from(error)
+            // Recording needs EU storage on the server; the server changed nothing. Save the rest.
+            if patch.changesRecording, apiError.status == 503 {
+                var rest = patch
+                rest.recording = nil
+                do {
+                    if !rest.isEmpty { saved = try await session.api.updateSettings(elderlyId: id, rest) }
+                    // Show what is really set: the recording choice stays as it was.
+                    draft.recording = saved?.recording ?? .uit
+                    message = (rest.isEmpty
+                        ? "Opnemen is op dit moment niet beschikbaar. Probeer het later nog eens."
+                        : "Opnemen is op dit moment niet beschikbaar. Je andere instellingen zijn wel bewaard.", true)
+                } catch {
+                    message = (APIError.from(error).userMessage, true)
+                }
+                return
+            }
+            message = (apiError.userMessage, true)
         }
     }
 }
@@ -74,7 +93,9 @@ struct NoahSettingsForm: View {
 
             NoahField(label: "Spreektempo", footnote: "Iets rustiger praten helpt vaak bij slechthorendheid.") {
                 VStack(spacing: NoahSpacing.xs) {
-                    Slider(value: $settings.speakingSpeed, in: NoahSettings.speedRange, step: 0.05) {
+                    Slider(value: Binding(get: { settings.speakingSpeed },
+                                          set: { settings.speakingSpeed = NoahSettings.roundedSpeed($0) }),
+                           in: NoahSettings.speedRange, step: 0.05) {
                         Text("Spreektempo")
                     }
                     .accessibilityValue(Text(speedLabel))

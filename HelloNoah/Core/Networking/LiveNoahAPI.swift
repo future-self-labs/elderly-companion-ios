@@ -119,8 +119,8 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("GET", "/elderly/\(esc(elderlyId))/settings", auth: .caregiver)
     }
 
-    func updateSettings(elderlyId: String, _ settings: NoahSettings) async throws -> NoahSettings {
-        try await client.send("PATCH", "/elderly/\(esc(elderlyId))/settings", body: settings, auth: .caregiver)
+    func updateSettings(elderlyId: String, _ patch: NoahSettingsPatch) async throws -> NoahSettings {
+        try await client.send("PATCH", "/elderly/\(esc(elderlyId))/settings", body: patch, auth: .caregiver)
     }
 
     // MARK: Emergency contacts

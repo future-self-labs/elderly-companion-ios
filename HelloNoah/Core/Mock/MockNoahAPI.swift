@@ -545,11 +545,18 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func updateSettings(elderlyId: String, _ newSettings: NoahSettings) async throws -> NoahSettings {
+    func updateSettings(elderlyId: String, _ patch: NoahSettingsPatch) async throws -> NoahSettings {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
-            var clamped = newSettings
+            // Like the backend: recording ≠ uit needs EU storage (`-mockRecordingUnavailable YES`).
+            if let recording = patch.recording, recording != .uit, defaults.bool(forKey: "mockRecordingUnavailable") {
+                throw fail(503, "niet_geconfigureerd", "Opnemen is op dit moment niet beschikbaar.")
+            }
+            if let speed = patch.speakingSpeed, !NoahSettings.speedRange.contains(speed) {
+                throw fail(400, "ongeldige_invoer", "Spreektempo moet tussen 0.8 en 1.2 liggen.")
+            }
+            var clamped = patch.applied(to: settingsByElderly[elderlyId] ?? .defaults)
             clamped.speakingSpeed = min(max(clamped.speakingSpeed, NoahSettings.speedRange.lowerBound), NoahSettings.speedRange.upperBound)
             clamped.maxConversationMinutes = min(max(clamped.maxConversationMinutes, 5), 30)
             clamped.noContactAlertDays = min(max(clamped.noContactAlertDays, 1), 7)

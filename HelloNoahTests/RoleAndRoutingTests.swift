@@ -78,7 +78,7 @@ final class RoleGatingTests: XCTestCase {
         }
         // …writing doesn't.
         do {
-            _ = try await api.updateSettings(elderlyId: MockIDs.riet, .defaults)
+            _ = try await api.updateSettings(elderlyId: MockIDs.riet, NoahSettingsPatch(.defaults))
             XCTFail("lezer must not change settings")
         } catch let error as APIError {
             XCTAssertEqual(error.status, 403)

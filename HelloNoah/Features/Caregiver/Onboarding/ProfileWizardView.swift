@@ -32,6 +32,8 @@ final class ProfileWizardModel: ObservableObject {
     @Published private(set) var profile: ElderlyProfile?
     @Published var people: [Person] = []
     @Published var settings = NoahSettings.defaults
+    /// What the server has after the last save in the wizard.
+    private var savedSettings: NoahSettings?
     @Published var contacts: [EmergencyContact] = []
     @Published var isWorking = false
     @Published var subscription: Subscription?
@@ -89,7 +91,14 @@ final class ProfileWizardModel: ObservableObject {
             case .about, .preferences:
                 try await saveProfile()
             case .noah:
-                if let id = profile?.id { settings = try await api.updateSettings(elderlyId: id, settings) }
+                if let id = profile?.id {
+                    // A new profile starts with the contract defaults: send only what was changed.
+                    let patch = NoahSettingsPatch(from: savedSettings ?? .defaults, to: settings)
+                    if !patch.isEmpty {
+                        settings = try await api.updateSettings(elderlyId: id, patch)
+                        savedSettings = settings
+                    }
+                }
             case .people, .contacts, .pair, .subscription:
                 break
             }

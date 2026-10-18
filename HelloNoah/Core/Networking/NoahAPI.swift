@@ -34,7 +34,8 @@ protocol NoahAPI: AnyObject {
 
     // Noah settings (§3.4)
     func settings(elderlyId: String) async throws -> NoahSettings
-    func updateSettings(elderlyId: String, _ settings: NoahSettings) async throws -> NoahSettings
+    /// Partial: send only what changed (`NoahSettingsPatch(from:to:)`).
+    func updateSettings(elderlyId: String, _ patch: NoahSettingsPatch) async throws -> NoahSettings
 
     // Emergency contacts (§3.5)
     func emergencyContacts(elderlyId: String) async throws -> [EmergencyContact]
