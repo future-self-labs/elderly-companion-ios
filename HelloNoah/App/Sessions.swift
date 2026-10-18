@@ -43,7 +43,7 @@ final class ElderSession: ObservableObject {
     }
 
     func makeConversationController() -> ConversationController {
-        ConversationController(api: api, reachability: reachability, mode: conversationMode, makeEngine: makeEngine)
+        ConversationController(api: api, reachability: reachability, mode: conversationMode, noahName: noahName, makeEngine: makeEngine)
     }
 }
 

@@ -87,6 +87,7 @@
 		CEE0B0DEA8C429DAB51457B4 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3F4840F62561FC1430034B /* AccountView.swift */; };
 		D075AFA01BF65357689EF8C5 /* RecordingPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E439E1FA96DFC6CBA33CA2 /* RecordingPlayer.swift */; };
 		D44B54C3F87854371211FA90 /* MoodOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A172D7BEE7A975B33DE4710 /* MoodOverviewView.swift */; };
+		DBAC147817F370FB8FDF8220 /* ConversationControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE27F67372E551ED93BC3F7 /* ConversationControllerTests.swift */; };
 		DBC708313CFCB01341EE242E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9354884D46541C3F0DA2F7 /* WidgetKit.framework */; };
 		DE622274CD96187060BBB1A8 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4428F576D329347D1D38592B /* MockData.swift */; };
 		E0284F1150EE5C422B66A04C /* NoahOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EAB4EB272673D153D92C369 /* NoahOrb.swift */; };
@@ -169,6 +170,7 @@
 		5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlayerViews.swift; sourceTree = "<group>"; };
 		5EF6AE8204A9DB296A02B757 /* CodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeField.swift; sourceTree = "<group>"; };
 		5F73611EFE76A07F61E8F244 /* HelloNoah.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HelloNoah.xcconfig; sourceTree = "<group>"; };
+		5FE27F67372E551ED93BC3F7 /* ConversationControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationControllerTests.swift; sourceTree = "<group>"; };
 		66EDC62D120F9A96D5C0CE51 /* HelloNoah.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HelloNoah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		67F97E64CE8569EF508A8FCD /* SubscriptionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionViews.swift; sourceTree = "<group>"; };
 		6A8ACE4415085BF7E95343B4 /* DutchFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DutchFormat.swift; sourceTree = "<group>"; };
@@ -409,6 +411,7 @@
 				2707AD9D947A501B8EC428C7 /* CodeFieldTests.swift */,
 				E07167BA140C8DBA99A7BF02 /* ContractDecodingTests.swift */,
 				7E118EA164824B2298F8AE5A /* ContractFixtures.swift */,
+				5FE27F67372E551ED93BC3F7 /* ConversationControllerTests.swift */,
 				CB7782D5731C2167EBC600DA /* FormattingTests.swift */,
 				483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */,
 				F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */,
@@ -763,6 +766,7 @@
 				884F1290F1A6150B3D97903C /* CodeFieldTests.swift in Sources */,
 				57FA521551CB7B6F5061A826 /* ContractDecodingTests.swift in Sources */,
 				4ECBD3F33933DDEF0E8A756A /* ContractFixtures.swift in Sources */,
+				DBAC147817F370FB8FDF8220 /* ConversationControllerTests.swift in Sources */,
 				F00474A8200E9642E7DAD125 /* FormattingTests.swift in Sources */,
 				8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */,
 				6A9E5213DF7E18F589A89F74 /* ProductCorrectionsTests.swift in Sources */,

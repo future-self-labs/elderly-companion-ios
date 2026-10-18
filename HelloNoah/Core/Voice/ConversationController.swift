@@ -58,33 +58,47 @@ final class ConversationController: ObservableObject {
     }
 
     private static let subtitlesKey = "elder.showsSubtitles"
+    /// How long before the maximum duration Noah is asked to round the conversation off.
+    static let wrapUpLead: TimeInterval = 60
+    /// Extra time after the maximum so Noah can finish the goodbye he is saying.
+    static let goodbyeGrace: TimeInterval = 30
+    static let wrapUpContext = "De afgesproken gesprekstijd is bijna om. Rond het gesprek in de komende minuut rustig en vriendelijk af: vat kort samen, neem warm afscheid en zeg dat je er de volgende keer graag weer bent. Begin geen nieuw onderwerp. Beëindig daarna zelf het gesprek."
+
+    /// Configurable name of Noah, for the status line.
+    let noahName: String
     private let api: NoahAPI
     private let makeEngine: () -> VoiceEngine
     private let reachability: Reachability
+    private let requestMicrophone: () async -> MicrophonePermission.State
     private var engine: VoiceEngine?
     private var maxDuration: TimeInterval = 30 * 60
+    private var wrapUpSent = false
     private var clock: Timer?
     private var startedAt: Date?
     private var cancellables = Set<AnyCancellable>()
     private var interruptionObserver: NSObjectProtocol?
 
-    init(api: NoahAPI, reachability: Reachability, mode: ConversationMode = .gesprek, makeEngine: @escaping () -> VoiceEngine) {
+    init(api: NoahAPI, reachability: Reachability, mode: ConversationMode = .gesprek, noahName: String = "Noah",
+         requestMicrophone: @escaping () async -> MicrophonePermission.State = MicrophonePermission.ensure,
+         makeEngine: @escaping () -> VoiceEngine) {
         self.api = api
         self.reachability = reachability
         self.mode = mode
+        self.noahName = noahName.isEmpty ? "Noah" : noahName
+        self.requestMicrophone = requestMicrophone
         self.makeEngine = makeEngine
         showsSubtitles = UserDefaults.standard.object(forKey: Self.subtitlesKey) as? Bool ?? true
     }
 
     var statusText: String {
         switch phase {
-        case .preparing, .connecting: return "Noah wordt gebeld…"
+        case .preparing, .connecting: return "\(noahName) wordt gebeld…"
         case .active:
             if networkLost { return "De verbinding hapert even…" }
             switch turn {
-            case .listening: return "Noah luistert"
-            case .thinking: return "Noah denkt even na"
-            case .speaking: return "Noah praat"
+            case .listening: return "\(noahName) luistert"
+            case .thinking: return "\(noahName) denkt even na"
+            case .speaking: return "\(noahName) praat"
             }
         case .ended: return "Gesprek beëindigd"
         case .failed: return "Dat lukte niet"
@@ -115,19 +129,20 @@ final class ConversationController: ObservableObject {
         reset()
         phase = .preparing
 
+        // A story (or any recording) that is still playing must not play into the conversation.
+        RecordingPlayer.pauseCurrent()
+
         guard reachability.isOnline else { return fail(.offline) }
 
-        switch MicrophonePermission.state {
-        case .denied: return fail(.micDenied)
-        case .undetermined:
-            guard await MicrophonePermission.request() else { return fail(.micDenied) }
-        case .granted: break
-        }
+        guard await requestMicrophone() == .granted else { return fail(.micDenied) }
+        // Hung up while the permission alert was showing.
+        guard !isFinished else { return }
 
         let session: ConversationSession
         do {
             session = try await api.startDeviceConversation(mode: mode)
         } catch {
+            guard !isFinished else { return }
             let apiError = APIError.from(error)
             switch apiError {
             case .server(_, "inactive", _): return fail(.inactive)
@@ -136,6 +151,8 @@ final class ConversationController: ObservableObject {
             default: return fail(.message(apiError.elderMessage))
             }
         }
+        // Hung up while the session was being prepared: don't open the microphone at all.
+        guard !isFinished, !Task.isCancelled else { return }
         if let seconds = session.maxDurationSeconds, seconds > 0 { maxDuration = TimeInterval(seconds) }
         isRecording = session.recording
 
@@ -148,9 +165,18 @@ final class ConversationController: ObservableObject {
         do {
             try await engine.start(session)
         } catch {
-            self.engine = nil
+            if self.engine === engine { self.engine = nil }
+            // Hung up while connecting: `end` already stopped the engine and closed the screen.
+            guard !isFinished, !(error is VoiceStartCancelled) else { return }
+            #if DEBUG
             NSLog("[Conversation] start failed: %@", String(describing: error))
-            return fail(reachability.isOnline ? .message("Het lukt nu even niet om Noah te bereiken. Probeert u het over een paar minuten nog eens.") : .offline)
+            #endif
+            return fail(reachability.isOnline ? .message("Het lukt nu even niet om \(noahName) te bereiken. Probeert u het over een paar minuten nog eens.") : .offline)
+        }
+        // The engine connected after a hang-up it did not notice: stop it now (mic, agent session).
+        if isFinished || Task.isCancelled {
+            await engine.stop()
+            if !isFinished { finish(.ended(.hungUp)) }
         }
     }
 
@@ -170,6 +196,11 @@ final class ConversationController: ObservableObject {
     private func handle(_ event: VoiceEvent) {
         switch event {
         case .connected:
+            // Never come back to life after a hang-up (the microphone would stay open without UI).
+            guard !isFinished, phase == .connecting else {
+                if isFinished { Task { await engine?.stop() } }
+                return
+            }
             phase = .active
             startedAt = Date()
             UIApplication.shared.isIdleTimerDisabled = true
@@ -206,12 +237,26 @@ final class ConversationController: ObservableObject {
     }
 
     private func tick() {
-        guard let startedAt else { return }
+        guard let startedAt, phase == .active else { return }
         elapsed = Date().timeIntervalSince(startedAt)
-        isNearMaxDuration = maxDuration - elapsed <= 60
-        if elapsed >= maxDuration {
+        isNearMaxDuration = maxDuration - elapsed <= Self.wrapUpLead
+        // Never cut Noah off mid-sentence: a minute before the end Noah is asked to say goodbye
+        // (and normally ends the call himself); only after a short grace period do we hang up.
+        if isNearMaxDuration, !wrapUpSent {
+            wrapUpSent = true
+            let engine = self.engine
+            Task { await engine?.sendContext(Self.wrapUpContext) }
+        }
+        if Self.shouldEndForMaxDuration(elapsed: elapsed, maxDuration: maxDuration, turn: turn) {
             Task { await end(.maxDuration) }
         }
+    }
+
+    /// At the maximum duration, wait while Noah is still talking (the goodbye), up to the grace period.
+    nonisolated static func shouldEndForMaxDuration(elapsed: TimeInterval, maxDuration: TimeInterval, turn: VoiceTurn) -> Bool {
+        guard elapsed >= maxDuration else { return false }
+        if turn == .speaking, elapsed < maxDuration + goodbyeGrace { return false }
+        return true
     }
 
     private func end(_ kind: EndKind) async {
@@ -222,6 +267,7 @@ final class ConversationController: ObservableObject {
     }
 
     private func fail(_ failure: Failure) {
+        guard !isFinished else { return }
         finish(.failed(failure))
     }
 
@@ -245,6 +291,8 @@ final class ConversationController: ObservableObject {
         networkLost = false
         isNearMaxDuration = false
         isRecording = false
+        wrapUpSent = false
+        startedAt = nil
         engine = nil
     }
 

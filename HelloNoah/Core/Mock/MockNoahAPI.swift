@@ -1033,7 +1033,8 @@ final class MockNoahAPI: NoahAPI {
                 conversationToken: "mock-conversation-token",
                 dynamicVariables: ["user_name": .string(profiles[id]?.preferredName ?? "Wim"), "session_claim": .string("mock")],
                 overrides: nil,
-                maxDurationSeconds: minutes * 60,
+                // `-mockMaxDurationSeconds 75` shortens sessions to try the calm goodbye at the end.
+                maxDurationSeconds: defaults.integer(forKey: "mockMaxDurationSeconds") > 0 ? defaults.integer(forKey: "mockMaxDurationSeconds") : minutes * 60,
                 mode: mode,
                 recording: recording
             )

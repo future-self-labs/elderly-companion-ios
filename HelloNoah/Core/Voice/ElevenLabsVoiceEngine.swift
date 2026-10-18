@@ -30,11 +30,19 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
     private var levelTimer: Timer?
     private var endedLocally = false
     private var didReportEnd = false
+    /// `stop()` was called; a session that is still connecting must be ended as soon as it exists.
+    private var stopRequested = false
 
     func start(_ session: ConversationSession) async throws {
+        guard !stopRequested else { throw VoiceStartCancelled() }
         // We own the audio session (voice chat + speaker); LiveKit must not reconfigure it.
         AudioManager.shared.audioSession.isAutomaticConfigurationEnabled = false
-        try ConversationAudioSession.activate()
+        do {
+            try ConversationAudioSession.activate()
+        } catch {
+            cleanup()
+            throw error
+        }
 
         var config = ConversationConfig()
         if let variables = session.dynamicVariables {
@@ -52,18 +60,38 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
         }
         let vad = vadScore
         config.onVadScore = { score in vad.update(score) }
-        config.onDisconnect = { [weak self] reason in
-            Task { @MainActor in
-                guard let self else { return }
-                switch reason {
-                case .user: self.reportEnd(.local)
-                case .agent: self.reportEnd(.agent)
-                case .error: self.reportEnd(.connectionLost)
+
+        let conversation: Conversation
+        do {
+            // `onDisconnect` must be passed here: this entry point overwrites `config.onDisconnect`.
+            conversation = try await ElevenLabs.startConversation(
+                conversationToken: session.conversationToken,
+                config: config,
+                onDisconnect: { [weak self] reason in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        switch reason {
+                        case .user: self.reportEnd(.local)
+                        case .agent: self.reportEnd(self.endedLocally ? .local : .agent)
+                        case .error: self.reportEnd(.connectionLost)
+                        }
+                    }
                 }
-            }
+            )
+        } catch {
+            // Connecting failed: give the audio session back (other apps, the recording player).
+            cleanup()
+            if stopRequested { throw VoiceStartCancelled() }
+            throw error
         }
 
-        let conversation = try await ElevenLabs.startConversation(conversationToken: session.conversationToken, config: config)
+        // Hung up while connecting: end the session that just came up, never report it connected.
+        if stopRequested || Task.isCancelled {
+            await conversation.endConversation()
+            cleanup()
+            throw VoiceStartCancelled()
+        }
+
         self.conversation = conversation
         observe(conversation)
 
@@ -88,9 +116,15 @@ final class ElevenLabsVoiceEngine: VoiceEngine {
 
     func stop() async {
         endedLocally = true
+        stopRequested = true
+        let conversation = self.conversation
         await conversation?.endConversation()
         cleanup()
         reportEnd(.local)
+    }
+
+    func sendContext(_ text: String) async {
+        try? await conversation?.updateContext(text)
     }
 
     private func observe(_ conversation: Conversation) {

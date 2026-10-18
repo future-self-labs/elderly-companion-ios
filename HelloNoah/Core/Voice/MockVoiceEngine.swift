@@ -8,6 +8,11 @@ final class MockVoiceEngine: VoiceEngine {
 
     private var task: Task<Void, Never>?
     private var lines: [SubtitleLine] = []
+    private var stopRequested = false
+    private var wrapUpRequested = false
+    private var name = "Wim"
+    /// How long "connecting" takes (tests use 0).
+    var connectDelay: TimeInterval = 1.2
 
     private enum Step {
         case noah(String, seconds: Double)
@@ -49,18 +54,27 @@ final class MockVoiceEngine: VoiceEngine {
     }
 
     func start(_ session: ConversationSession) async throws {
-        try await Task.sleep(nanoseconds: 1_200_000_000)
-        let name = session.dynamicVariables?["user_name"]?.stringValue ?? "Wim"
+        // Like the real engine: connecting takes a moment and a hang-up meanwhile wins.
+        // (Not `Task.sleep(…)` with `try`: the SwiftUI task may be cancelled, the session must still end cleanly.)
+        try? await Task.sleep(nanoseconds: UInt64(connectDelay * 1_000_000_000))
+        if stopRequested || Task.isCancelled { throw VoiceStartCancelled() }
+        name = session.dynamicVariables?["user_name"]?.stringValue ?? "Wim"
         onEvent?(.connected)
         let steps = script(name: name, mode: session.mode, recording: session.recording)
         task = Task { [weak self] in
             for step in steps {
                 guard !Task.isCancelled, let self else { return }
+                if self.wrapUpRequested { break }
                 await self.play(step)
             }
-            // Then just listen quietly until hung up.
+            // Then just listen quietly until hung up, or say goodbye when asked to round off.
             while !Task.isCancelled {
                 guard let self else { return }
+                if self.wrapUpRequested {
+                    await self.play(.noah("Ik merk dat we al een hele tijd praten, \(self.name). Het was heel fijn. Zullen we het hier voor nu bij laten? Tot de volgende keer!", seconds: 6))
+                    if !Task.isCancelled { self.onEvent?(.ended(.agent)) }
+                    return
+                }
                 self.onEvent?(.turn(.listening))
                 await self.levels(agent: false, user: true, seconds: 1, quiet: true)
             }
@@ -68,9 +82,14 @@ final class MockVoiceEngine: VoiceEngine {
     }
 
     func stop() async {
+        stopRequested = true
         task?.cancel()
         task = nil
         onEvent?(.ended(.local))
+    }
+
+    func sendContext(_ text: String) async {
+        wrapUpRequested = true
     }
 
     private func play(_ step: Step) async {

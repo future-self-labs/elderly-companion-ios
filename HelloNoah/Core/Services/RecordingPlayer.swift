@@ -3,8 +3,10 @@ import Combine
 import Foundation
 
 /// Plays one recorded conversation (v2.1). The signed URL (valid ~15 min) is fetched when the
-/// person taps play, and fetched again when it expired: on resume after a long pause, or when
-/// playback fails (an expired URL answers 403). Only one recording plays at a time.
+/// person taps play, and fetched again when it expired: on resume after a long pause, when
+/// playback fails or stalls after `expiresAt`, or when the server answers `403 link_verlopen`
+/// (seen in the item's error log). The shown state follows the player's real state (a phone
+/// call pauses it). Only one recording plays at a time.
 @MainActor
 final class RecordingPlayer: ObservableObject {
     enum State: Equatable {
@@ -33,6 +35,14 @@ final class RecordingPlayer: ObservableObject {
 
     /// The player that is playing now; starting another one pauses it.
     private static weak var current: RecordingPlayer?
+    private var interruptionObserver: NSObjectProtocol?
+    private var resumeAfterInterruption = false
+    private var lastLinkRefresh: Date?
+
+    /// Pauses whatever recording is playing (a conversation with Noah is about to start).
+    static func pauseCurrent() {
+        current?.pause()
+    }
 
     init(startSeconds: Double? = nil, durationHint: Double? = nil, fetch: @escaping () async throws -> ConversationAudio) {
         self.startSeconds = max(0, startSeconds ?? 0)
@@ -80,8 +90,9 @@ final class RecordingPlayer: ObservableObject {
     }
 
     func pause() {
+        resumeAfterInterruption = false
         player?.pause()
-        if state == .playing { state = .paused }
+        if state == .playing || state == .loading { state = .paused }
     }
 
     func seek(to seconds: Double) {
@@ -92,6 +103,8 @@ final class RecordingPlayer: ObservableObject {
 
     /// Stops and releases the player (screen closed).
     func stop() {
+        if let interruptionObserver { NotificationCenter.default.removeObserver(interruptionObserver) }
+        interruptionObserver = nil
         teardown()
         if state == .playing || state == .loading { state = .paused }
         if Self.current === self {
@@ -126,6 +139,7 @@ final class RecordingPlayer: ObservableObject {
         claimPlayback()
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
         try? AVAudioSession.sharedInstance().setActive(true)
+        observeInterruptions()
 
         let item = AVPlayerItem(url: url)
         let player = AVPlayer(playerItem: item)
@@ -173,10 +187,82 @@ final class RecordingPlayer: ObservableObject {
             .sink { [weak self] _ in self?.playbackFailed() }
             .store(in: &observers)
 
+        // A stall after the link expired is an expired link (the next Range request answers 403).
+        NotificationCenter.default.publisher(for: .AVPlayerItemPlaybackStalled, object: item)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self, Self.needsFreshURL(expiresAt: self.audio?.expiresAt, now: Date(), margin: 0) else { return }
+                self.refreshExpiredLink()
+            }
+            .store(in: &observers)
+
+        // `403 link_verlopen` shows up in the access/error log before (or instead of) a failure.
+        NotificationCenter.default.publisher(for: .AVPlayerItemNewErrorLogEntry, object: item)
+            .receive(on: RunLoop.main)
+            .sink { [weak self, weak item] _ in
+                guard let self, let item, let event = item.errorLog()?.events.last,
+                      Self.isExpiredLinkStatus(event.errorStatusCode) else { return }
+                self.refreshExpiredLink()
+            }
+            .store(in: &observers)
+
+        // Keep the shown state in line with what the player really does (route change, Siri,
+        // another app taking the audio).
+        player.publisher(for: \.timeControlStatus)
+            .receive(on: RunLoop.main)
+            .sink { [weak self, weak player] status in
+                guard let self, let player, self.player === player else { return }
+                if status == .paused, self.state == .playing { self.state = .paused }
+                if status == .playing, self.state == .paused { self.state = .playing }
+            }
+            .store(in: &observers)
+
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main) { [weak self] time in
             Task { @MainActor in
                 guard let self, self.state == .playing, time.seconds.isFinite else { return }
                 self.position = time.seconds
+            }
+        }
+    }
+
+    nonisolated static func isExpiredLinkStatus(_ status: Int) -> Bool { status == 403 || status == 410 }
+
+    /// The signed link ran out mid-stream: fetch a fresh one and continue where we were.
+    private func refreshExpiredLink() {
+        guard state == .playing || state == .loading else { return }
+        // A fresh link that is refused at once is not an expiry: fall back to the one-shot retry.
+        if let last = lastLinkRefresh, Date().timeIntervalSince(last) < 30 { return playbackFailed() }
+        lastLinkRefresh = Date()
+        retriedWithFreshURL = false
+        playbackFailed()
+    }
+
+    /// A phone call (or another app) took the audio: show "paused", and continue afterwards
+    /// when iOS says we may.
+    private func observeInterruptions() {
+        guard interruptionObserver == nil else { return }
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+            let options = (notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt).map(AVAudioSession.InterruptionOptions.init(rawValue:)) ?? []
+            Task { @MainActor in
+                guard let self, Self.current === self else { return }
+                switch type {
+                case .began:
+                    let wasPlaying = self.state == .playing
+                    self.player?.pause()
+                    if wasPlaying { self.state = .paused }
+                    self.resumeAfterInterruption = wasPlaying
+                case .ended:
+                    if self.resumeAfterInterruption, options.contains(.shouldResume) {
+                        self.resumeAfterInterruption = false
+                        await self.togglePlayback()
+                    }
+                @unknown default:
+                    break
+                }
             }
         }
     }

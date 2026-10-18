@@ -35,12 +35,25 @@ enum VoiceEvent {
 }
 
 /// A live voice session. `ElevenLabsVoiceEngine` in production, `MockVoiceEngine` in mock mode.
+///
+/// `stop()` may be called at any time, also while `start` is still connecting: the engine must
+/// then end the session as soon as it exists and must not report `.connected`.
 @MainActor
 protocol VoiceEngine: AnyObject {
     var onEvent: ((VoiceEvent) -> Void)? { get set }
     func start(_ session: ConversationSession) async throws
     func stop() async
+    /// Background information for the agent that it does not answer out loud (an ElevenLabs
+    /// contextual update), e.g. "round the conversation off".
+    func sendContext(_ text: String) async
 }
+
+extension VoiceEngine {
+    func sendContext(_ text: String) async {}
+}
+
+/// The engine was stopped (hung up) before the session finished connecting.
+struct VoiceStartCancelled: Error {}
 
 /// The audio session for a Noah conversation: play-and-record, voice-chat mode (Apple's echo
 /// cancellation), loudspeaker by default (older people rarely hold the phone to their ear),
@@ -81,6 +94,14 @@ enum MicrophonePermission {
         case .granted: return .granted
         case .denied: return .denied
         default: return .undetermined
+        }
+    }
+
+    /// The current permission, asking once when it was never asked.
+    static func ensure() async -> State {
+        switch state {
+        case .undetermined: return await request() ? .granted : .denied
+        case let known: return known
         }
     }
 
