@@ -23,11 +23,21 @@ struct ElderHomeView: View {
                 if !reachability.isOnline {
                     NoahNotice(kind: .warning, text: "Er is nu geen internet. Praten met \(session.noahName) lukt weer zodra de verbinding terug is.", large: true)
                 }
-                if session.justPaired {
+                if let arrival = session.arrivalMessage {
+                    NoahNotice(kind: .success, text: arrival, large: true)
+                        .accessibilityIdentifier("elder.arrival")
+                } else if session.justPaired {
                     NoahNotice(kind: .success, text: "Gelukt! Deze telefoon is gekoppeld. U kunt nu met \(session.noahName) praten.", large: true)
                 }
                 if session.me.value?.access == .inactive {
-                    NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Vraag uw mantelzorger om hulp.", large: true)
+                    if session.isSelfManaged {
+                        // v2.3: no family to ask; the subscription is one tap away.
+                        NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Met een abonnement kunt u weer praten.", large: true,
+                                   actionTitle: "Abonnement starten") { path.append(.settingsSubscription) }
+                            .accessibilityIdentifier("elder.inactiveSelf")
+                    } else {
+                        NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Vraag uw mantelzorger om hulp.", large: true)
+                    }
                 }
                 if case .failed(let error) = session.me {
                     NoahNotice(kind: .warning, text: error.elderMessage, large: true, actionTitle: "Opnieuw proberen") {
@@ -88,9 +98,10 @@ struct ElderHomeView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, NoahSpacing.s)
         .contentShape(Rectangle())
-        // Hidden: caregivers can long-press the greeting for settings (unpairing).
-        .onLongPressGesture(minimumDuration: 2) { showsHelp = true }
-        .accessibilityAction(named: Text("Instellingen voor de mantelzorger")) { showsHelp = true }
+        // Hidden: caregivers can long-press the greeting for settings (unpairing). A self-managed
+        // profile has its own "Instellingen" instead (v2.3).
+        .onLongPressGesture(minimumDuration: 2) { if !session.isSelfManaged { showsHelp = true } }
+        .accessibilityAction(named: Text("Instellingen voor de mantelzorger")) { if !session.isSelfManaged { showsHelp = true } }
     }
 
     private var greeting: String {
@@ -102,6 +113,7 @@ struct ElderHomeView: View {
         let diameter = min(orbSize, 300)
         return Button {
             session.justPaired = false
+            session.arrivalMessage = nil
             session.requestConversation()
         } label: {
             ZStack {
@@ -131,6 +143,7 @@ struct ElderHomeView: View {
     private var storyButton: some View {
         Button {
             session.justPaired = false
+            session.arrivalMessage = nil
             session.requestConversation(mode: .levensverhaal)
         } label: {
             NoahButtonLabel(title: "Vertel een verhaal", systemImage: "quote.bubble.fill", iconTint: NoahColor.accent)
@@ -204,6 +217,12 @@ struct ElderHomeView: View {
                 .accessibilityIdentifier("elder.myStory")
             ElderTileButton(title: "Herinneringen", systemImage: "bell.fill") { path.append(.reminders) }
                 .accessibilityIdentifier("elder.reminders")
+            if session.isSelfManaged {
+                // v2.3: one calm entry, at the bottom, for people who manage Noah themselves.
+                ElderTileButton(title: "Instellingen", systemImage: "gearshape.fill", iconTint: NoahColor.textSoft) { path.append(.settings) }
+                    .padding(.top, NoahSpacing.m)
+                    .accessibilityIdentifier("elder.settings")
+            }
         }
     }
 
@@ -228,26 +247,33 @@ struct ElderHomeView: View {
 struct ElderTileButton: View {
     let title: LocalizedStringKey
     let systemImage: String
+    var iconTint: Color = NoahColor.accent
     let action: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: NoahSpacing.m) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundColor(NoahColor.accent)
-                    .frame(width: 40)
-                    .accessibilityHidden(true)
-                Text(title)
-                    .font(NoahFont.Elder.bodyStrong)
-                    .foregroundColor(NoahColor.text)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(NoahFont.Elder.label)
-                    .foregroundColor(NoahColor.textSecondary)
-                    .accessibilityHidden(true)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    // Icon above the title and no chevron: long single words ("Noodcontacten",
+                    // "Herinneringen") get the full width and never break mid-word.
+                    VStack(alignment: .leading, spacing: NoahSpacing.s) {
+                        icon
+                        label.dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(spacing: NoahSpacing.m) {
+                        icon
+                        label
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(NoahFont.Elder.label)
+                            .foregroundColor(NoahColor.textSecondary)
+                            .accessibilityHidden(true)
+                    }
+                }
             }
             .padding(.horizontal, NoahSpacing.l)
             .padding(.vertical, NoahSpacing.m)
@@ -257,6 +283,22 @@ struct ElderTileButton: View {
             .contentShape(RoundedRectangle(cornerRadius: NoahRadius.large))
         }
         .buttonStyle(.plain)
+    }
+
+    private var icon: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 30, weight: .semibold))
+            .foregroundColor(iconTint)
+            .frame(width: 40, alignment: .leading)
+            .accessibilityHidden(true)
+    }
+
+    private var label: some View {
+        Text(title)
+            .font(NoahFont.Elder.bodyStrong)
+            .foregroundColor(NoahColor.text)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

@@ -203,4 +203,11 @@ extension View {
     func noahElderTitleScaling() -> some View {
         dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
+
+    /// Whole older-person screens built on the 22 pt elder type (sign-up, settings): beyond
+    /// accessibility size 2 long Dutch words ("telefoonnummer", "Bijvoorbeeld") break mid-word on a
+    /// phone. Text stays far larger than the system default.
+    func noahElderScreenScaling() -> some View {
+        dynamicTypeSize(...DynamicTypeSize.accessibility2)
+    }
 }

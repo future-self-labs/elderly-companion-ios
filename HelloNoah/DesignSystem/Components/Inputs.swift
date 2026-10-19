@@ -5,26 +5,30 @@ struct NoahField<Content: View>: View {
     let label: LocalizedStringKey
     var footnote: LocalizedStringKey?
     var error: String?
+    /// The older person's interface: bigger label, footnote and error.
+    var large = false
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoahSpacing.xs) {
             Text(label)
-                .font(NoahFont.semibold(15, relativeTo: .subheadline))
-                .foregroundColor(NoahColor.textSoft)
+                .font(large ? NoahFont.Elder.bodyStrong : NoahFont.semibold(15, relativeTo: .subheadline))
+                .foregroundColor(large ? NoahColor.text : NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
             content()
             if let error {
                 Label {
                     Text(verbatim: error)
+                        .fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     Image(systemName: "exclamationmark.circle.fill")
                 }
-                .font(NoahFont.footnote)
+                .font(large ? NoahFont.Elder.label : NoahFont.footnote)
                 .foregroundColor(NoahColor.dangerText)
             } else if let footnote {
                 Text(footnote)
-                    .font(NoahFont.footnote)
-                    .foregroundColor(NoahColor.textSecondary)
+                    .font(large ? NoahFont.Elder.label : NoahFont.footnote)
+                    .foregroundColor(large ? NoahColor.textSoft : NoahColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -35,14 +39,15 @@ struct NoahField<Content: View>: View {
 struct NoahInputBox: ViewModifier {
     var isFocused = false
     var hasError = false
+    var large = false
 
     func body(content: Content) -> some View {
         content
-            .font(NoahFont.bodyText)
+            .font(large ? NoahFont.Elder.body : NoahFont.bodyText)
             .foregroundColor(NoahColor.text)
             .padding(.horizontal, NoahSpacing.m)
             .padding(.vertical, NoahSpacing.s)
-            .frame(minHeight: NoahSize.button)
+            .frame(minHeight: large ? NoahSize.elderButton : NoahSize.button)
             .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(NoahColor.surface))
             .overlay(
                 RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous)
@@ -52,8 +57,8 @@ struct NoahInputBox: ViewModifier {
 }
 
 extension View {
-    func noahInputBox(isFocused: Bool = false, hasError: Bool = false) -> some View {
-        modifier(NoahInputBox(isFocused: isFocused, hasError: hasError))
+    func noahInputBox(isFocused: Bool = false, hasError: Bool = false, large: Bool = false) -> some View {
+        modifier(NoahInputBox(isFocused: isFocused, hasError: hasError, large: large))
     }
 }
 
@@ -90,6 +95,8 @@ struct NoahTextField: View {
     var contentType: UITextContentType?
     var autocapitalization: NoahCapitalization = .sentences
     var multiline = false
+    /// The older person's interface: 22 pt text in a 76 pt box.
+    var large = false
 
     @FocusState private var multilineFocused: Bool
     @State private var singleLineFocused = false
@@ -99,7 +106,7 @@ struct NoahTextField: View {
     }
 
     var body: some View {
-        NoahField(label: label, footnote: footnote, error: error) {
+        NoahField(label: label, footnote: footnote, error: error, large: large) {
             if multiline {
                 TextField(label, text: $text, prompt: prompt.map { Text($0) }, axis: .vertical)
                     .lineLimit(3...10)
@@ -108,7 +115,7 @@ struct NoahTextField: View {
                     .textInputAutocapitalization(autocapitalization.swiftUI)
                     .autocorrectionDisabled(noAutocorrect)
                     .focused($multilineFocused)
-                    .noahInputBox(isFocused: multilineFocused, hasError: error != nil)
+                    .noahInputBox(isFocused: multilineFocused, hasError: error != nil, large: large)
                     .accessibilityHint(footnote.map { Text($0) } ?? Text(""))
             } else {
                 // UIKit-backed: the text field owns its text, so fast typing, key bursts and
@@ -119,19 +126,20 @@ struct NoahTextField: View {
                     keyboard: keyboard,
                     contentType: contentType,
                     autocapitalization: autocapitalization.uiKit,
-                    autocorrection: noAutocorrect ? .no : .default
+                    autocorrection: noAutocorrect ? .no : .default,
+                    pointSize: large ? 22 : 17
                 )
                 .overlay(alignment: .leading) {
                     if text.isEmpty, let prompt {
                         Text(prompt)
-                            .font(NoahFont.bodyText)
+                            .font(large ? NoahFont.Elder.body : NoahFont.bodyText)
                             .foregroundColor(NoahColor.textSecondary.opacity(0.75))
                             .lineLimit(1)
                             .allowsHitTesting(false)
                             .accessibilityHidden(true)
                     }
                 }
-                .noahInputBox(isFocused: singleLineFocused, hasError: error != nil)
+                .noahInputBox(isFocused: singleLineFocused, hasError: error != nil, large: large)
                 .accessibilityLabel(Text(label))
                 .accessibilityHint(footnote.map { Text($0) } ?? Text(""))
             }
@@ -147,12 +155,13 @@ struct NoahSingleLineField: UIViewRepresentable {
     var contentType: UITextContentType?
     var autocapitalization: UITextAutocapitalizationType
     var autocorrection: UITextAutocorrectionType
+    var pointSize: CGFloat = 17
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeUIView(context: Context) -> UITextField {
         let field = UITextField()
-        let base = UIFont(name: NoahFontFamily.body, size: 17) ?? .preferredFont(forTextStyle: .body)
+        let base = UIFont(name: NoahFontFamily.body, size: pointSize) ?? .preferredFont(forTextStyle: .body)
         field.font = UIFontMetrics(forTextStyle: .body).scaledFont(for: base)
         field.adjustsFontForContentSizeCategory = true
         field.textColor = UIColor(NoahColor.text)
@@ -268,30 +277,33 @@ struct NoahOptionCard: View {
     let title: String
     var subtitle: String?
     let isSelected: Bool
+    /// The older person's interface: bigger text, ≥ 76 pt tall.
+    var large = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: NoahSpacing.s) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .font(NoahFont.title3)
+                    .font(large ? NoahFont.Elder.title2 : NoahFont.title3)
                     .foregroundColor(isSelected ? NoahColor.accent : NoahColor.textSecondary)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: NoahSpacing.xxs) {
                     Text(verbatim: title)
-                        .font(NoahFont.bodyStrong)
+                        .font(large ? NoahFont.Elder.bodyStrong : NoahFont.bodyStrong)
                         .foregroundColor(NoahColor.text)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let subtitle {
                         Text(verbatim: subtitle)
-                            .font(NoahFont.subheadline)
-                            .foregroundColor(NoahColor.textSecondary)
+                            .font(large ? NoahFont.Elder.label : NoahFont.subheadline)
+                            .foregroundColor(large ? NoahColor.textSoft : NoahColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Spacer(minLength: 0)
             }
-            .padding(NoahSpacing.m)
-            .frame(minHeight: NoahSize.button)
+            .padding(large ? NoahSpacing.l : NoahSpacing.m)
+            .frame(minHeight: large ? NoahSize.elderButton : NoahSize.button)
             .background(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).fill(isSelected ? NoahColor.accentGlow : NoahColor.surface))
             .overlay(RoundedRectangle(cornerRadius: NoahRadius.medium, style: .continuous).strokeBorder(isSelected ? NoahColor.accent : NoahColor.border, lineWidth: isSelected ? 2 : 1))
             .contentShape(Rectangle())

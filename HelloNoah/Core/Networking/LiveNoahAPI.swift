@@ -45,6 +45,14 @@ final class LiveNoahAPI: NoahAPI {
         return try await client.send("POST", "/devices/pair", body: Body(code: code, deviceName: deviceName, platform: "ios"), auth: .none)
     }
 
+    func startElderSignUp(phoneNumber: String, channel: PhoneVerificationChannel) async throws {
+        try await client.sendVoid("POST", "/auth/elderly/phone/start", body: ElderSignUpStartRequest(phoneNumber: phoneNumber, channel: channel), auth: .none)
+    }
+
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse {
+        try await client.send("POST", "/auth/elderly/phone/verify", body: request, auth: .none)
+    }
+
     // MARK: Me
 
     func me() async throws -> MeResponse {
@@ -319,5 +327,69 @@ final class LiveNoahAPI: NoahAPI {
 
     func unpairThisDevice() async throws {
         try await client.sendVoid("POST", "/device/unpair", auth: .device)
+    }
+
+    // MARK: Device, self-managed profiles (v2.3)
+
+    func deviceProfile() async throws -> DeviceProfile {
+        try await client.send("GET", "/device/profile", auth: .device)
+    }
+
+    func updateDeviceProfile(_ patch: DeviceProfilePatch) async throws -> DeviceProfile {
+        try await client.send("PATCH", "/device/profile", body: patch, auth: .device)
+    }
+
+    func deviceSettings() async throws -> NoahSettings {
+        try await client.send("GET", "/device/settings", auth: .device)
+    }
+
+    func updateDeviceSettings(_ patch: NoahSettingsPatch) async throws -> NoahSettings {
+        try await client.send("PATCH", "/device/settings", body: patch, auth: .device)
+    }
+
+    func deviceEmergencyContacts() async throws -> [EmergencyContact] {
+        let response: ItemsResponse<EmergencyContact> = try await client.send("GET", "/device/emergency-contacts", auth: .device)
+        return response.items.sorted { $0.priority < $1.priority }
+    }
+
+    func createDeviceEmergencyContact(_ input: EmergencyContactInput) async throws -> EmergencyContact {
+        try await client.send("POST", "/device/emergency-contacts", body: input, auth: .device)
+    }
+
+    func updateDeviceEmergencyContact(contactId: String, _ input: EmergencyContactInput) async throws -> EmergencyContact {
+        try await client.send("PATCH", "/device/emergency-contacts/\(esc(contactId))", body: input, auth: .device)
+    }
+
+    func deleteDeviceEmergencyContact(contactId: String) async throws {
+        try await client.sendVoid("DELETE", "/device/emergency-contacts/\(esc(contactId))", auth: .device)
+    }
+
+    func deviceSubscription() async throws -> Subscription {
+        try await client.send("GET", "/device/subscription", auth: .device)
+    }
+
+    func submitDeviceAppStoreTransaction(signedTransaction: String) async throws -> Subscription {
+        try await client.send("POST", "/device/subscriptions/app-store", body: ["signedTransaction": signedTransaction], auth: .device)
+    }
+
+    func createDeviceInvitation(role: Role) async throws -> Invitation {
+        try await client.send("POST", "/device/invitations", body: ["role": role.rawValue], auth: .device)
+    }
+
+    func deviceCaregivers() async throws -> [CaregiverMembership] {
+        let response: ItemsResponse<CaregiverMembership> = try await client.send("GET", "/device/caregivers", auth: .device)
+        return response.items
+    }
+
+    func removeDeviceCaregiver(caregiverId: String) async throws {
+        try await client.sendVoid("DELETE", "/device/caregivers/\(esc(caregiverId))", auth: .device)
+    }
+
+    func exportDevice() async throws -> Data {
+        try await client.sendData("GET", "/device/export", auth: .device)
+    }
+
+    func deleteDeviceAccount() async throws {
+        try await client.sendVoid("DELETE", "/device/account", body: ["confirm": "VERWIJDER"], auth: .device)
     }
 }

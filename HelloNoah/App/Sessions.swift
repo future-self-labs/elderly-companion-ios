@@ -7,9 +7,14 @@ import SwiftUI
 final class ElderSession: ObservableObject {
     let api: NoahAPI
     let reachability: Reachability
+    let subscriptions: SubscriptionStore
     private let makeEngine: () -> VoiceEngine
+    private let defaults: UserDefaults
 
     @Published private(set) var me: Loadable<DeviceMe> = .idle
+    /// v2.3 `GET /device/profile`: tells whether the older person manages the profile themselves.
+    /// nil until loaded (or on an older backend): then nobody sees the self-managed settings.
+    @Published private(set) var profile: DeviceProfile?
     /// Set when a conversation should open (big button, widget, `hellonoah://praat`).
     @Published var isConversationPresented = false
     /// What the next conversation is: "Praat met Noah" or "Vertel een verhaal" (v2.1).
@@ -17,24 +22,93 @@ final class ElderSession: ObservableObject {
     /// Opened by a link from outside the app: wait for a tap before the microphone starts (M11).
     @Published private(set) var conversationNeedsConfirmation = false
     @Published var justPaired = false
+    /// A calm one-off line on the home screen ("Welkom terug", "Alles staat klaar").
+    @Published var arrivalMessage: String?
+    /// v2.3: a new self-managed profile still walks through name, voice, emergency contact and
+    /// subscription. Kept across launches, so a closed app resumes where it was.
+    @Published private(set) var isOnboarding: Bool
 
-    init(api: NoahAPI, reachability: Reachability, makeEngine: @escaping () -> VoiceEngine) {
+    static let onboardingKey = "elder.selfOnboardingPending"
+
+    init(api: NoahAPI, reachability: Reachability, subscriptions: SubscriptionStore, defaults: UserDefaults = .standard,
+         makeEngine: @escaping () -> VoiceEngine) {
         self.api = api
         self.reachability = reachability
+        self.subscriptions = subscriptions
+        self.defaults = defaults
         self.makeEngine = makeEngine
+        isOnboarding = defaults.bool(forKey: Self.onboardingKey)
+        configureSubscriptions()
     }
 
-    var name: String { me.value?.elderly.preferredName ?? "" }
+    var name: String { profile?.preferredName.nilIfEmpty ?? me.value?.elderly.preferredName ?? "" }
     var noahName: String { me.value?.elderly.noahName ?? "Noah" }
+    var elderlyId: String? { me.value?.elderly.id ?? profile?.id }
+    /// The older person manages everything themselves: show "Instellingen" (v2.3).
+    var isSelfManaged: Bool {
+        if let profile { return profile.isSelfManaged }
+        return me.value?.resolvedManagedBy == .zelf
+    }
 
     func load() async {
         if me.value == nil { me = .loading }
+        async let profileResult = try? api.deviceProfile()
         do {
             me = .loaded(try await api.deviceMe())
         } catch {
             let apiError = APIError.from(error)
-            if apiError == .cancelled { return }
-            if me.value == nil { me = .failed(apiError) }
+            if apiError != .cancelled, me.value == nil { me = .failed(apiError) }
+        }
+        if let loaded = await profileResult { profile = loaded }
+        configureSubscriptions()
+    }
+
+    /// Settings changed the name or "u"/"jij".
+    func didUpdate(profile: DeviceProfile) {
+        var merged = profile
+        if merged.id == nil { merged.id = self.profile?.id }
+        self.profile = merged
+    }
+
+    func startOnboarding() {
+        defaults.set(true, forKey: Self.onboardingKey)
+        isOnboarding = true
+    }
+
+    func finishOnboarding() {
+        defaults.removeObject(forKey: Self.onboardingKey)
+        isOnboarding = false
+        arrivalMessage = "Alles staat klaar. Tik op de grote knop om met \(noahName) te praten."
+        Task { await load() }
+    }
+
+    static func clearOnboarding(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: onboardingKey)
+    }
+
+    /// Purchases on this phone go to the device endpoint, and only for this person's own profile:
+    /// the same Apple ID may pay for other people elsewhere, those transactions are left alone.
+    private func configureSubscriptions() {
+        subscriptions.audience = .elder
+        subscriptions.redeemsOnlyKnownProfiles = true
+        let selfId = isSelfManaged ? elderlyId : nil
+        subscriptions.knownElderlyIds = selfId.map { [$0] } ?? []
+        subscriptions.knownElderlyNames = selfId.map { [$0.lowercased(): name] } ?? [:]
+        guard selfId != nil else {
+            // Caregiver-managed: the family pays; nothing is redeemed from this phone.
+            subscriptions.submit = nil
+            subscriptions.hasActiveAppStoreSubscription = nil
+            return
+        }
+        subscriptions.submit = { [weak self] _, jws in
+            guard let self else { throw APIError.cancelled }
+            let subscription = try await self.api.submitDeviceAppStoreTransaction(signedTransaction: jws)
+            await self.load()
+            return subscription
+        }
+        subscriptions.hasActiveAppStoreSubscription = { [weak self] in
+            guard let self, let subscription = try? await self.api.deviceSubscription() else { return false }
+            return subscription.isPaidOrBeta && subscription.platform == "app_store" && subscription.paidByMe != false
         }
     }
 
@@ -48,7 +122,15 @@ final class ElderSession: ObservableObject {
     }
 
     func makeConversationController() -> ConversationController {
-        ConversationController(api: api, reachability: reachability, mode: conversationMode, noahName: noahName, makeEngine: makeEngine)
+        ConversationController(api: api, reachability: reachability, mode: conversationMode, noahName: noahName,
+                               isSelfManaged: isSelfManaged, makeEngine: makeEngine)
+    }
+}
+
+extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : self
     }
 }
 
@@ -152,6 +234,8 @@ final class CaregiverSession: ObservableObject {
         self.push = push
         self.isMock = isMock
         selectedElderlyId = UserDefaults.standard.string(forKey: Self.selectedKey)
+        subscriptions.audience = .caregiver
+        subscriptions.redeemsOnlyKnownProfiles = false
         subscriptions.submit = { [weak self] elderlyId, jws in
             guard let self else { throw APIError.cancelled }
             let subscription = try await self.api.submitAppStoreTransaction(elderlyId: elderlyId, signedTransaction: jws)

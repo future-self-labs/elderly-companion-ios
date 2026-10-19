@@ -65,6 +65,21 @@ enum APIError: Error, Equatable {
             return "Noah kan dit telefoonnummer niet bellen. Vraag uw mantelzorger om hulp. Hier in de app kunt u wel met Noah praten."
         case .server(_, "belgrens_bereikt", _):
             return "Noah heeft vandaag al vaak gebeld. Hier in de app kunt u wel met Noah praten."
+        // v2.3: self sign-up and the older person's own settings.
+        case .server(_, "beheerd_door_mantelzorger", _):
+            return "Uw familie regelt dit nu voor u. Vraag hen gerust om hulp."
+        case .server(_, "ongeldige_code", _), .server(_, "invalid_code", _), .server(_, "code_expired", _):
+            return "Deze code klopt niet of is verlopen. Probeert u het nog eens, of vraag een nieuwe code."
+        case .server(_, "te_veel_verzoeken", _), .server(_, "rate_limited", _):
+            return "Even geduld. Probeert u het over een paar minuten nog eens."
+        case .server(_, "sms_mislukt", _):
+            return "De sms kon niet worden verstuurd. Kijkt u het nummer na en probeert u het nog eens."
+        case .server(_, "niet_geconfigureerd", _), .server(_, "niet_beschikbaar", _):
+            return "Dit is nu even niet beschikbaar. Probeert u het later nog eens."
+        case .server(_, "demo_account", _):
+            return "Dit is een demo-account: deze functie staat uit."
+        case .server(_, "uitnodiging_ongeldig", _):
+            return "Deze uitnodiging is verlopen. Maakt u een nieuwe uitnodiging."
         case .server(_, _, let message?) where !message.isEmpty:
             return message
         case .deviceUnpaired:

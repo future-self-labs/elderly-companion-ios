@@ -23,8 +23,10 @@ final class AppEnvironment {
         self.config = config
         #if DEBUG
         if config.useMock {
-            storage = KeychainTokenStorage(namespace: "mock")
-            api = MockNoahAPI()
+            let mockStorage = KeychainTokenStorage(namespace: "mock")
+            storage = mockStorage
+            // The mock knows which profile this phone belongs to from the (mock) device token.
+            api = MockNoahAPI(deviceToken: { mockStorage.deviceToken })
             client = nil
             Self.applyMockPersona(storage: storage)
             return
@@ -44,8 +46,8 @@ final class AppEnvironment {
     }
 
     #if DEBUG
-    /// `-mockPersona caregiver|new|elder|none` puts mock mode straight into a state (testing and
-    /// screenshots). Only applies to the mock namespace.
+    /// `-mockPersona caregiver|new|elder|self|none` puts mock mode straight into a state (testing and
+    /// screenshots). `self` is Toos, who signed up herself (v2.3). Only applies to the mock namespace.
     private static func applyMockPersona(storage: TokenStorage) {
         guard let persona = UserDefaults.standard.string(forKey: "mockPersona") else { return }
         let tokens = CaregiverTokens(accessToken: "mock-access", accessTokenExpiresAt: Date().addingTimeInterval(3600 * 24 * 365), refreshToken: "hnr_mock")
@@ -60,9 +62,16 @@ final class AppEnvironment {
             UserDefaults.standard.set(MockIDs.newCaregiver, forKey: "mock.currentCaregiver")
         case "elder":
             storage.deviceToken = "hnd_mock_\(MockIDs.wim)"
+            storage.caregiverTokens = nil
+            ElderSession.clearOnboarding()
+        case "self":
+            storage.deviceToken = "hnd_mock_\(MockIDs.toos)"
+            storage.caregiverTokens = nil
+            ElderSession.clearOnboarding()
         case "none":
             storage.deviceToken = nil
             storage.caregiverTokens = nil
+            ElderSession.clearOnboarding()
         default:
             break
         }
@@ -127,6 +136,33 @@ final class AppModel: ObservableObject {
         enterElder(justPaired: true)
     }
 
+    /// v2.3 self route: the older person verified their own number.
+    func didSignUpElder(_ response: ElderSignUpResponse) {
+        environment.storage.deviceToken = response.deviceToken
+        if response.needsOnboarding {
+            ElderSession.clearOnboarding()
+            enterElder(justPaired: true)
+            elder?.startOnboarding()
+        } else {
+            enterElder(justPaired: true)
+            if response.managedBy == .zelf {
+                let name = response.elderly.preferredName
+                elder?.arrivalMessage = name.isEmpty ? "Welkom terug! U kunt meteen weer met Noah praten." : "Welkom terug, \(name)! U kunt meteen weer met Noah praten."
+            } else {
+                elder?.arrivalMessage = "Deze telefoon is gekoppeld aan het account van uw familie. U kunt nu met Noah praten."
+            }
+        }
+    }
+
+    /// v2.3: the older person deleted their own account.
+    func elderAccountDeleted() {
+        environment.storage.deviceToken = nil
+        ElderSession.clearOnboarding()
+        elder = nil
+        welcomeNotice = "Uw account en al uw gegevens zijn verwijderd."
+        if environment.storage.caregiverTokens != nil { enterCaregiver() } else { mode = .welcome }
+    }
+
     func didSignIn(_ auth: AuthResponse) {
         environment.storage.caregiverTokens = CaregiverTokens(
             accessToken: auth.accessToken,
@@ -159,6 +195,7 @@ final class AppModel: ObservableObject {
     func unpairThisDevice() async {
         try? await api.unpairThisDevice()
         environment.storage.deviceToken = nil
+        ElderSession.clearOnboarding()
         elder = nil
         welcomeNotice = "Deze telefoon is ontkoppeld."
         if environment.storage.caregiverTokens != nil { enterCaregiver() } else { mode = .welcome }
@@ -173,15 +210,16 @@ final class AppModel: ObservableObject {
     }
 
     private func deviceUnpairedRemotely() {
+        ElderSession.clearOnboarding()
         elder = nil
-        welcomeNotice = "Deze telefoon is niet meer gekoppeld aan HelloNoah. Vraag uw mantelzorger om een nieuwe code."
+        welcomeNotice = "Deze telefoon is niet meer gekoppeld aan HelloNoah. U kunt zich opnieuw aanmelden met uw telefoonnummer, of uw familie om een nieuwe code vragen."
         mode = environment.storage.caregiverTokens != nil ? .caregiver : .welcome
         if mode == .caregiver { enterCaregiver() }
     }
 
     private func enterElder(justPaired: Bool = false) {
         caregiver = nil
-        let session = ElderSession(api: api, reachability: reachability, makeEngine: { [weak self] in
+        let session = ElderSession(api: api, reachability: reachability, subscriptions: subscriptions, makeEngine: { [weak self] in
             self?.environment.makeVoiceEngine() ?? ElevenLabsVoiceEngine()
         })
         session.justPaired = justPaired

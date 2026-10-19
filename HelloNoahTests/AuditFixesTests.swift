@@ -157,7 +157,7 @@ final class LinkSafetyTests: XCTestCase {
 
     @MainActor
     func testExternalTalkLinkNeedsConfirmation() {
-        let session = ElderSession(api: MockNoahAPI(), reachability: Reachability(), makeEngine: { MockVoiceEngine() })
+        let session = ElderSession(api: MockNoahAPI(), reachability: Reachability(), subscriptions: SubscriptionStore(), makeEngine: { MockVoiceEngine() })
         session.requestConversation(needsConfirmation: true)
         XCTAssertTrue(session.isConversationPresented)
         XCTAssertTrue(session.conversationNeedsConfirmation)

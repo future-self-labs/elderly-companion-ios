@@ -63,7 +63,7 @@ struct ConversationScreen: View {
                 outcome(
                     systemImage: failure == .micDenied ? "mic.slash.fill" : (failure == .offline ? "wifi.slash" : "exclamationmark.bubble.fill"),
                     message: failure.text,
-                    canRetry: failure != .inactive,
+                    canRetry: !failure.isInactive,
                     showsSettings: failure == .micDenied
                 )
             case .ended(let kind) where kind != .hungUp:

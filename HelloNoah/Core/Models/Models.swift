@@ -105,12 +105,90 @@ struct PairDeviceResponse: Decodable {
     struct DeviceRef: Decodable { let id: String }
     struct ElderlyRef: Decodable {
         let id: String
-        let preferredName: String
+        /// A self sign-up without a name yet may answer an empty name.
+        var preferredName: String = ""
         let noahName: String?
+
+        init(id: String, preferredName: String, noahName: String?) {
+            self.id = id
+            self.preferredName = preferredName
+            self.noahName = noahName
+        }
+
+        enum CodingKeys: String, CodingKey { case id, preferredName, noahName }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            preferredName = try c.decodeIfPresent(String.self, forKey: .preferredName) ?? ""
+            noahName = try c.decodeIfPresent(String.self, forKey: .noahName)
+        }
     }
     let deviceToken: String
     let device: DeviceRef
     let elderly: ElderlyRef
+}
+
+/// v2.3 self route: `POST /auth/elderly/phone/start` (`channel` only when the code is read out).
+struct ElderSignUpStartRequest: Encodable {
+    let phoneNumber: String
+    var channel: PhoneVerificationChannel?
+
+    enum CodingKeys: String, CodingKey { case phoneNumber, channel }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(phoneNumber, forKey: .phoneNumber)
+        // SMS is the server default; only a spoken code is asked for explicitly.
+        if let channel, channel != .sms { try c.encode(channel, forKey: .channel) }
+    }
+}
+
+/// v2.3 `POST /auth/elderly/phone/verify`. `preferredName`/`addressForm` are optional.
+struct ElderSignUpVerifyRequest: Encodable {
+    let phoneNumber: String
+    let code: String
+    var preferredName: String?
+    var addressForm: AddressForm?
+    /// Backend v2.3 extras, as in `/devices/pair`.
+    var deviceName: String?
+    var platform: String? = "ios"
+
+    enum CodingKeys: String, CodingKey { case phoneNumber, code, preferredName, addressForm, deviceName, platform }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(phoneNumber, forKey: .phoneNumber)
+        try c.encode(code, forKey: .code)
+        try c.encodeIfPresent(preferredName.nilIfBlank, forKey: .preferredName)
+        if let addressForm, addressForm != .unknown { try c.encode(addressForm, forKey: .addressForm) }
+        try c.encodeIfPresent(deviceName.nilIfBlank, forKey: .deviceName)
+        try c.encodeIfPresent(platform, forKey: .platform)
+    }
+}
+
+/// v2.3: who manages an elderly profile. A self profile becomes `mantelzorger` as soon as a
+/// caregiver accepts a `beheerder` invitation.
+enum ManagedBy: String, TolerantEnum {
+    case zelf
+    case mantelzorger
+    case unknown
+    static var unknownCase: ManagedBy { .unknown }
+}
+
+/// v2.3 `POST /auth/elderly/phone/verify`: like pairing, plus what happened to the number.
+struct ElderSignUpResponse: Decodable {
+    let deviceToken: String
+    let device: PairDeviceResponse.DeviceRef
+    let elderly: PairDeviceResponse.ElderlyRef
+    @DefaultFalse var isNewProfile: Bool = false
+    /// `mantelzorger`: the number already belonged to a caregiver-managed profile and this phone
+    /// is now paired to it.
+    var managedBy: ManagedBy
+
+    /// A brand-new self profile: walk through name, voice, emergency contact and subscription.
+    var needsOnboarding: Bool { managedBy == .zelf && isNewProfile }
+    var isLinkedToFamily: Bool { managedBy == .mantelzorger }
 }
 
 // MARK: - Me
@@ -122,6 +200,8 @@ struct ElderlySummary: Codable, Hashable, Identifiable {
     var access: Access
     var lastConversationAt: Date?
     var openAlertCount: Int?
+    /// v2.3 (backend): `zelf` while no caregiver is beheerder.
+    var managedBy: ManagedBy? = nil
 }
 
 struct MeResponse: Decodable {
@@ -158,6 +238,8 @@ struct ElderlyProfile: Codable, Hashable, Identifiable {
     var phoneVerifiedAt: Date? = nil
     /// `"inbound"` | `"code"` | nil
     var phoneVerifiedVia: String? = nil
+    /// v2.3: whether the older person manages the profile themselves. nil = older backend.
+    var managedBy: ManagedBy? = nil
 
     /// The number still needs confirming before Noah can call it (v2.2).
     var needsPhoneConfirmation: Bool { phoneVerified == false && !(phoneNumber ?? "").isEmpty }
@@ -814,6 +896,9 @@ enum AlertType: String, TolerantEnum {
     case noodgeval
     /// v2.1: fair-use notice (info, never pushed, beheerders only, at most one per month).
     case verbruik
+    /// v2.3 (backend): the older person paired their own phone by signing up with the profile's
+    /// number (info, never pushed, beheerders only).
+    case apparaatGekoppeld = "apparaat_gekoppeld"
     case unknown
     static var unknownCase: AlertType { .unknown }
 }
@@ -942,11 +1027,18 @@ struct DeviceMe: Decodable {
         var preferredName: String
         var addressForm: AddressForm?
         var noahName: String?
+        /// v2.3 (backend): may also sit here.
+        var managedBy: ManagedBy? = nil
     }
     var elderly: ElderlyRef
     var access: Access
     var lastConversationAt: Date?
     var nextReminder: Reminder?
+    /// v2.3 (backend): whether the older person manages the profile themselves.
+    var managedBy: ManagedBy? = nil
+
+    /// Wherever the backend put it; nil on an older backend.
+    var resolvedManagedBy: ManagedBy? { managedBy ?? elderly.managedBy }
 }
 
 /// `POST /device/conversation`: everything needed to start an ElevenLabs session.
@@ -981,6 +1073,56 @@ struct ConversationSession: Decodable {
     var mode: ConversationMode?
     /// v2.1: this conversation is recorded (Noah asks permission first). Shown as "Wordt opgenomen".
     @DefaultFalse var recording: Bool = false
+}
+
+/// v2.3 `GET /device/profile` (allowed for both kinds of profile).
+struct DeviceProfile: Codable, Hashable {
+    var id: String?
+    var preferredName: String
+    var addressForm: AddressForm
+    var phoneNumber: String?
+    var managedBy: ManagedBy
+    var access: Access?
+
+    var isSelfManaged: Bool { managedBy == .zelf }
+
+    enum CodingKeys: String, CodingKey { case id, preferredName, addressForm, phoneNumber, managedBy, access }
+
+    init(id: String? = nil, preferredName: String, addressForm: AddressForm, phoneNumber: String?, managedBy: ManagedBy, access: Access?) {
+        self.id = id
+        self.preferredName = preferredName
+        self.addressForm = addressForm
+        self.phoneNumber = phoneNumber
+        self.managedBy = managedBy
+        self.access = access
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(String.self, forKey: .id)
+        preferredName = try c.decodeIfPresent(String.self, forKey: .preferredName) ?? ""
+        addressForm = try c.decodeIfPresent(AddressForm.self, forKey: .addressForm) ?? .u
+        phoneNumber = try c.decodeIfPresent(String.self, forKey: .phoneNumber)
+        // Missing: an older backend, so nobody but a caregiver manages it.
+        managedBy = try c.decodeIfPresent(ManagedBy.self, forKey: .managedBy) ?? .mantelzorger
+        access = try c.decodeIfPresent(Access.self, forKey: .access)
+    }
+}
+
+/// v2.3 `PATCH /device/profile`: only what changed.
+struct DeviceProfilePatch: Encodable, Equatable {
+    var preferredName: String?
+    var addressForm: AddressForm?
+
+    var isEmpty: Bool { preferredName == nil && addressForm == nil }
+
+    enum CodingKeys: String, CodingKey { case preferredName, addressForm }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(preferredName?.trimmingCharacters(in: .whitespacesAndNewlines), forKey: .preferredName)
+        if let addressForm, addressForm != .unknown { try c.encode(addressForm, forKey: .addressForm) }
+    }
 }
 
 struct PushTokenRequest: Encodable {

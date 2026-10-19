@@ -110,6 +110,14 @@ enum ProductCopy {
     /// For the older person ("u").
     static let elderReminderNote = String(localized: "Noah helpt u herinneren, naast wat u al gebruikt, zoals uw medicijndoos of de kalender.")
 
+    /// v2.3: the older person's own privacy line ("u"; they decide about recording themselves).
+    static let elderPrivacy = String(localized: "Uw gesprekken en gegevens worden versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten; die bewaren geen gegevens langer dan nodig. Opnames alleen als u dat zelf aanzet en ja zegt.")
+
+    /// v2.3: fair use for the older person who pays themselves, kindly and in "u". Never "onbeperkt".
+    static func elderFairUse(allowanceMinutes: Int) -> String {
+        String(localized: "U kunt met Noah praten zo vaak als u wilt. Er geldt wel een redelijk-gebruikbeleid van \(DutchFormat.hours(minutes: allowanceMinutes)) per maand, zodat Noah voor iedereen betaalbaar blijft. Heeft u in een maand heel veel gepraat, dan blijft Noah gewoon voor u bereikbaar, met wat kortere gesprekken (tot \(Plan.cappedConversationMinutes) minuten). De maand erna is alles weer zoals gewoonlijk.")
+    }
+
     /// Point 1: fair use, plainly and kindly. Never "onbeperkt".
     static func fairUse(name: String, allowanceMinutes: Int) -> String {
         String(localized: "Praten met Noah kan zo vaak als \(name) wil, met een redelijk-gebruikbeleid van \(DutchFormat.hours(minutes: allowanceMinutes)) per maand. Is dat op, dan blijft Noah gewoon bereikbaar, met kortere gesprekken (tot \(Plan.cappedConversationMinutes) minuten). De maand erna is alles weer zoals gewoonlijk.")
@@ -208,6 +216,7 @@ extension AlertType {
         case .verwardheid: return "Verwardheid"
         case .noodgeval: return "Noodgeval"
         case .verbruik: return "Redelijk gebruik"
+        case .apparaatGekoppeld: return "Telefoon gekoppeld"
         case .unknown: return "Melding"
         }
     }
@@ -222,6 +231,7 @@ extension AlertType {
         case .verwardheid: return "questionmark.circle.fill"
         case .noodgeval: return "staroflife.fill"
         case .verbruik: return "clock.fill"
+        case .apparaatGekoppeld: return "iphone.radiowaves.left.and.right"
         case .unknown: return "bell.fill"
         }
     }

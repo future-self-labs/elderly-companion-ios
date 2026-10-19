@@ -7,6 +7,8 @@ struct WelcomeFlowView: View {
         case signIn
         case phoneSignIn
         case pairing
+        /// v2.3: the older person signs up with their own phone number.
+        case elderSignUp
     }
 
     @EnvironmentObject private var app: AppModel
@@ -23,27 +25,33 @@ struct WelcomeFlowView: View {
                     if let notice = app.welcomeNotice {
                         NoahNotice(kind: .info, text: notice)
                     }
-                    #if DEBUG
-                    if app.isMock {
-                        NoahNotice(kind: .warning, text: "Demo-modus: de app gebruikt voorbeeldgegevens en praat niet met de echte server.")
-                    }
-                    #endif
 
                     VStack(spacing: NoahSpacing.m) {
                         WelcomeChoiceCard(
                             systemImage: "person.2.fill",
                             title: "Ik ben mantelzorger",
-                            subtitle: "Ik stel Noah in voor mijn vader, moeder of een andere naaste, en kijk mee hoe het gaat."
+                            subtitle: "Ik stel Noah in voor een naaste en kijk mee hoe het gaat."
                         ) {
                             app.welcomeNotice = nil
                             path.append(.caregiverIntro)
                         }
                         .accessibilityIdentifier("welcome.caregiver")
 
+                        // v2.3: the older person can start on their own, as clearly as the others.
+                        WelcomeChoiceCard(
+                            systemImage: "mic.fill",
+                            title: "Ik wil zelf met Noah praten",
+                            subtitle: "U meldt zich aan met uw eigen telefoonnummer."
+                        ) {
+                            app.welcomeNotice = nil
+                            path.append(.elderSignUp)
+                        }
+                        .accessibilityIdentifier("welcome.self")
+
                         WelcomeChoiceCard(
                             systemImage: "iphone.radiowaves.left.and.right",
-                            title: "Deze telefoon is voor iemand die met Noah gaat praten",
-                            subtitle: "Koppel deze telefoon met de code van 6 cijfers van de mantelzorger."
+                            title: "Deze telefoon koppelen met een code",
+                            subtitle: "Met de code van 6 cijfers van uw familie."
                         ) {
                             app.welcomeNotice = nil
                             path.append(.pairing)
@@ -51,6 +59,11 @@ struct WelcomeFlowView: View {
                         .accessibilityIdentifier("welcome.elder")
                     }
 
+                    #if DEBUG
+                    if app.isMock {
+                        NoahNotice(kind: .warning, text: "Demo-modus: de app gebruikt voorbeeldgegevens en praat niet met de echte server.")
+                    }
+                    #endif
                     Text("Een product van Aldery")
                         .font(NoahFont.footnote)
                         .foregroundColor(NoahColor.textSecondary)
@@ -75,6 +88,8 @@ struct WelcomeFlowView: View {
                         PhoneSignInView()
                     case .pairing:
                         PairingView(initialCode: prefilledPairingCode)
+                    case .elderSignUp:
+                        ElderSignUpView()
                     }
                 }
                 .noahPushedScreen()
@@ -122,11 +137,11 @@ struct WelcomeFlowView: View {
             Text("Welkom")
                 .font(NoahFont.largeTitle).noahTitleScaling()
                 .foregroundColor(NoahColor.text)
-            Text("Noah is een warme metgezel om mee te praten. Voor waardig ouder worden, en gemoedsrust voor de familie.")
+            Text("Noah is een warme metgezel om mee te praten.")
                 .font(NoahFont.bodyText)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Voor wie is deze telefoon?")
+            Text("Hoe wilt u beginnen?")
                 .font(NoahFont.title3)
                 .foregroundColor(NoahColor.text)
                 .padding(.top, NoahSpacing.s)
@@ -153,6 +168,7 @@ struct WelcomeFlowView: View {
             case "signIn": path = [.caregiverIntro, .signIn]
             case "phoneSignIn": path = [.caregiverIntro, .signIn, .phoneSignIn]
             case "pairing": path = [.pairing]
+            case "elderSignUp", "elderSignUpCode", "familyLinked": path = [.elderSignUp]
             default: break
             }
         }
@@ -168,16 +184,16 @@ struct WelcomeChoiceCard: View {
     var body: some View {
         Button(action: action) {
             AdaptiveStack(spacing: NoahSpacing.m) {
-                NoahIconBadge(systemName: systemImage, size: 52)
+                NoahIconBadge(systemName: systemImage, size: 44)
                 VStack(alignment: .leading, spacing: NoahSpacing.xs) {
                     Text(title)
-                        .font(NoahFont.title3)
+                        .font(NoahFont.Elder.bodyStrong)
                         .foregroundColor(NoahColor.text)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     Text(subtitle)
-                        .font(NoahFont.callout)
-                        .foregroundColor(NoahColor.textSecondary)
+                        .font(NoahFont.bodyText)
+                        .foregroundColor(NoahColor.textSoft)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -189,7 +205,8 @@ struct WelcomeChoiceCard: View {
                     .accessibilityHidden(true)
             }
             .padding(NoahSpacing.l)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // Huge targets for everyone who opens the app for the first time (also older people).
+            .frame(maxWidth: .infinity, minHeight: NoahSize.elderButton + NoahSpacing.l, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
             .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
             .contentShape(RoundedRectangle(cornerRadius: NoahRadius.large))

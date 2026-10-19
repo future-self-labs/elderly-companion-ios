@@ -11,10 +11,12 @@
 		060FCD6D774599DBB53303AA /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 85DE68049ECFDCEE1320D2A3 /* Lexend-SemiBold.ttf */; };
 		07F51953255FB1C57B3E62E5 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D63B6A171D166E2ED7C467 /* Reachability.swift */; };
 		0855800B7DBA7DC218954BD0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94964109FE5D2748460B7F6 /* Models.swift */; };
+		0AA9939E4139131697B631CD /* ElderPeopleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18999FE088E14E6045C233D5 /* ElderPeopleViews.swift */; };
 		0AC614FB6E13BCE4A5CB8FE4 /* Lexend-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 162FD32A3F73359B474DE68B /* Lexend-Regular.ttf */; };
 		0ADD6482A824A0E832A7C426 /* CaregiversAndDevicesViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A05BFD2690AA6B76C432DE /* CaregiversAndDevicesViews.swift */; };
 		0D6039FD6ED5A9EE9C5AA0D7 /* RemindersViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 886D0EBC966AAB0527E80630 /* RemindersViews.swift */; };
 		0D6A3897D39909C21F2AD2BC /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 543A7F21B3473462F53184AD /* LiveKit */; };
+		0DB5E425667B07B4B0FBD7AD /* ElderAccountViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA771E3BD146AF571D0B90F7 /* ElderAccountViews.swift */; };
 		10DC0CFDBE32C439E77319F3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8B8DBC8445A30AC45FED9FEB /* Assets.xcassets */; };
 		11A0F8C40F1E671C4F9F52EA /* WidgetLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6D298589280307A63F04B3 /* WidgetLaunch.swift */; };
 		14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */; };
@@ -22,11 +24,13 @@
 		18B5F4DA01C0C23BF169C09F /* SubscriptionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F97E64CE8569EF508A8FCD /* SubscriptionViews.swift */; };
 		1C14FDA83E8B0A8BC405A654 /* Chips.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57CBF11F8E43E63C5C0540 /* Chips.swift */; };
 		212151CD010D06B511ED3D9B /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45864FAEB21F35E433F38F69 /* AppModel.swift */; };
+		22BBEB39BFA89DA27B5803A8 /* SelfOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58503BF86C8C92EAF3ED130E /* SelfOnboardingView.swift */; };
 		22F339851D4A79D20AEF6006 /* MockNoahAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4ECAE35501EE04A9CB8354F /* MockNoahAPI.swift */; };
 		2486E8615C4281D15EBCCBD1 /* States.swift in Sources */ = {isa = PBXBuildFile; fileRef = C362E028A49037979B1BBBE0 /* States.swift */; };
 		26491B752C3A3F439C44CD95 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC33CD072EFB0D582160CAB /* APIClient.swift */; };
 		2766B79364DEE4E0D85305B4 /* DutchFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8ACE4415085BF7E95343B4 /* DutchFormat.swift */; };
 		2A37BB64A6273F5BB2526AAA /* HelloNoahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551501931F47852F3C865A17 /* HelloNoahApp.swift */; };
+		2B4831030D1A604A35A3B23D /* ElderSelfParts.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5784C79C08C6B3075A1C0D /* ElderSelfParts.swift */; };
 		2C1CAECFD77131C420E1BFFE /* NoahSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5667674571D1457F458678E4 /* NoahSettingsView.swift */; };
 		34325550F9C8CC542F4E9199 /* ConversationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BB4B8AD1F28FCA108D9573 /* ConversationScreen.swift */; };
 		36352ED28B03BEFD77293EAE /* TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C4FD2DA5FA6D37D972EFB6 /* TokenStore.swift */; };
@@ -48,6 +52,7 @@
 		63CD5E8FE7288566B4CDEB24 /* PhoneSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEAC7A090BAA706AE093C0B3 /* PhoneSignInView.swift */; };
 		6A9E5213DF7E18F589A89F74 /* ProductCorrectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */; };
 		6F30BF7EE1672E3A4B91AB43 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25808448C7465A3FD4DDB18 /* Buttons.swift */; };
+		7065DDD430274063BE0D3818 /* ElderSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163ABD1C004268643D4DB332 /* ElderSettingsViews.swift */; };
 		713F13CA523D67349F86F46A /* ConversationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD2FDB0527C7C0F5F67365B3 /* ConversationListView.swift */; };
 		76A45F6E698598A97659525C /* CaregiverRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052D81CAC776EC490A34D59B /* CaregiverRootView.swift */; };
 		76C97C15C2A23410A522137C /* WelcomeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059CFE527C11098DB32613D8 /* WelcomeFlowView.swift */; };
@@ -75,6 +80,7 @@
 		A4F16FFD2383B5E6BE8D614C /* CaregiverIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8099692DEB9BD2E0A2CF09E3 /* CaregiverIntroView.swift */; };
 		AB869FF7C32231FF77F11E43 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 9CE704FFB5DD28671AB89AB5 /* ElevenLabs */; };
 		ABFA84471F55BFF591CC0EB7 /* MockRecording.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC47258A2ACB8052CB04C05F /* MockRecording.swift */; };
+		AF3274A0FE71B56C64B7E534 /* ElderSubscriptionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B719E1B2C90BEDE362FE0081 /* ElderSubscriptionViews.swift */; };
 		B105B9D32CEA604FF43F1D86 /* MockVoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB51ACE2259645BCCED02A2 /* MockVoiceEngine.swift */; };
 		B620CB93A8392C0C7E67ADBE /* ScheduleMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36933F7A94BECCA0BDA2CE74 /* ScheduleMath.swift */; };
 		B7BB47046506C26C52D0FA2E /* CaregiverStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18833ED34FADD089588D108E /* CaregiverStartView.swift */; };
@@ -89,6 +95,7 @@
 		CEE0B0DEA8C429DAB51457B4 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3F4840F62561FC1430034B /* AccountView.swift */; };
 		D075AFA01BF65357689EF8C5 /* RecordingPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E439E1FA96DFC6CBA33CA2 /* RecordingPlayer.swift */; };
 		D44B54C3F87854371211FA90 /* MoodOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A172D7BEE7A975B33DE4710 /* MoodOverviewView.swift */; };
+		D766D62C9E65DE3F79DF6D8C /* SelfRouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03FB9F51033C907591597E84 /* SelfRouteTests.swift */; };
 		DBAC147817F370FB8FDF8220 /* ConversationControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE27F67372E551ED93BC3F7 /* ConversationControllerTests.swift */; };
 		DBC708313CFCB01341EE242E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D9354884D46541C3F0DA2F7 /* WidgetKit.framework */; };
 		DE622274CD96187060BBB1A8 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4428F576D329347D1D38592B /* MockData.swift */; };
@@ -99,6 +106,7 @@
 		E754DC4FA7CC87C3173FD4F1 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB505E362B943C0B653379FD /* MoreView.swift */; };
 		E8960ED43740FC577D55C067 /* AuditFixesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A93A5D694CB05AB64FBB1A /* AuditFixesTests.swift */; };
 		EB5ACA80363A16E68BE3E28F /* ElderRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6CC6FDA16F0D619B2D93F1 /* ElderRootView.swift */; };
+		EC9B3DDB59E226AE6EA52EA7 /* ElderSignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED40BE3CE4C20571244D7986 /* ElderSignUpView.swift */; };
 		F00474A8200E9642E7DAD125 /* FormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7782D5731C2167EBC600DA /* FormattingTests.swift */; };
 		F04D511CCAEE0637DEF9857A /* RoleAndRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDBB429CEAC357FC4DCFA228 /* RoleAndRoutingTests.swift */; };
 		F4590201700A6B423C16BB96 /* HelloNoahWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 75CCFA384BE584B9B0B6B6E4 /* HelloNoahWidget.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -142,11 +150,14 @@
 /* Begin PBXFileReference section */
 		012744EACD6EBE003E07B603 /* ElderRemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderRemindersView.swift; sourceTree = "<group>"; };
 		0336A3D7A8575C21AA75F1D8 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
+		03FB9F51033C907591597E84 /* SelfRouteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfRouteTests.swift; sourceTree = "<group>"; };
 		052D81CAC776EC490A34D59B /* CaregiverRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaregiverRootView.swift; sourceTree = "<group>"; };
 		059CFE527C11098DB32613D8 /* WelcomeFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFlowView.swift; sourceTree = "<group>"; };
 		12C4FD2DA5FA6D37D972EFB6 /* TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenStore.swift; sourceTree = "<group>"; };
 		162FD32A3F73359B474DE68B /* Lexend-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lexend-Regular.ttf"; sourceTree = "<group>"; };
+		163ABD1C004268643D4DB332 /* ElderSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderSettingsViews.swift; sourceTree = "<group>"; };
 		18833ED34FADD089588D108E /* CaregiverStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaregiverStartView.swift; sourceTree = "<group>"; };
+		18999FE088E14E6045C233D5 /* ElderPeopleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderPeopleViews.swift; sourceTree = "<group>"; };
 		19C8570CACD47FA3DC66B4CA /* NoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahAPI.swift; sourceTree = "<group>"; };
 		19E930DAD9AC20BE5E2F91BB /* LifeStoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeStoryViews.swift; sourceTree = "<group>"; };
 		1F3F4840F62561FC1430034B /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
@@ -171,6 +182,7 @@
 		551501931F47852F3C865A17 /* HelloNoahApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloNoahApp.swift; sourceTree = "<group>"; };
 		5667674571D1457F458678E4 /* NoahSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahSettingsView.swift; sourceTree = "<group>"; };
 		57C2F9382CCF03124FA9A8C4 /* LiveNoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNoahAPI.swift; sourceTree = "<group>"; };
+		58503BF86C8C92EAF3ED130E /* SelfOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfOnboardingView.swift; sourceTree = "<group>"; };
 		5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlayerViews.swift; sourceTree = "<group>"; };
 		5EF6AE8204A9DB296A02B757 /* CodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeField.swift; sourceTree = "<group>"; };
 		5F73611EFE76A07F61E8F244 /* HelloNoah.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HelloNoah.xcconfig; sourceTree = "<group>"; };
@@ -196,12 +208,15 @@
 		A39DF6D0D483E69A169E6D9B /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		A4ECAE35501EE04A9CB8354F /* MockNoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNoahAPI.swift; sourceTree = "<group>"; };
 		A5C4769B7F2FBA0028884AED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA5784C79C08C6B3075A1C0D /* ElderSelfParts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderSelfParts.swift; sourceTree = "<group>"; };
+		AA771E3BD146AF571D0B90F7 /* ElderAccountViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderAccountViews.swift; sourceTree = "<group>"; };
 		AAEA7915F0508B8959290554 /* OFL-DMSerifDisplay.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-DMSerifDisplay.txt"; sourceTree = "<group>"; };
 		AEAC7A090BAA706AE093C0B3 /* PhoneSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSignInView.swift; sourceTree = "<group>"; };
 		AFB51ACE2259645BCCED02A2 /* MockVoiceEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockVoiceEngine.swift; sourceTree = "<group>"; };
 		B06D8DCFC72E5A71C20F09D5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B25808448C7465A3FD4DDB18 /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
 		B62B1F179FFF9CDB00B482CA /* MoodChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodChart.swift; sourceTree = "<group>"; };
+		B719E1B2C90BEDE362FE0081 /* ElderSubscriptionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderSubscriptionViews.swift; sourceTree = "<group>"; };
 		B732D6271928B8CA8CD44E98 /* ProfileViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViews.swift; sourceTree = "<group>"; };
 		B7A93A5D694CB05AB64FBB1A /* AuditFixesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditFixesTests.swift; sourceTree = "<group>"; };
 		BB4D906C8D4B7EB4BC2E635D /* ConversationDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationDetailView.swift; sourceTree = "<group>"; };
@@ -225,6 +240,7 @@
 		E07167BA140C8DBA99A7BF02 /* ContractDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractDecodingTests.swift; sourceTree = "<group>"; };
 		EA37B6F44E17F42EE194E8E6 /* Labels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Labels.swift; sourceTree = "<group>"; };
 		EA57CBF11F8E43E63C5C0540 /* Chips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chips.swift; sourceTree = "<group>"; };
+		ED40BE3CE4C20571244D7986 /* ElderSignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderSignUpView.swift; sourceTree = "<group>"; };
 		EDC33CD072EFB0D582160CAB /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		EE6CC6FDA16F0D619B2D93F1 /* ElderRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElderRootView.swift; sourceTree = "<group>"; };
 		F1588895F239BEB150426C47 /* Coding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coding.swift; sourceTree = "<group>"; };
@@ -289,6 +305,7 @@
 			isa = PBXGroup;
 			children = (
 				8099692DEB9BD2E0A2CF09E3 /* CaregiverIntroView.swift */,
+				ED40BE3CE4C20571244D7986 /* ElderSignUpView.swift */,
 				96E16BDC1A788BCD22D4AB4E /* PairingView.swift */,
 				AEAC7A090BAA706AE093C0B3 /* PhoneSignInView.swift */,
 				A39DF6D0D483E69A169E6D9B /* SignInView.swift */,
@@ -422,6 +439,7 @@
 				483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */,
 				F7A416716081E46ACB5DAEA2 /* ProductCorrectionsTests.swift */,
 				CDBB429CEAC357FC4DCFA228 /* RoleAndRoutingTests.swift */,
+				03FB9F51033C907591597E84 /* SelfRouteTests.swift */,
 				D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */,
 			);
 			path = HelloNoahTests;
@@ -554,6 +572,7 @@
 		D45FC5A5184C7FF861216C3B /* Elder */ = {
 			isa = PBXGroup;
 			children = (
+				E65F049B4CED8680BD0B77F4 /* Self */,
 				32BB4B8AD1F28FCA108D9573 /* ConversationScreen.swift */,
 				F4773FCE8CBFECF814C89F72 /* ElderHomeView.swift */,
 				012744EACD6EBE003E07B603 /* ElderRemindersView.swift */,
@@ -585,6 +604,19 @@
 				DC47258A2ACB8052CB04C05F /* MockRecording.swift */,
 			);
 			path = Mock;
+			sourceTree = "<group>";
+		};
+		E65F049B4CED8680BD0B77F4 /* Self */ = {
+			isa = PBXGroup;
+			children = (
+				AA771E3BD146AF571D0B90F7 /* ElderAccountViews.swift */,
+				18999FE088E14E6045C233D5 /* ElderPeopleViews.swift */,
+				AA5784C79C08C6B3075A1C0D /* ElderSelfParts.swift */,
+				163ABD1C004268643D4DB332 /* ElderSettingsViews.swift */,
+				B719E1B2C90BEDE362FE0081 /* ElderSubscriptionViews.swift */,
+				58503BF86C8C92EAF3ED130E /* SelfOnboardingView.swift */,
+			);
+			path = Self;
 			sourceTree = "<group>";
 		};
 		E9C6399D372422CA895A1A03 /* Mood */ = {
@@ -779,6 +811,7 @@
 				8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */,
 				6A9E5213DF7E18F589A89F74 /* ProductCorrectionsTests.swift in Sources */,
 				F04D511CCAEE0637DEF9857A /* RoleAndRoutingTests.swift in Sources */,
+				D766D62C9E65DE3F79DF6D8C /* SelfRouteTests.swift in Sources */,
 				14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -821,9 +854,15 @@
 				C320ADCC6C64003F4FA0E81A /* DashboardView.swift in Sources */,
 				C4AA081454CE629F372C6734 /* DeepLink.swift in Sources */,
 				2766B79364DEE4E0D85305B4 /* DutchFormat.swift in Sources */,
+				0DB5E425667B07B4B0FBD7AD /* ElderAccountViews.swift in Sources */,
 				C5D50B7CAB527C520A6BD2C5 /* ElderHomeView.swift in Sources */,
+				0AA9939E4139131697B631CD /* ElderPeopleViews.swift in Sources */,
 				4210100071E9A2B144F26867 /* ElderRemindersView.swift in Sources */,
 				EB5ACA80363A16E68BE3E28F /* ElderRootView.swift in Sources */,
+				2B4831030D1A604A35A3B23D /* ElderSelfParts.swift in Sources */,
+				7065DDD430274063BE0D3818 /* ElderSettingsViews.swift in Sources */,
+				EC9B3DDB59E226AE6EA52EA7 /* ElderSignUpView.swift in Sources */,
+				AF3274A0FE71B56C64B7E534 /* ElderSubscriptionViews.swift in Sources */,
 				8C4AB6D5579BE6D34CAC596E /* ElevenLabsVoiceEngine.swift in Sources */,
 				2A37BB64A6273F5BB2526AAA /* HelloNoahApp.swift in Sources */,
 				957000B28467C219EDFBACAA /* Inputs.swift in Sources */,
@@ -853,6 +892,7 @@
 				C59367C4B89FE4D73A66919C /* RecordingPlayerViews.swift in Sources */,
 				0D6039FD6ED5A9EE9C5AA0D7 /* RemindersViews.swift in Sources */,
 				B620CB93A8392C0C7E67ADBE /* ScheduleMath.swift in Sources */,
+				22BBEB39BFA89DA27B5803A8 /* SelfOnboardingView.swift in Sources */,
 				BB704188FD10115E0A435DD2 /* Sessions.swift in Sources */,
 				62E411582B66A0DC33BA55B6 /* SignInView.swift in Sources */,
 				2486E8615C4281D15EBCCBD1 /* States.swift in Sources */,

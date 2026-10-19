@@ -16,13 +16,21 @@ import Foundation
 ///   (Wim used up this month's fair use: shorter conversations, notice on the subscription screen).
 /// - v2.1: Wim's recording setting is "alleen bij levensverhalen"; his story conversations and two
 ///   life-story entries have a (generated, demo) recording.
-/// Data lives in memory and resets at each launch.
+/// - v2.3 self route: Toos manages her own profile (`-mockPersona self`). Self sign-up with any
+///   number and any 6-digit code (`000000` is rejected) creates a new self profile; Wim's number
+///   (06 23456789) pairs to Wim instead ("gekoppeld aan het account van uw familie"), Toos's number
+///   (06 45678901) signs Toos in again. Device endpoints answer `403 beheerd_door_mantelzorger` for
+///   Wim and Riet. The phone's profile follows the (mock) device token.
+/// Data lives in memory and resets at each launch, except self sign-ups (kept in UserDefaults so
+/// a relaunch still knows the new profile).
 final class MockNoahAPI: NoahAPI {
     private let lock = NSLock()
     private let latency: TimeInterval
     private let offline: Bool
     private let overAllowance: Bool
     private let defaults: UserDefaults
+    /// The device token of this phone (mock tokens are `hnd_mock_<elderlyId>`).
+    private let deviceToken: () -> String?
 
     // MARK: State
 
@@ -47,12 +55,15 @@ final class MockNoahAPI: NoahAPI {
     private var invitations: [String: (elderlyId: String, role: Role)] = [:]
     private var pairingCodes: [String: String] = [:]
 
-    init(defaults: UserDefaults = .standard, now: Date = Date()) {
+    init(defaults: UserDefaults = .standard, now: Date = Date(), deviceToken: @escaping () -> String? = { nil }) {
         self.defaults = defaults
+        self.deviceToken = deviceToken
         latency = defaults.object(forKey: "mockLatency") == nil ? 0.35 : defaults.double(forKey: "mockLatency")
         offline = defaults.bool(forKey: "mockOffline")
         overAllowance = defaults.bool(forKey: "mockOverAllowance")
         seed(now: now, inactive: defaults.bool(forKey: "mockInactive"))
+        seedSelfProfiles(now: now)
+        restoreSelfSignUps()
     }
 
     // MARK: Seed
@@ -79,7 +90,8 @@ final class MockNoahAPI: NoahAPI {
             // `-mockPhoneUnverified YES`: Wim's number still needs confirming (v2.2).
             phoneVerified: !defaults.bool(forKey: "mockPhoneUnverified"),
             phoneVerifiedAt: defaults.bool(forKey: "mockPhoneUnverified") ? nil : now.addingTimeInterval(-86_400 * 39),
-            phoneVerifiedVia: defaults.bool(forKey: "mockPhoneUnverified") ? nil : "inbound"
+            phoneVerifiedVia: defaults.bool(forKey: "mockPhoneUnverified") ? nil : "inbound",
+            managedBy: .mantelzorger
         )
         profiles[MockIDs.riet] = ElderlyProfile(
             id: MockIDs.riet, firstName: "Hendrika", lastName: "Jansen", preferredName: "Riet",
@@ -88,7 +100,8 @@ final class MockNoahAPI: NoahAPI {
             likes: ["bingo", "puzzels", "Zeeland"], dislikes: [], topicsToRaise: ["haar zus in Zeeland"], topicsToAvoid: [],
             routines: nil, caregiverNotes: nil, access: .active, isBeta: true, myRole: .lezer,
             createdAt: now.addingTimeInterval(-86_400 * 20),
-            phoneVerified: true, phoneVerifiedAt: now.addingTimeInterval(-86_400 * 19), phoneVerifiedVia: "code"
+            phoneVerified: true, phoneVerifiedAt: now.addingTimeInterval(-86_400 * 19), phoneVerifiedVia: "code",
+            managedBy: .mantelzorger
         )
         memberships[MockIDs.wim] = [MockIDs.anna: .beheerder, MockIDs.mark: .lezer]
         memberships[MockIDs.riet] = [MockIDs.anna: .lezer, MockIDs.mark: .beheerder]
@@ -157,6 +170,89 @@ final class MockNoahAPI: NoahAPI {
             ? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 0)
             : Subscription(status: .intro, productId: SubscriptionStore.productID, renewsAt: calendar.date(byAdding: .day, value: 18, to: now), expiresAt: nil, platform: "app_store", paidByMe: true, freeConversationsLeft: 0)
         subscriptions[MockIDs.riet] = Subscription(status: .beta, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: false)
+    }
+
+    /// v2.3: Toos signed up herself; her daughter Ellen looks along as lezer.
+    private func seedSelfProfiles(now: Date) {
+        let id = MockIDs.toos
+        caregiverRecords[MockIDs.ellen] = Caregiver(id: MockIDs.ellen, name: "Ellen Bakker", email: "ellen@example.com", phoneNumber: "+31656781234", createdAt: now.addingTimeInterval(-86_400 * 10))
+        profiles[id] = ElderlyProfile(
+            id: id, firstName: "Catharina", lastName: "Bakker", preferredName: "Toos",
+            addressForm: .u, gender: .vrouw, birthYear: 1944, phoneNumber: "+31645678901", city: "Leiden",
+            livingSituation: .alleen, about: nil, routines: nil, caregiverNotes: nil,
+            access: defaults.bool(forKey: "mockInactive") ? .inactive : .active, isBeta: false, myRole: nil,
+            createdAt: now.addingTimeInterval(-86_400 * 14),
+            phoneVerified: true, phoneVerifiedAt: now.addingTimeInterval(-86_400 * 14), phoneVerifiedVia: "code",
+            managedBy: .zelf
+        )
+        memberships[id] = [MockIDs.ellen: .lezer]
+        joinedAt[MockIDs.ellen + id] = now.addingTimeInterval(-86_400 * 10)
+        var settings = NoahSettings.defaults
+        settings.speakingSpeed = 0.9
+        settingsByElderly[id] = settings
+        contacts[id] = [
+            EmergencyContact(id: "E21", name: "Ellen Bakker", phoneNumber: "+31656781234", relation: "dochter", priority: 1, notifyBySms: true, notifyByCall: true),
+        ]
+        conversationsByElderly[id] = []
+        lifeStories[id] = []
+        remindersByElderly[id] = [
+            Reminder(id: "R21", title: "Koffie bij de buurvrouw", notes: nil, type: .afspraak, schedule: .weekly(time: "10:30", weekdays: [4]), delivery: .inGesprek, active: true, createdBy: .noah, nextAt: ReminderSchedule.weekly(time: "10:30", weekdays: [4]).nextOccurrence(after: now), lastCompletedAt: nil),
+        ]
+        alertsByElderly[id] = []
+        devicesByElderly[id] = [PairedDevice(id: MockIDs.toosDevice, deviceName: "iPhone van Toos", platform: "ios", pairedAt: now.addingTimeInterval(-86_400 * 14), lastSeenAt: now.addingTimeInterval(-600))]
+        subscriptions[id] = defaults.bool(forKey: "mockInactive")
+            ? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 0)
+            : Subscription(status: .intro, productId: Plan.productIDs[1], renewsAt: DutchFormat.calendar.date(byAdding: .day, value: 12, to: now), expiresAt: nil, platform: "app_store", paidByMe: true, freeConversationsLeft: 0)
+    }
+
+    // MARK: Self sign-ups (kept across launches)
+
+    private static let selfSignUpsKey = "mock.selfSignUps"
+
+    private struct StoredSelfProfile: Codable {
+        var id: String
+        var phoneNumber: String
+        var preferredName: String
+        var addressForm: String
+    }
+
+    private func restoreSelfSignUps() {
+        guard let data = defaults.data(forKey: Self.selfSignUpsKey),
+              let stored = try? JSONDecoder().decode([StoredSelfProfile].self, from: data) else { return }
+        for item in stored where profiles[item.id] == nil {
+            createSelfProfile(id: item.id, phoneNumber: item.phoneNumber, preferredName: item.preferredName,
+                              addressForm: AddressForm(rawValue: item.addressForm) ?? .u, persist: false)
+        }
+    }
+
+    private func persistSelfSignUps() {
+        let stored = profiles.values.filter { $0.managedBy == .zelf && $0.id != MockIDs.toos }.map {
+            StoredSelfProfile(id: $0.id, phoneNumber: $0.phoneNumber ?? "", preferredName: $0.preferredName, addressForm: $0.addressForm.rawValue)
+        }
+        defaults.set(try? JSONEncoder().encode(stored), forKey: Self.selfSignUpsKey)
+    }
+
+    @discardableResult
+    private func createSelfProfile(id: String, phoneNumber: String, preferredName: String, addressForm: AddressForm, persist: Bool = true) -> ElderlyProfile {
+        let profile = ElderlyProfile(
+            id: id, firstName: preferredName, lastName: nil, preferredName: preferredName, addressForm: addressForm,
+            gender: nil, birthYear: nil, phoneNumber: phoneNumber, city: nil, livingSituation: nil, about: nil,
+            routines: nil, caregiverNotes: nil, access: .active, isBeta: false, myRole: nil, createdAt: Date(),
+            // The SMS code proves the number (v2.3).
+            phoneVerified: true, phoneVerifiedAt: Date(), phoneVerifiedVia: "code", managedBy: .zelf
+        )
+        profiles[id] = profile
+        memberships[id] = [:]
+        settingsByElderly[id] = NoahSettings.defaults
+        contacts[id] = []
+        conversationsByElderly[id] = []
+        lifeStories[id] = []
+        remindersByElderly[id] = []
+        alertsByElderly[id] = []
+        // Free trial: the first conversation is free.
+        subscriptions[id] = Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 1)
+        if persist { persistSelfSignUps() }
+        return profile
     }
 
     // MARK: Helpers
@@ -347,7 +443,8 @@ final class MockNoahAPI: NoahAPI {
                 return ElderlySummary(
                     id: elderlyId, preferredName: profile.preferredName, role: role, access: profile.access,
                     lastConversationAt: conversationsByElderly[elderlyId]?.first?.startedAt,
-                    openAlertCount: alertsByElderly[elderlyId]?.filter { $0.status == .open }.count ?? 0
+                    openAlertCount: alertsByElderly[elderlyId]?.filter { $0.status == .open }.count ?? 0,
+                    managedBy: profile.managedBy
                 )
             }.sorted { $0.preferredName < $1.preferredName }
             return MeResponse(caregiver: caregiverRecords[me] ?? Caregiver(id: me), elderly: elderly)
@@ -705,6 +802,11 @@ final class MockNoahAPI: NoahAPI {
                 invitations[normalized] = nil
                 memberships[invitation.elderlyId, default: [:]][currentCaregiverId] = invitation.role
                 joinedAt[currentCaregiverId + invitation.elderlyId] = Date()
+                // v2.3: a beheerder takes over a self-managed profile.
+                if invitation.role == .beheerder, profiles[invitation.elderlyId]?.managedBy == .zelf {
+                    profiles[invitation.elderlyId]?.managedBy = .mantelzorger
+                    persistSelfSignUps()
+                }
                 return AcceptInvitationResponse(elderly: .init(id: invitation.elderlyId, preferredName: profiles[invitation.elderlyId]?.preferredName ?? ""), role: invitation.role)
             }
             // Demo: the code K7P-2QX from the contract joins Riet as lezer.
@@ -1033,7 +1135,7 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
-            let subscription = Subscription(status: .intro, productId: SubscriptionStore.productID,
+            let subscription = Subscription(status: .intro, productId: Self.productID(fromMockJWS: signedTransaction),
                                             renewsAt: DutchFormat.calendar.date(byAdding: .month, value: 1, to: Date()),
                                             expiresAt: nil, platform: "app_store", paidByMe: true, freeConversationsLeft: 0)
             subscriptions[elderlyId] = subscription
@@ -1042,9 +1144,33 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
+    /// Simulated purchases send `mock-signed-transaction:<productId>` (never a real JWS).
+    static func productID(fromMockJWS jws: String) -> String {
+        let parts = jws.split(separator: ":", maxSplits: 1)
+        if parts.count == 2, Plan.isPlanProduct(String(parts[1])) { return String(parts[1]) }
+        return Plan.productID
+    }
+
     // MARK: Device
 
-    private var deviceElderlyId: String { MockIDs.wim }
+    /// The profile of this phone, from the mock device token (`hnd_mock_<elderlyId>`); Wim when
+    /// there is none (tests).
+    private var deviceElderlyId: String {
+        if let token = deviceToken(), token.hasPrefix("hnd_mock_") {
+            let id = String(token.dropFirst("hnd_mock_".count))
+            if profiles[id] != nil { return id }
+        }
+        return MockIDs.wim
+    }
+
+    /// v2.3: device endpoints for self-managed profiles only.
+    private func requireSelfManaged() throws -> String {
+        let id = deviceElderlyId
+        guard profiles[id]?.managedBy == .zelf else {
+            throw fail(403, "beheerd_door_mantelzorger", "Dit regelt uw familie voor u.")
+        }
+        return id
+    }
 
     func deviceMe() async throws -> DeviceMe {
         try await simulate()
@@ -1056,7 +1182,8 @@ final class MockNoahAPI: NoahAPI {
                 elderly: .init(id: id, preferredName: profile.preferredName, addressForm: profile.addressForm, noahName: settingsByElderly[id]?.noahName ?? "Noah"),
                 access: profile.access,
                 lastConversationAt: conversationsByElderly[id]?.first?.startedAt,
-                nextReminder: next
+                nextReminder: next,
+                managedBy: profile.managedBy
             )
         }
     }
@@ -1067,6 +1194,12 @@ final class MockNoahAPI: NoahAPI {
             let id = deviceElderlyId
             guard profiles[id]?.access == .active else {
                 throw fail(409, "inactive", "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+            }
+            // Free trial (v2.2): used up when the session starts; a second one is inactive.
+            if var subscription = subscriptions[id], !subscription.isPaidOrBeta, let free = subscription.freeConversationsLeft, free > 0 {
+                subscription.freeConversationsLeft = free - 1
+                subscriptions[id] = subscription
+                if free - 1 == 0 { profiles[id]?.access = .inactive }
             }
             let settings = settingsByElderly[id] ?? .defaults
             let mode: ConversationMode = mode == .levensverhaal ? .levensverhaal : .gesprek
@@ -1130,6 +1263,234 @@ final class MockNoahAPI: NoahAPI {
 
     func unpairThisDevice() async throws {
         try await simulate()
+    }
+
+    // MARK: Self sign-up (v2.3)
+
+    func startElderSignUp(phoneNumber: String, channel: PhoneVerificationChannel) async throws {
+        try await simulate()
+        guard PhoneNumberFormat.e164(phoneNumber) != nil else {
+            throw fail(400, "ongeldige_invoer", "Dit telefoonnummer klopt niet.")
+        }
+    }
+
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse {
+        try await simulate()
+        return try sync {
+            guard request.code.count == 6, request.code != "000000" else {
+                throw fail(400, "ongeldige_code", "Deze code klopt niet of is verlopen.")
+            }
+            let deviceId = UUID().uuidString
+            if let existing = profiles.values.first(where: { $0.phoneNumber == request.phoneNumber }) {
+                // Caregiver-managed: this phone is paired to that profile, the family gets a notice.
+                let managedBy: ManagedBy = existing.managedBy == .zelf ? .zelf : .mantelzorger
+                if managedBy == .mantelzorger {
+                    alertsByElderly[existing.id, default: []].insert(
+                        NoahAlert(id: UUID().uuidString, type: .apparaatGekoppeld, severity: .info, title: "De telefoon van \(existing.preferredName) is gekoppeld",
+                                  body: "\(existing.preferredName) heeft zich aangemeld met het eigen telefoonnummer. Die telefoon is nu gekoppeld aan dit profiel.",
+                                  conversationId: nil, status: .open, createdAt: Date(), acknowledgedBy: nil), at: 0)
+                }
+                devicesByElderly[existing.id, default: []].append(PairedDevice(id: deviceId, deviceName: "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date()))
+                return ElderSignUpResponse(deviceToken: "hnd_mock_\(existing.id)", device: .init(id: deviceId),
+                                           elderly: .init(id: existing.id, preferredName: existing.preferredName, noahName: settingsByElderly[existing.id]?.noahName ?? "Noah"),
+                                           isNewProfile: false, managedBy: managedBy)
+            }
+            let id = UUID().uuidString
+            let profile = createSelfProfile(id: id, phoneNumber: request.phoneNumber, preferredName: request.preferredName ?? "",
+                                            addressForm: request.addressForm ?? .u)
+            devicesByElderly[id] = [PairedDevice(id: deviceId, deviceName: "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date())]
+            return ElderSignUpResponse(deviceToken: "hnd_mock_\(id)", device: .init(id: deviceId),
+                                       elderly: .init(id: id, preferredName: profile.preferredName, noahName: "Noah"),
+                                       isNewProfile: true, managedBy: .zelf)
+        }
+    }
+
+    // MARK: Device endpoints for self-managed profiles (v2.3)
+
+    func deviceProfile() async throws -> DeviceProfile {
+        try await simulate()
+        return sync {
+            let id = deviceElderlyId
+            let profile = profiles[id]!
+            return DeviceProfile(id: id, preferredName: profile.preferredName, addressForm: profile.addressForm, phoneNumber: profile.phoneNumber,
+                                 managedBy: profile.managedBy ?? .mantelzorger, access: profile.access)
+        }
+    }
+
+    func updateDeviceProfile(_ patch: DeviceProfilePatch) async throws -> DeviceProfile {
+        try await simulate()
+        try sync {
+            let id = try requireSelfManaged()
+            if let name = patch.preferredName?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                guard !name.isEmpty else { throw fail(400, "ongeldige_invoer", "Vul een naam in.") }
+                profiles[id]?.preferredName = name
+                if profiles[id]?.firstName.isEmpty == true { profiles[id]?.firstName = name }
+            }
+            if let form = patch.addressForm, form != .unknown { profiles[id]?.addressForm = form }
+            persistSelfSignUps()
+        }
+        return try await deviceProfile()
+    }
+
+    func deviceSettings() async throws -> NoahSettings {
+        try await simulate()
+        return try sync { settingsByElderly[try requireSelfManaged()] ?? .defaults }
+    }
+
+    func updateDeviceSettings(_ patch: NoahSettingsPatch) async throws -> NoahSettings {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            if let recording = patch.recording, recording != .uit, defaults.bool(forKey: "mockRecordingUnavailable") {
+                throw fail(503, "niet_geconfigureerd", "Opnemen is op dit moment niet beschikbaar.")
+            }
+            if let speed = patch.speakingSpeed, !NoahSettings.speedRange.contains(speed) {
+                throw fail(400, "ongeldige_invoer", "Spreektempo moet tussen 0.8 en 1.2 liggen.")
+            }
+            let updated = patch.applied(to: settingsByElderly[id] ?? .defaults)
+            settingsByElderly[id] = updated
+            return updated
+        }
+    }
+
+    func deviceEmergencyContacts() async throws -> [EmergencyContact] {
+        try await simulate()
+        return try sync { (contacts[try requireSelfManaged()] ?? []).sorted { $0.priority < $1.priority } }
+    }
+
+    func createDeviceEmergencyContact(_ input: EmergencyContactInput) async throws -> EmergencyContact {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            guard PhoneNumberFormat.e164(input.phoneNumber) != nil else { throw fail(400, "ongeldige_invoer", "Dit telefoonnummer klopt niet.") }
+            let contact = EmergencyContact(id: UUID().uuidString, name: input.name, phoneNumber: input.phoneNumber, relation: input.relation,
+                                           priority: (contacts[id]?.count ?? 0) + 1, notifyBySms: input.notifyBySms, notifyByCall: input.notifyByCall)
+            contacts[id, default: []].append(contact)
+            return contact
+        }
+    }
+
+    func updateDeviceEmergencyContact(contactId: String, _ input: EmergencyContactInput) async throws -> EmergencyContact {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            guard let index = contacts[id]?.firstIndex(where: { $0.id == contactId }) else { throw fail(404, "niet_gevonden", "Dit contact bestaat niet (meer).") }
+            var contact = contacts[id]![index]
+            contact.name = input.name
+            contact.phoneNumber = input.phoneNumber
+            contact.relation = input.relation
+            contact.notifyBySms = input.notifyBySms
+            contact.notifyByCall = input.notifyByCall
+            contacts[id]![index] = contact
+            return contact
+        }
+    }
+
+    func deleteDeviceEmergencyContact(contactId: String) async throws {
+        try await simulate()
+        try sync {
+            let id = try requireSelfManaged()
+            contacts[id]?.removeAll { $0.id == contactId }
+            contacts[id] = contacts[id]?.enumerated().map { index, contact in
+                var copy = contact
+                copy.priority = index + 1
+                return copy
+            }
+        }
+    }
+
+    func deviceSubscription() async throws -> Subscription {
+        try await simulate()
+        return sync {
+            let id = deviceElderlyId
+            var subscription = subscriptions[id] ?? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil)
+            // `paidByMe` = paid via this device: a caregiver pays for Wim and Riet.
+            if profiles[id]?.managedBy != .zelf { subscription.paidByMe = false }
+            if subscription.status.grantsAccess { subscription.usage = usage(id) }
+            return subscription
+        }
+    }
+
+    func submitDeviceAppStoreTransaction(signedTransaction: String) async throws -> Subscription {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            let subscription = Subscription(status: .intro, productId: Self.productID(fromMockJWS: signedTransaction),
+                                            renewsAt: DutchFormat.calendar.date(byAdding: .month, value: 1, to: Date()),
+                                            expiresAt: nil, platform: "app_store", paidByMe: true, freeConversationsLeft: 0)
+            subscriptions[id] = subscription
+            profiles[id]?.access = .active
+            return subscription
+        }
+    }
+
+    func createDeviceInvitation(role: Role) async throws -> Invitation {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+            let raw = String((0..<6).map { _ in alphabet.randomElement()! })
+            let code = String(raw.prefix(3)) + "-" + String(raw.suffix(3))
+            invitations[code] = (id, role)
+            let url = "https://hellonoah.ai/uitnodiging/\(code)"
+            let what = role == .beheerder ? "om mee te kijken en mee te helpen" : "om mee te kijken"
+            return Invitation(code: code, url: url, expiresAt: Date().addingTimeInterval(7 * 86_400),
+                              shareText: "Ik gebruik Noah en nodig je uit \(what). Installeer de HelloNoah-app en open deze link: \(url) (code \(code))")
+        }
+    }
+
+    func deviceCaregivers() async throws -> [CaregiverMembership] {
+        try await simulate()
+        return sync {
+            let id = deviceElderlyId
+            return (memberships[id] ?? [:]).map { caregiverId, role in
+                CaregiverMembership(caregiverId: caregiverId, name: caregiverRecords[caregiverId]?.name ?? "Familielid", role: role,
+                                    joinedAt: joinedAt[caregiverId + id], isMe: false)
+            }.sorted { ($0.name ?? "") < ($1.name ?? "") }
+        }
+    }
+
+    func removeDeviceCaregiver(caregiverId: String) async throws {
+        try await simulate()
+        try sync {
+            let id = try requireSelfManaged()
+            memberships[id]?[caregiverId] = nil
+        }
+    }
+
+    func exportDevice() async throws -> Data {
+        try await simulate()
+        return try sync {
+            let id = try requireSelfManaged()
+            let export: [String: AnyEncodable] = [
+                "profiel": AnyEncodable(profiles[id]),
+                "instellingen": AnyEncodable(settingsByElderly[id]),
+                "noodcontacten": AnyEncodable(contacts[id] ?? []),
+                "gesprekken": AnyEncodable(conversationsByElderly[id] ?? []),
+                "levensverhaal": AnyEncodable(lifeStories[id] ?? []),
+                "herinneringen": AnyEncodable(remindersByElderly[id] ?? []),
+                "exportedAt": AnyEncodable(NoahJSON.formatDate(Date())),
+            ]
+            return try NoahJSON.makeEncoder(pretty: true).encode(export)
+        }
+    }
+
+    func deleteDeviceAccount() async throws {
+        try await simulate()
+        try sync {
+            let id = try requireSelfManaged()
+            profiles[id] = nil
+            memberships[id] = nil
+            settingsByElderly[id] = nil
+            contacts[id] = nil
+            conversationsByElderly[id] = nil
+            lifeStories[id] = nil
+            remindersByElderly[id] = nil
+            alertsByElderly[id] = nil
+            devicesByElderly[id] = nil
+            subscriptions[id] = nil
+            persistSelfSignUps()
+        }
     }
 }
 

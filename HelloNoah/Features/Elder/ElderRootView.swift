@@ -4,6 +4,17 @@ enum ElderRoute: Hashable {
     case myStory
     case storyEntry(LifeStoryEntry)
     case reminders
+    // v2.3: "Instellingen" of a self-managed profile.
+    case settings
+    case settingsNoah
+    case settingsRecording
+    case settingsContacts
+    case settingsSubscription
+    case settingsPaywall
+    case settingsInvite
+    case settingsCaregivers
+    case settingsExport
+    case settingsDelete
 }
 
 /// The older person's interface: home, conversation (full screen), my story, reminders.
@@ -13,6 +24,16 @@ struct ElderRootView: View {
     @State private var path: [ElderRoute] = []
 
     var body: some View {
+        if session.isOnboarding {
+            // v2.3: a new self-managed profile first finishes steps 2–5 of the sign-up.
+            SelfOnboardingView()
+                .transition(.opacity)
+        } else {
+            home
+        }
+    }
+
+    private var home: some View {
         NavigationStack(path: $path) {
             ElderHomeView(path: $path)
                 .hidesWhileCovered(ownDepth: 0, stackDepth: path.count)
@@ -22,6 +43,19 @@ struct ElderRootView: View {
                         case .myStory: MyStoryView(path: $path)
                         case .storyEntry(let entry): ElderStoryDetailView(entry: entry)
                         case .reminders: ElderRemindersView()
+                        case .settings: ElderSettingsView(path: $path)
+                        case .settingsNoah: ElderNoahSettingsView()
+                        case .settingsRecording: ElderRecordingView()
+                        case .settingsContacts: ElderEmergencyContactsView()
+                        case .settingsSubscription: ElderSubscriptionView(path: $path)
+                        case .settingsPaywall:
+                            ElderScrollScreen {
+                                ElderPaywallView { if !path.isEmpty { path.removeLast() } }
+                            }
+                        case .settingsInvite: ElderInviteView()
+                        case .settingsCaregivers: ElderCaregiversView(path: $path)
+                        case .settingsExport: ElderExportView()
+                        case .settingsDelete: ElderDeleteAccountView()
                         }
                     }
                     .noahPushedScreen()
@@ -48,6 +82,17 @@ struct ElderRootView: View {
         case "storyEntry":
             path = [.myStory, .storyEntry(MockData.wimLifeStory(now: Date())[2])]
         case "reminders": path = [.reminders]
+        case "onboarding", "onboardingVoice", "onboardingContact", "onboardingPaywall": session.startOnboarding()
+        case "settings": path = [.settings]
+        case "settingsNoah": path = [.settings, .settingsNoah]
+        case "settingsRecording": path = [.settings, .settingsRecording]
+        case "settingsContacts": path = [.settings, .settingsContacts]
+        case "settingsSubscription": path = [.settings, .settingsSubscription]
+        case "settingsPaywall": path = [.settings, .settingsSubscription, .settingsPaywall]
+        case "settingsInvite": path = [.settings, .settingsInvite]
+        case "settingsCaregivers": path = [.settings, .settingsCaregivers]
+        case "settingsExport": path = [.settings, .settingsExport]
+        case "settingsDelete": path = [.settings, .settingsDelete]
         default: break
         }
         #endif

@@ -13,6 +13,10 @@ enum MockIDs {
     static let wim = "8E5C2D1A-4B7F-4C2A-9F3E-1A2B3C4D5E6F"
     static let riet = "3A9D7C21-5E4B-4F10-8B2C-7D6E5F4A3B21"
     static let wimDevice = "D3C1B2A0-0000-4000-8000-000000000001"
+    /// v2.3: Toos signed up on her own phone (self-managed); her daughter Ellen looks along.
+    static let toos = "5B2E9F40-7C1D-4A8B-9E3F-0A1B2C3D4E5F"
+    static let toosDevice = "D3C1B2A0-0000-4000-8000-000000000002"
+    static let ellen = "6F1C2B7E-1D7A-4E36-9C55-2F0B6A1C9D04"
 }
 
 struct MockConversationTemplate {

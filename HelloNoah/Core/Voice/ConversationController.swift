@@ -25,6 +25,8 @@ final class ConversationController: ObservableObject {
     enum Failure: Equatable {
         case micDenied
         case inactive
+        /// v2.3: a self-managed profile without (or after) the free conversation: no family to ask.
+        case inactiveSelf
         case offline
         case connectionLost
         case message(String)
@@ -33,11 +35,14 @@ final class ConversationController: ObservableObject {
             switch self {
             case .micDenied: return "Noah kan u niet horen, omdat de microfoon uit staat. U kunt de microfoon aanzetten bij Instellingen."
             case .inactive: return "Noah is nog niet actief. Vraag uw mantelzorger om hulp."
+            case .inactiveSelf: return "Noah is nog niet actief. U kunt uw abonnement starten bij Instellingen, onderaan het beginscherm."
             case .offline: return "Er is nu geen internet. Probeert u het straks nog eens."
             case .connectionLost: return "De verbinding met Noah is weggevallen. Probeert u het gerust nog een keer."
             case .message(let text): return text
             }
         }
+
+        var isInactive: Bool { self == .inactive || self == .inactiveSelf }
     }
 
     @Published private(set) var phase: Phase = .preparing
@@ -78,13 +83,18 @@ final class ConversationController: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var interruptionObserver: NSObjectProtocol?
 
+    /// v2.3: the older person manages the profile themselves (texts never say "vraag uw mantelzorger").
+    let isSelfManaged: Bool
+
     init(api: NoahAPI, reachability: Reachability, mode: ConversationMode = .gesprek, noahName: String = "Noah",
+         isSelfManaged: Bool = false,
          requestMicrophone: @escaping () async -> MicrophonePermission.State = MicrophonePermission.ensure,
          makeEngine: @escaping () -> VoiceEngine) {
         self.api = api
         self.reachability = reachability
         self.mode = mode
         self.noahName = noahName.isEmpty ? "Noah" : noahName
+        self.isSelfManaged = isSelfManaged
         self.requestMicrophone = requestMicrophone
         self.makeEngine = makeEngine
         showsSubtitles = UserDefaults.standard.object(forKey: Self.subtitlesKey) as? Bool ?? true
@@ -145,7 +155,7 @@ final class ConversationController: ObservableObject {
             guard !isFinished else { return }
             let apiError = APIError.from(error)
             switch apiError {
-            case .server(_, "inactive", _): return fail(.inactive)
+            case .server(_, "inactive", _): return fail(isSelfManaged ? .inactiveSelf : .inactive)
             case .offline: return fail(.offline)
             case .cancelled: return
             default: return fail(.message(apiError.elderMessage))

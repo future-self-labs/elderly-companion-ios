@@ -10,6 +10,11 @@ protocol NoahAPI: AnyObject {
     func logout(refreshToken: String) async throws
     func createPairingCode(elderlyId: String) async throws -> PairingCode
     func pairDevice(code: String, deviceName: String) async throws -> PairDeviceResponse
+    /// v2.3 self route: an SMS code (or a call that reads it out) to the older person's own number.
+    func startElderSignUp(phoneNumber: String, channel: PhoneVerificationChannel) async throws
+    /// v2.3: creates a self-managed profile, or pairs this phone to the caregiver-managed profile
+    /// that already has this number.
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse
 
     // Me (§3.1)
     func me() async throws -> MeResponse
@@ -102,6 +107,28 @@ protocol NoahAPI: AnyObject {
     func deviceReminders() async throws -> [Reminder]
     func registerDevicePushToken(_ token: String, environment: String) async throws
     func unpairThisDevice() async throws
+
+    // Device endpoints for self-managed profiles (v2.3). Caregiver-managed profiles answer
+    // `403 beheerd_door_mantelzorger`, except where noted.
+    /// Allowed for both kinds of profile.
+    func deviceProfile() async throws -> DeviceProfile
+    func updateDeviceProfile(_ patch: DeviceProfilePatch) async throws -> DeviceProfile
+    func deviceSettings() async throws -> NoahSettings
+    func updateDeviceSettings(_ patch: NoahSettingsPatch) async throws -> NoahSettings
+    func deviceEmergencyContacts() async throws -> [EmergencyContact]
+    func createDeviceEmergencyContact(_ input: EmergencyContactInput) async throws -> EmergencyContact
+    func updateDeviceEmergencyContact(contactId: String, _ input: EmergencyContactInput) async throws -> EmergencyContact
+    func deleteDeviceEmergencyContact(contactId: String) async throws
+    /// Allowed for both; `paidByMe` = paid via this device.
+    func deviceSubscription() async throws -> Subscription
+    func submitDeviceAppStoreTransaction(signedTransaction: String) async throws -> Subscription
+    func createDeviceInvitation(role: Role) async throws -> Invitation
+    /// Allowed for both.
+    func deviceCaregivers() async throws -> [CaregiverMembership]
+    func removeDeviceCaregiver(caregiverId: String) async throws
+    func exportDevice() async throws -> Data
+    /// Deletes the self profile and all its data.
+    func deleteDeviceAccount() async throws
 }
 
 enum AlertListFilter: String {
