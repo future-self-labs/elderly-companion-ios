@@ -105,7 +105,9 @@ final class SubscriptionOutcomeTests: XCTestCase {
         let otherProfile = SubscriptionStore.redeemOutcome(for: .server(status: 400, code: "abonnement_ander_profiel", message: "Dit abonnement hoort bij een ander profiel."))
         XCTAssertTrue(otherProfile.finish)
         XCTAssertFalse(otherProfile.message.contains("Betaling ontvangen"))
-        XCTAssertTrue(otherProfile.message.contains("één naaste"))
+        XCTAssertTrue(otherProfile.message.contains("niets extra afgeschreven"))
+        // v2.3: one Apple ID can pay for up to three profiles, so never "voor één naaste".
+        XCTAssertFalse(otherProfile.message.contains("één naaste"))
 
         let invalid = SubscriptionStore.redeemOutcome(for: .server(status: 400, code: "ongeldig_abonnement", message: nil))
         XCTAssertTrue(invalid.finish)
@@ -114,14 +116,20 @@ final class SubscriptionOutcomeTests: XCTestCase {
         XCTAssertFalse(SubscriptionStore.redeemOutcome(for: .sessionExpired).finish)
     }
 
-    func testExistingEntitlementExplainsWhoIsPaidFor() {
-        let existing = SubscriptionStore.ExistingEntitlement(elderlyId: "a", elderlyName: "Wim", isForThisProfile: false)
-        let text = existing.explanation(for: "Riet")
-        XCTAssertTrue(text.contains("voor Wim"))
-        XCTAssertTrue(text.contains("voor Riet"))
-        XCTAssertTrue(text.contains("niets afgeschreven"))
-        XCTAssertTrue(SubscriptionStore.ExistingEntitlement(elderlyId: nil, elderlyName: nil, isForThisProfile: false)
-            .explanation(for: nil).contains("een ander profiel"))
+    /// v2.3 replaces the stopgap "Je betaalt al met deze Apple ID…": a fourth profile is explained.
+    @MainActor
+    func testAllInUseExplainsWhoIsPaidFor() {
+        let store = SubscriptionStore()
+        store.knownElderlyNames = ["a": "Wim", "b": "Riet"]
+        let owned = [OwnedSubscription(productID: Plan.productIDs[0], elderlyId: "a"),
+                     OwnedSubscription(productID: Plan.productIDs[1], elderlyId: "B"),
+                     OwnedSubscription(productID: Plan.productIDs[2], elderlyId: nil)]
+        let text = store.allInUseExplanation(owned: owned, targetName: "Toos")
+        XCTAssertTrue(text.contains("Wim, Riet en een ander profiel"), text)
+        XCTAssertTrue(text.contains("voor Toos"), text)
+        XCTAssertTrue(text.contains("niets afgeschreven"), text)
+        XCTAssertFalse(text.contains("Je betaalt al met deze Apple ID"))
+        XCTAssertEqual(store.ownedDescription([OwnedSubscription(productID: Plan.productID, elderlyId: nil)]), "één profiel")
     }
 }
 

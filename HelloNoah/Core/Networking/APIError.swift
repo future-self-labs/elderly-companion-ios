@@ -91,7 +91,8 @@ enum APIError: Error, Equatable {
         case "niet_gevonden": return "Dit bestaat niet (meer), of je hebt er geen toegang toe."
         case "sms_mislukt": return "De sms kon niet worden verstuurd. Controleer het nummer en probeer het opnieuw."
         case "telefoonnummer_is_inlog": return "Je logt in met dit telefoonnummer. Dat nummer kun je hier daarom niet wijzigen."
-        case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel. Met één Apple ID kun je op dit moment voor één naaste betalen."
+        case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel. Er is niets extra afgeschreven."
+        case "beheerd_door_mantelzorger": return "Dit profiel wordt beheerd door een mantelzorger."
         case "ongeldig_abonnement": return "Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam."
         case "link_verlopen": return "Deze link is verlopen. Probeer het opnieuw."
         // v2.2

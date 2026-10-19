@@ -64,6 +64,100 @@
           ]
         }
       ]
+    },
+    {
+      "id" : "21500002",
+      "localizations" : [
+        {
+          "description" : "Noah, de AI-metgezel, voor nog een naaste",
+          "displayName" : "Noah 2",
+          "locale" : "nl"
+        }
+      ],
+      "name" : "Noah 2",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6700000003",
+          "introductoryOffer" : {
+            "displayPrice" : "9.99",
+            "internalID" : "6700000004",
+            "numberOfPeriods" : 6,
+            "paymentMode" : "payAsYouGo",
+            "subscriptionPeriod" : "P1M"
+          },
+          "localizations" : [
+            {
+              "description" : "Praten met Noah (redelijk gebruik), dashboard, levensverhaal en meldingen.",
+              "displayName" : "HelloNoah-abonnement",
+              "locale" : "nl"
+            }
+          ],
+          "productID" : "ai.hellonoah.abonnement.maand.2",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "HelloNoah-abonnement (maand) 2",
+          "subscriptionGroupID" : "21500002",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "21500003",
+      "localizations" : [
+        {
+          "description" : "Noah, de AI-metgezel, voor nog een naaste",
+          "displayName" : "Noah 3",
+          "locale" : "nl"
+        }
+      ],
+      "name" : "Noah 3",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6700000005",
+          "introductoryOffer" : {
+            "displayPrice" : "9.99",
+            "internalID" : "6700000006",
+            "numberOfPeriods" : 6,
+            "paymentMode" : "payAsYouGo",
+            "subscriptionPeriod" : "P1M"
+          },
+          "localizations" : [
+            {
+              "description" : "Praten met Noah (redelijk gebruik), dashboard, levensverhaal en meldingen.",
+              "displayName" : "HelloNoah-abonnement",
+              "locale" : "nl"
+            }
+          ],
+          "productID" : "ai.hellonoah.abonnement.maand.3",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "HelloNoah-abonnement (maand) 3",
+          "subscriptionGroupID" : "21500003",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
     }
   ],
   "version" : {

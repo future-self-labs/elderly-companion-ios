@@ -152,8 +152,10 @@ struct PaywallView: View {
     @EnvironmentObject private var app: AppModel
     @State private var activated = false
     @State private var trial: Subscription?
-    /// This Apple ID already pays for a profile (H4: one Apple ID, one subscription for now).
-    @State private var existing: SubscriptionStore.ExistingEntitlement?
+    /// v2.3: which of the three products this Apple ID can still buy for this profile.
+    @State private var choice: ProductChoice?
+
+    private var productID: String? { choice?.productID }
 
     private var name: String {
         elderlyName ?? session.elderly.first { $0.id == elderlyId }?.preferredName ?? "je naaste"
@@ -176,10 +178,10 @@ struct PaywallView: View {
     }
 
     private func prepare() async {
-        async let product: Void = store.loadProduct()
+        async let products: Void = store.loadProducts()
         trial = try? await session.api.subscription(elderlyId: elderlyId)
-        existing = await store.existingEntitlement(for: elderlyId)
-        await product
+        choice = await store.choice(for: elderlyId)
+        await products
     }
 
     private var content: some View {
@@ -230,16 +232,16 @@ struct PaywallView: View {
             }
 
             NoahCard(padding: NoahSpacing.l) {
-                if store.isEligibleForIntro {
-                    Text(verbatim: "\(store.introPriceText) per maand")
+                if store.isEligibleForIntro(productID) {
+                    Text(verbatim: "\(store.introPriceText(for: productID)) per maand")
                         .font(NoahFont.display(36, relativeTo: .largeTitle)).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
-                    Text("de eerste \(store.introPeriodCount) maanden, daarna \(store.regularPriceText) per maand")
+                    Text("de eerste \(store.introPeriodCount(for: productID)) maanden, daarna \(store.regularPriceText(for: productID)) per maand")
                         .font(NoahFont.callout)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(verbatim: "\(store.regularPriceText) per maand")
+                    Text(verbatim: "\(store.regularPriceText(for: productID)) per maand")
                         .font(NoahFont.display(36, relativeTo: .largeTitle)).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
                 }
@@ -268,13 +270,16 @@ struct PaywallView: View {
             }
 
 
-            if let existing {
-                existingSubscriptionCard(existing)
-            } else {
+            switch choice {
+            case .alreadyForThisProfile?:
+                alreadyPaidCard
+            case .allInUse(let owned)?:
+                allInUseCard(owned)
+            case .buy?, nil:
                 if let error = store.errorMessage { NoahNotice(kind: .warning, text: error) }
 
                 NoahAsyncButton(kind: .primary, action: purchase) {
-                    Text(store.isEligibleForIntro ? "Start voor \(store.introPriceText) per maand" : "Start voor \(store.regularPriceText) per maand")
+                    Text(store.isEligibleForIntro(productID) ? "Start voor \(store.introPriceText(for: productID)) per maand" : "Start voor \(store.regularPriceText(for: productID)) per maand")
                 }
                 .accessibilityIdentifier("paywall.purchase")
             }
@@ -297,43 +302,55 @@ struct PaywallView: View {
         }
     }
 
-    /// Explains up front why this Apple ID can't start a second subscription, instead of letting
-    /// StoreKit return the existing one and showing a false "Betaling ontvangen".
-    @ViewBuilder
-    private func existingSubscriptionCard(_ existing: SubscriptionStore.ExistingEntitlement) -> some View {
+    /// This Apple ID already pays for this profile: restore, never a second payment.
+    private var alreadyPaidCard: some View {
+        VStack(alignment: .leading, spacing: NoahSpacing.l) {
+            NoahCard(padding: NoahSpacing.l) {
+                Label {
+                    Text("Je hebt al een abonnement voor \(name)")
+                        .font(NoahFont.headline)
+                        .foregroundColor(NoahColor.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: "info.circle.fill").foregroundColor(NoahColor.accent)
+                }
+                Text("Met deze Apple ID loopt het \(Plan.displayName) voor \(name) al. Tik op Aankopen herstellen om Noah voor \(name) te activeren. Er wordt niets extra afgeschreven.")
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityIdentifier("paywall.existingSubscription")
+            if let error = store.errorMessage { NoahNotice(kind: .info, text: error) }
+        }
+    }
+
+    /// A fourth profile on the same Apple ID (v2.3: at most three, one per subscription group).
+    private func allInUseCard(_ owned: [OwnedSubscription]) -> some View {
         NoahCard(padding: NoahSpacing.l) {
             Label {
-                Text(existing.isForThisProfile ? "Je hebt al een abonnement voor \(name)" : "Je betaalt al met deze Apple ID")
+                Text("Deze Apple ID betaalt al voor \(Plan.maxPerAppleID) naasten")
                     .font(NoahFont.headline)
                     .foregroundColor(NoahColor.text)
                     .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "info.circle.fill").foregroundColor(NoahColor.accent)
             }
-            if existing.isForThisProfile {
-                Text("Met deze Apple ID loopt het \(Plan.displayName) voor \(name) al. Tik op Aankopen herstellen om Noah voor \(name) te activeren. Er wordt niets extra afgeschreven.")
-                    .font(NoahFont.callout)
-                    .foregroundColor(NoahColor.textSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text(verbatim: existing.explanation(for: name))
-                    .font(NoahFont.callout)
-                    .foregroundColor(NoahColor.textSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Wat wel kan: een andere mantelzorger van \(name) wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Vragen? Ons supportteam helpt je graag.")
-                    .font(NoahFont.callout)
-                    .foregroundColor(NoahColor.textSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-                Link(destination: app.environment.config.supportURL) {
-                    Text("Hulp en contact")
-                }
-                .font(NoahFont.semibold(15, relativeTo: .subheadline))
-                .foregroundColor(NoahColor.accent)
-                .frame(minHeight: NoahSize.minTap)
+            Text(verbatim: store.allInUseExplanation(owned: owned, targetName: name))
+                .font(NoahFont.callout)
+                .foregroundColor(NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Wat wel kan: een andere mantelzorger van \(name) wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Of stop een abonnement dat je niet meer nodig hebt via Instellingen › je naam › Abonnementen. Vragen? Ons supportteam helpt je graag.")
+                .font(NoahFont.callout)
+                .foregroundColor(NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
+            Link(destination: app.environment.config.supportURL) {
+                Text("Hulp en contact")
             }
+            .font(NoahFont.semibold(15, relativeTo: .subheadline))
+            .foregroundColor(NoahColor.accent)
+            .frame(minHeight: NoahSize.minTap)
         }
-        .accessibilityIdentifier("paywall.existingSubscription")
-        if let error = store.errorMessage { NoahNotice(kind: .info, text: error) }
+        .accessibilityIdentifier("paywall.allInUse")
     }
 
     private func feature(_ text: LocalizedStringKey) -> some View {
@@ -361,9 +378,9 @@ struct PaywallView: View {
     }
 
     private var disclosureText: String {
-        let intro = store.isEligibleForIntro
-            ? "Je betaalt de eerste \(store.introPeriodCount) maanden \(store.introPriceText) per maand, daarna \(store.regularPriceText) per maand. "
-            : "Je betaalt \(store.regularPriceText) per maand. "
+        let intro = store.isEligibleForIntro(productID)
+            ? "Je betaalt de eerste \(store.introPeriodCount(for: productID)) maanden \(store.introPriceText(for: productID)) per maand, daarna \(store.regularPriceText(for: productID)) per maand. "
+            : "Je betaalt \(store.regularPriceText(for: productID)) per maand. "
         return intro + "De betaling loopt via je Apple ID. Het abonnement wordt elke maand automatisch verlengd, tenzij je het minstens 24 uur voor het einde van de periode opzegt. Opzeggen en beheren doe je in de instellingen van je Apple ID."
     }
 
@@ -372,6 +389,9 @@ struct PaywallView: View {
             await session.reloadMe()
             session.dataChanged()
             activated = true
+        } else {
+            // Ownership may have changed meanwhile (another device, another profile).
+            choice = await store.choice(for: elderlyId)
         }
     }
 
