@@ -1,7 +1,8 @@
 # HelloNoah — iOS
 
 Native iOS app of **HelloNoah.ai**: Noah, a Dutch, voice-first AI companion for older people.
-The family caregiver (*mantelzorger*) buys and sets it up; the older person just talks to Noah.
+The family caregiver (*mantelzorger*) buys and sets it up; the older person just talks to Noah. Since API v2.3 the
+older person can also sign up on their own phone, pay themselves and invite family later (the *self route*).
 A product by Aldery.
 
 - Product spec: `HelloNoah.ai — Product & Research Handoff.md` (Section 1 is binding).
@@ -16,7 +17,7 @@ At launch the app decides by what is in the Keychain:
 |---|---|
 | device token (`hnd_…`) | **Older person** — formal "u", huge targets, no login ever |
 | caregiver tokens | **Caregiver** — informal "je", tab bar |
-| nothing | Welcome: "Ik ben mantelzorger" or "Deze telefoon is voor iemand die met Noah gaat praten" (6-digit pairing code) |
+| nothing | Welcome, three equal choices: "Ik ben mantelzorger", "Ik wil zelf met Noah praten" (self sign-up) or "Deze telefoon koppelen met een code" (6-digit pairing code) |
 
 **Older person:** Home (big round "Praat met Noah", last conversation, "Vertel een verhaal" (story mode), "Bel mij",
 next reminder, Mijn verhaal, Herinneringen) · Conversation (orb + waveform reacting to who speaks, optional large
@@ -28,6 +29,20 @@ they already use) · widgets (small, medium, lock-screen circular) that start a 
 button: the microphone only opens after a visible tap. The widget proves it is the widget with a per-install token in
 the shared Keychain group `<team>.ai.hellonoah.shared` (`Shared/WidgetLaunch.swift`). A hidden long-press (2 s) on the greeting opens settings for the
 caregiver (unpair this phone).
+
+**Self route (v2.3, older person on their own phone, "u", huge targets, at most 5 steps):** phone number → SMS code
+(same robust code field; "Bel mij met de code" reads it out) → "Hoe mag Noah u noemen?" + u/jij → Noah's voice →
+"Wie mogen we waarschuwen als het niet goed gaat?" (strongly suggested, skippable; "Noah is geen alarmcentrale … 112")
+→ subscription in "u" (same price and intro, fair use, restore, disclosures; "Eerst gratis proberen" uses the free first
+conversation) → home. A number that already belongs to a caregiver-managed profile shows "Deze telefoon is gekoppeld
+aan het account van uw familie" and opens the normal home. Steps 2–5 resume after the app was closed
+(`ElderSession.isOnboarding`). Self-managed homes get one calm "Instellingen" row at the bottom: naam/stem/tempo,
+opnemen (consent in "u"), noodcontacten, abonnement, familie uitnodigen (meekijken = lezer, helpen beheren = beheerder,
+with what that means), wie kijkt er mee (remove), gegevens downloaden, account verwijderen (two calm screens with a big
+red button, no typing; the second screen puts "Nee, toch niet" first and arms the red button after a moment).
+Caregiver-managed phones never see it and keep the hidden unpair gesture. `managedBy` comes from `GET /device/profile`
+(fallback `GET /device/me`); when a beheerder takes over, Instellingen disappears on the next refresh. These screens cap
+Dynamic Type at accessibility size 2 (`noahElderScreenScaling`), so long Dutch words never break mid-word.
 
 **Caregiver:** 4 welcome slides · Sign in with Apple / phone + SMS code · start (new profile or invitation code) ·
 9-step profile wizard (name & address form, phone, about, important people, preferences, Noah settings, emergency
@@ -62,19 +77,28 @@ Uncheck the argument in *Edit Scheme → Run → Arguments* to use the live back
 - Hidden toggle (**Debug builds only**; the mock, the toggle and all launch arguments are compiled out of Release, so
   TestFlight and the App Store always use the real backend): tap the HelloNoah logo on the welcome screen 5×, or
   long-press the version line in *Meer → Account en privacy*.
-- Handy launch arguments (mock only): `-mockPersona caregiver|new|elder|none`, `-uiRoute <screen>` (e.g.
+- Self route (v2.3): "Ik wil zelf met Noah praten" with any number and any 6-digit code (`000000` is rejected)
+  creates a new self-managed profile (kept across launches in UserDefaults); Wim's number 06 23456789 pairs to Wim
+  ("gekoppeld aan het account van uw familie"); Toos's 06 45678901 signs Toos in again. `-mockPersona self` is Toos,
+  who signed up herself (daughter Ellen looks along as lezer). Self routes: `-uiRoute elderSignUp|elderSignUpCode|
+  familyLinked` (welcome) and `onboarding|onboardingVoice|onboardingContact|onboardingPaywall|settings|settingsNoah|
+  settingsRecording|settingsContacts|settingsSubscription|settingsPaywall|settingsInvite|settingsCaregivers|
+  settingsExport|settingsDelete` (with `-mockPersona self`).
+- Handy launch arguments (mock only): `-mockPersona caregiver|new|elder|self|none`, `-uiRoute <screen>` (e.g.
   `dashboard`, `conversationDetail`, `storyConversationDetail`, `alertDetail`, `wizard`, `paywall`, `conversation`,
   `storyConversation`, `myStory`, `storyEntry`; see `CaregiverRootView.applyDebugRoute` / `ElderRootView`),
   `-mockOffline YES`, `-mockInactive YES`, `-mockOverAllowance YES` (fair use used up), `-mockLatency 0`,
   `-mockMaxDurationSeconds 70` (short sessions: Noah is asked to say goodbye a minute before the end),
-  `-mockRecordingUnavailable YES` (recording changes answer 503), `-mockAppleIDPaysFor <elderlyId>` (this Apple ID
-  already pays for that profile: the paywall explains instead of selling), `-mockPhoneUnverified YES` (Wim's number
+  `-mockRecordingUnavailable YES` (recording changes answer 503), `-mockAppleIDPaysFor <id1>,<id2>,…` (this Apple ID
+  already owns `.maand`, `.maand.2`, … for those profiles, in order: the paywall offers the next free product, says
+  "al een abonnement" for an owned profile and explains a 4th), `-mockPhoneUnverified YES` (Wim's number
   still needs confirming; any 6 digits except `000000` confirm it).
 - Recordings (v2.1): Wim's recording setting is "alleen bij levensverhalen"; his story conversations and two life-story
   entries (trouwdag, Toon Hermans) have a recording. Mock mode plays a generated 40-second demo tune instead of a voice.
 - Purchases: mock mode always simulates the purchase and never touches StoreKit (no real charge, nothing finished
-  against the mock). `Products.storekit` (`ai.hellonoah.abonnement.maand`, intro €9,99 × 6, then €59,99) is used when
-  running live from Xcode.
+  against the mock); a simulated purchase takes the next free product, so three profiles use `.maand`, `.maand.2`,
+  `.maand.3` and a fourth gets the explanation. `Products.storekit` (three identical products in groups "Noah",
+  "Noah 2", "Noah 3": intro €9,99 × 6, then €59,99) is used when running live from Xcode.
 
 Mock data lives in memory and resets at each launch.
 
@@ -90,7 +114,9 @@ Base URL: `Config/HelloNoah.xcconfig` (`API_BASE_URL`, default
 xcodebuild -scheme HelloNoah -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build test
 ```
 
-90+ unit tests (incl. `AuditFixesTests` and `ConversationControllerTests` for the 2026-10-18 audit fixes): every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
+110+ unit tests (incl. `AuditFixesTests` and `ConversationControllerTests` for the 2026-10-18 audit fixes and
+`SelfRouteTests` for v2.3: sign-up/device-profile decoding, request bodies and paths, product selection, simulated
+multi-product purchases, the mock's self route and the older person's session): every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
 arrays), request encoding, single-flight token refresh (5 parallel 401s → exactly 1 refresh), sign-out on an invalid
 refresh token, device unpairing on 401, Dutch relative dates and reminder schedules, phone number normalisation,
 role gating (incl. the mock enforcing it), deep links, and the v2.1 product corrections (fair use, recording setting,
@@ -98,6 +124,13 @@ story mode, audio URLs and expiry, memory-aid and privacy copy, and a scan of th
 like "onbeperkt" or "geen geluidsopnames").
 
 ## Product wording (v2.1)
+
+**Several profiles, one Apple ID (v2.3).** `Plan.productIDs` = `ai.hellonoah.abonnement.maand`, `.maand.2`, `.maand.3`
+(separate subscription groups, same price and intro). `ProductChoice.choose` picks the first product this Apple ID does
+not own in `Transaction.currentEntitlements`; a profile it already pays for gets "herstellen", a 4th gets a clear
+explanation (caregiver "je", older person "u"). Caregiver purchases go to `POST /subscriptions/app-store`, the older
+person's to `POST /device/subscriptions/app-store` (only while self-managed; that phone never finishes another
+profile's transaction).
 
 The plan is named only in `Plan.displayName` ("HelloNoah-abonnement", `Core/Services/SubscriptionStore.swift`). Texts
 that must read the same everywhere live in `ProductCopy` (`Core/Formatting/Labels.swift`): the honest privacy text,
@@ -153,8 +186,8 @@ files from the build's intermediates.
 ## Release checklist (Apple)
 
 See the report in `LOG.md` (2026-10-11): App ID capabilities (Sign in with Apple, Push, Associated Domains), the
-widget App ID, the auto-renewable subscription `ai.hellonoah.abonnement.maand` ("HelloNoah-abonnement") in group "Noah" with the 6-month
-pay-as-you-go intro offer, App Store Server Notifications V2 URL, APNs key for the backend, AASA file on
+widget App ID, the auto-renewable subscriptions `ai.hellonoah.abonnement.maand`, `.maand.2` and `.maand.3`
+("HelloNoah-abonnement") in groups "Noah", "Noah 2" and "Noah 3", each €59,99 with the 6-month pay-as-you-go intro offer, App Store Server Notifications V2 URL, APNs key for the backend, AASA file on
 hellonoah.ai, TestFlight.
 
 ```sh

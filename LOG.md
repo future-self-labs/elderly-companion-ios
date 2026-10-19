@@ -1,6 +1,6 @@
 # Noah - Elderly Companion: Project Log
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 ---
 
@@ -418,6 +418,47 @@ Note: N8N is no longer used. `DEEPGRAM_API_KEY` and `ELEVEN_API_KEY` are require
 - **Status**: Investigating via Railway logs.
 
 ---
+
+## 2026-10-19 — Self route for the older person + several subscriptions per Apple ID (API v2.3), iOS
+
+Implements the "2026-10-19 — v2.3" entry of `elderly-companion-api/docs/api-v2.md` and follows the backend's
+"backend v2.3 implemented" notes (optional `channel` on start, `deviceName`/`platform` on verify, alert type
+`apparaat_gekoppeld`, `managedBy` on `/me` and `/device/me`).
+
+- **Welcome.** Three equally clear, big choices: "Ik ben mantelzorger", "Ik wil zelf met Noah praten" (new), "Deze
+  telefoon koppelen met een code". Shorter copy so all three fit; demo notice moved below them.
+- **Self sign-up** (`Features/Welcome/ElderSignUpView`, `Features/Elder/Self/SelfOnboardingView`), "u", huge type,
+  "Stap n van 5": phone + SMS code (`POST /auth/elderly/phone/start|verify`, "Bel mij met de code" for landlines, wrong
+  code `400 ongeldige_code` never unpairs) → name + u/jij (`PATCH /device/profile`; the verify call carries no name, the
+  backend starts nameless) → voice (`PATCH /device/settings`) → emergency contact (strongly suggested, skippable,
+  honest "geen alarmcentrale, bel 112") → paywall in "u" with "Eerst gratis proberen" → home ("Alles staat klaar").
+  The onboarding flag survives a relaunch. A number of a caregiver-managed profile → "Deze telefoon is gekoppeld aan
+  het account van uw familie" → normal home. A returning self user → "Welkom terug".
+- **Instellingen** for self-managed profiles only (`Features/Elder/Self/*`): naam/stem/spreeksnelheid (three choices
+  instead of a slider), opnemen with the consent explanation, noodcontacten (add/edit/delete), abonnement (status, fair
+  use, beheren, herstellen), familie uitnodigen (meekijken/helpen beheren explained, warning that a beheerder takes
+  over the settings, share sheet), wie kijkt er mee (remove with confirmation), gegevens downloaden (share sheet, file
+  removed afterwards), account verwijderen (two-step, big red button, no typing; warns that the Apple subscription must
+  be cancelled separately). Caregiver-managed phones keep the hidden unpair gesture and see none of this. Inactive
+  self profiles see "Abonnement starten" instead of "Vraag uw mantelzorger", also in the conversation screen.
+- **Several subscriptions per Apple ID.** `Products.storekit` has `.maand`, `.maand.2`, `.maand.3` in groups "Noah",
+  "Noah 2", "Noah 3" (same price, same intro). `SubscriptionStore` picks the first product this Apple ID doesn't own
+  (`Transaction.currentEntitlements`), offers "herstellen" for a profile it already pays for and explains a 4th. This
+  replaces the stopgap "Je betaalt al met deze Apple ID…". Works for the caregiver paywall (also in the wizard) and the
+  older person's paywall (device endpoint, "u" texts). On the older person's phone only that profile's transactions
+  are redeemed/finished.
+- **Mock.** `-mockPersona self` (Toos, self-managed, Ellen as lezer), the new auth and device endpoints with
+  `403 beheerd_door_mantelzorger` for Wim/Riet, self sign-ups kept across launches, the free first conversation used
+  up at the start, a beheerder invitation turning a self profile caregiver-managed, simulated multi-product purchases
+  (`-mockAppleIDPaysFor id1,id2,…`; the fake JWS names the product). Debug only; never StoreKit.
+- **Design system.** `large` variants of `NoahTextField`/`NoahField`/`NoahOptionCard`, `ElderTileButton` stacks its
+  icon above the title at accessibility sizes, `noahElderScreenScaling()` caps the new screens at AX2 (verified at
+  normal, AX1 and AX5: no mid-word breaks).
+- **Tests.** 112 (21 new in `SelfRouteTests.swift`). Screenshots 70–99 in `docs/screenshots/`.
+- **Not done / for product.** No audio sample of the voices: the contract has no sample endpoint and a system voice
+  would sound nothing like the real ElevenLabs voice (a short mp3 per voice on hellonoah.ai would make it cheap).
+  No reorder UI for the older person's emergency contacts (`PUT /device/emergency-contacts/order` exists). App Store
+  Connect: create `.maand.2` and `.maand.3` in groups "Noah 2" and "Noah 3" with the same price and intro offer.
 
 ## 2026-10-18 — Audit fixes (iOS review + security audit, API v2.2), iOS
 
