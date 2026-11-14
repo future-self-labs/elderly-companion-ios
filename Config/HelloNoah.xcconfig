@@ -6,6 +6,9 @@
 API_BASE_URL = https:/$()/elderly-companion-api-production.up.railway.app/api/v2
 
 // Links shown on the paywall and in settings (App Store Review requires terms + privacy).
-TERMS_URL = https:/$()/www.apple.com/legal/internet-services/itunes/dev/stdeula/
+// The Dutch terms replace Apple's English standard EULA (audit 2026-11-14 §3.4); the same URL must
+// be set as the license agreement / terms link in App Store Connect.
+TERMS_URL = https:/$()/hellonoah.ai/voorwaarden
 PRIVACY_URL = https:/$()/hellonoah.ai/privacy
 SUPPORT_URL = https:/$()/hellonoah.ai/hulp
+ACCOUNT_DELETION_URL = https:/$()/hellonoah.ai/account-verwijderen

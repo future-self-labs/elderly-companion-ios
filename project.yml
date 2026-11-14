@@ -23,8 +23,8 @@ configFiles:
 
 settings:
   base:
-    MARKETING_VERSION: "2.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "3"
     DEVELOPMENT_TEAM: "465F27GDQR"
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
@@ -35,7 +35,9 @@ settings:
     # Dutch is the development language and the only language that ships.
     XCSTRINGS_LANGUAGES_TO_COMPILE: "nl"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
-    TARGETED_DEVICE_FAMILY: "1,2"
+    # iPhone only. xcodegen writes a per-target default ("1,2") that wins over this project-level
+    # value, so every target below repeats it (audit 2026-11-14 B1).
+    TARGETED_DEVICE_FAMILY: "1"
 
 schemes:
   HelloNoah:
@@ -86,6 +88,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: HelloNoah/Supporting/HelloNoah.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
 
   HelloNoahWidget:
     type: app-extension
@@ -106,6 +109,7 @@ targets:
         CODE_SIGN_ENTITLEMENTS: HelloNoahWidget/HelloNoahWidget.entitlements
         SKIP_INSTALL: YES
         ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+        TARGETED_DEVICE_FAMILY: "1"
     dependencies:
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
@@ -123,3 +127,4 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/HelloNoah.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HelloNoah"
         BUNDLE_LOADER: "$(TEST_HOST)"
+        TARGETED_DEVICE_FAMILY: "1"

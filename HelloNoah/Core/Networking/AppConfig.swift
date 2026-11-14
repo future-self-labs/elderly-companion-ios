@@ -13,6 +13,8 @@ struct AppConfig {
     let termsURL: URL
     let privacyURL: URL
     let supportURL: URL
+    /// Deleting an account without the app (App Store / Play requirement).
+    let accountDeletionURL: URL
 
     /// Reads Info.plist (from the xcconfig) and, in Debug builds only, launch arguments / user defaults.
     ///
@@ -39,9 +41,10 @@ struct AppConfig {
         return AppConfig(
             baseURL: base,
             useMock: useMock,
-            termsURL: url("HNTermsURL", fallback: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"),
+            termsURL: url("HNTermsURL", fallback: "https://hellonoah.ai/voorwaarden"),
             privacyURL: url("HNPrivacyURL", fallback: "https://hellonoah.ai/privacy"),
-            supportURL: url("HNSupportURL", fallback: "https://hellonoah.ai/hulp")
+            supportURL: url("HNSupportURL", fallback: "https://hellonoah.ai/hulp"),
+            accountDeletionURL: url("HNAccountDeletionURL", fallback: "https://hellonoah.ai/account-verwijderen")
         )
     }
 

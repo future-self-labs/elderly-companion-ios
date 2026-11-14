@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		026D7152475CA3CAC3CDC41A /* V24Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9244A57377E8EB09555A011E /* V24Tests.swift */; };
 		03CA48D56CEEDF11733795F7 /* PushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFFB5A662CD45CE9FAB83C1D /* PushManager.swift */; };
+		05D20C4CA8117E585B9B8920 /* CaregiverTransparencyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3015C9A1DD8DBB198C27557A /* CaregiverTransparencyViews.swift */; };
 		060FCD6D774599DBB53303AA /* Lexend-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 85DE68049ECFDCEE1320D2A3 /* Lexend-SemiBold.ttf */; };
 		07F51953255FB1C57B3E62E5 /* Reachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D63B6A171D166E2ED7C467 /* Reachability.swift */; };
 		0855800B7DBA7DC218954BD0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94964109FE5D2748460B7F6 /* Models.swift */; };
@@ -68,6 +70,7 @@
 		8B45BA67587E9D6890892808 /* VoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 202CC73FA768947D8D30E3EB /* VoiceEngine.swift */; };
 		8C2D765738BC72301D686959 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B06D8DCFC72E5A71C20F09D5 /* PrivacyInfo.xcprivacy */; };
 		8C4AB6D5579BE6D34CAC596E /* ElevenLabsVoiceEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70C2013EB7048E365A228714 /* ElevenLabsVoiceEngine.swift */; };
+		8D5EB45C479BB798B610B96D /* TransparencyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A33039F4DAAFA7A52051E72 /* TransparencyViews.swift */; };
 		8EF7AACACF427D211F4D44E2 /* LifeStoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19E930DAD9AC20BE5E2F91BB /* LifeStoryViews.swift */; };
 		8F01C133B9A6310431FD15E1 /* LevelShaperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483FE3DAACF2D3069C572C6A /* LevelShaperTests.swift */; };
 		8F83CDDBA87E7D5AD4D21D2D /* MoodChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = B62B1F179FFF9CDB00B482CA /* MoodChart.swift */; };
@@ -166,6 +169,7 @@
 		24565C77FC779982A00BEE2F /* ProfileWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileWizardView.swift; sourceTree = "<group>"; };
 		2707AD9D947A501B8EC428C7 /* CodeFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFieldTests.swift; sourceTree = "<group>"; };
 		2EAB4EB272673D153D92C369 /* NoahOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahOrb.swift; sourceTree = "<group>"; };
+		3015C9A1DD8DBB198C27557A /* CaregiverTransparencyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaregiverTransparencyViews.swift; sourceTree = "<group>"; };
 		32BB4B8AD1F28FCA108D9573 /* ConversationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationScreen.swift; sourceTree = "<group>"; };
 		32E7311DCC82A4BB3C886700 /* Inputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inputs.swift; sourceTree = "<group>"; };
 		36933F7A94BECCA0BDA2CE74 /* ScheduleMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleMath.swift; sourceTree = "<group>"; };
@@ -183,6 +187,7 @@
 		5667674571D1457F458678E4 /* NoahSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoahSettingsView.swift; sourceTree = "<group>"; };
 		57C2F9382CCF03124FA9A8C4 /* LiveNoahAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNoahAPI.swift; sourceTree = "<group>"; };
 		58503BF86C8C92EAF3ED130E /* SelfOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfOnboardingView.swift; sourceTree = "<group>"; };
+		5A33039F4DAAFA7A52051E72 /* TransparencyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransparencyViews.swift; sourceTree = "<group>"; };
 		5B9B489EF31C67555E96CF12 /* RecordingPlayerViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlayerViews.swift; sourceTree = "<group>"; };
 		5EF6AE8204A9DB296A02B757 /* CodeField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeField.swift; sourceTree = "<group>"; };
 		5F73611EFE76A07F61E8F244 /* HelloNoah.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = HelloNoah.xcconfig; sourceTree = "<group>"; };
@@ -202,6 +207,7 @@
 		886D0EBC966AAB0527E80630 /* RemindersViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersViews.swift; sourceTree = "<group>"; };
 		8A0812D2ABE784E7A163900D /* ConversationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationController.swift; sourceTree = "<group>"; };
 		8B8DBC8445A30AC45FED9FEB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9244A57377E8EB09555A011E /* V24Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = V24Tests.swift; sourceTree = "<group>"; };
 		96E16BDC1A788BCD22D4AB4E /* PairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairingView.swift; sourceTree = "<group>"; };
 		9A62732A7069EFA87CDA14E2 /* ListRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListRows.swift; sourceTree = "<group>"; };
 		9C5C6875BF1F8531661C598C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -319,6 +325,7 @@
 			children = (
 				1F3F4840F62561FC1430034B /* AccountView.swift */,
 				54A05BFD2690AA6B76C432DE /* CaregiversAndDevicesViews.swift */,
+				3015C9A1DD8DBB198C27557A /* CaregiverTransparencyViews.swift */,
 				7EAEC3BDB9238961ED60BBEB /* ContactsAndPhoneViews.swift */,
 				DB505E362B943C0B653379FD /* MoreView.swift */,
 				5667674571D1457F458678E4 /* NoahSettingsView.swift */,
@@ -441,6 +448,7 @@
 				CDBB429CEAC357FC4DCFA228 /* RoleAndRoutingTests.swift */,
 				03FB9F51033C907591597E84 /* SelfRouteTests.swift */,
 				D89B4F4D89356B0E6BC29F5C /* TokenRefreshTests.swift */,
+				9244A57377E8EB09555A011E /* V24Tests.swift */,
 			);
 			path = HelloNoahTests;
 			sourceTree = "<group>";
@@ -578,6 +586,7 @@
 				012744EACD6EBE003E07B603 /* ElderRemindersView.swift */,
 				EE6CC6FDA16F0D619B2D93F1 /* ElderRootView.swift */,
 				36B3612E14E0DD48A5555756 /* MyStoryView.swift */,
+				5A33039F4DAAFA7A52051E72 /* TransparencyViews.swift */,
 			);
 			path = Elder;
 			sourceTree = "<group>";
@@ -813,6 +822,7 @@
 				F04D511CCAEE0637DEF9857A /* RoleAndRoutingTests.swift in Sources */,
 				D766D62C9E65DE3F79DF6D8C /* SelfRouteTests.swift in Sources */,
 				14B96C28E0FAE930F8A2B522 /* TokenRefreshTests.swift in Sources */,
+				026D7152475CA3CAC3CDC41A /* V24Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -842,6 +852,7 @@
 				A4F16FFD2383B5E6BE8D614C /* CaregiverIntroView.swift in Sources */,
 				76A45F6E698598A97659525C /* CaregiverRootView.swift in Sources */,
 				B7BB47046506C26C52D0FA2E /* CaregiverStartView.swift in Sources */,
+				05D20C4CA8117E585B9B8920 /* CaregiverTransparencyViews.swift in Sources */,
 				0ADD6482A824A0E832A7C426 /* CaregiversAndDevicesViews.swift in Sources */,
 				1C14FDA83E8B0A8BC405A654 /* Chips.swift in Sources */,
 				4E9FA0171CBA6890EA278B60 /* CodeField.swift in Sources */,
@@ -900,6 +911,7 @@
 				18B5F4DA01C0C23BF169C09F /* SubscriptionViews.swift in Sources */,
 				36352ED28B03BEFD77293EAE /* TokenStore.swift in Sources */,
 				7797FBC1A6AF66C5F6DCECB1 /* Tokens.swift in Sources */,
+				8D5EB45C479BB798B610B96D /* TransparencyViews.swift in Sources */,
 				8B45BA67587E9D6890892808 /* VoiceEngine.swift in Sources */,
 				76C97C15C2A23410A522137C /* WelcomeFlowView.swift in Sources */,
 				11A0F8C40F1E671C4F9F52EA /* WidgetLaunch.swift in Sources */,
@@ -937,7 +949,7 @@
 				PRODUCT_NAME = HelloNoahWidget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -956,7 +968,7 @@
 				PRODUCT_NAME = HelloNoahWidget;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -972,7 +984,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ai.hellonoah.app.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HelloNoah.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HelloNoah";
 			};
 			name = Debug;
@@ -989,7 +1001,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ai.hellonoah.app.tests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HelloNoah.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HelloNoah";
 			};
 			name = Release;
@@ -1030,7 +1042,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 465F27GDQR;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1053,7 +1065,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1064,7 +1076,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XCSTRINGS_LANGUAGES_TO_COMPILE = nl;
 			};
 			name = Debug;
@@ -1105,7 +1117,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 465F27GDQR;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -1122,7 +1134,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1132,7 +1144,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XCSTRINGS_LANGUAGES_TO_COMPILE = nl;
 			};
 			name = Release;
@@ -1152,7 +1164,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ai.hellonoah.app;
 				PRODUCT_NAME = HelloNoah;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -1171,7 +1183,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ai.hellonoah.app;
 				PRODUCT_NAME = HelloNoah;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
