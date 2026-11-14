@@ -58,9 +58,11 @@ struct ElderHomeView: View {
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .accessibilityIdentifier("elder.lastConversation")
 
-                storyButton
-
-                callMeButton
+                // A phone that waits for approval has no story mode and no "Bel mij" (backend v2.4 §8).
+                if !session.isRestricted {
+                    storyButton
+                    callMeButton
+                }
 
                 if let reminder = session.me.value?.nextReminder {
                     nextReminderCard(reminder)

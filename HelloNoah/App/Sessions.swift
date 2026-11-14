@@ -69,6 +69,8 @@ final class ElderSession: ObservableObject {
     /// v2.4: this phone was just signed in on a profile in use and waits for approval.
     var isRestricted: Bool { me.value?.restricted == true }
     var restrictedUntil: Date? { me.value?.restrictedUntil }
+    /// v2.4: on `GET /device/me` and `GET /device/profile` (backend v2.4 §6).
+    var outboundPaused: Bool? { me.value?.outboundPaused ?? profile?.outboundPaused }
     var noahName: String { me.value?.elderly.noahName ?? "Noah" }
     var elderlyId: String? { me.value?.elderly.id ?? profile?.id }
     /// The older person manages everything themselves: show "Instellingen" (v2.3).

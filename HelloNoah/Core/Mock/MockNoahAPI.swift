@@ -225,6 +225,7 @@ final class MockNoahAPI: NoahAPI {
             hidden.moodIndicators = []
             hidden.hasConcern = false
             hidden.hasAudio = false
+            hidden.mode = nil
             hidden.lifeStoryEntryIds = []
             conversationsByElderly[MockIDs.wim]![index] = hidden
         }
@@ -1402,10 +1403,12 @@ final class MockNoahAPI: NoahAPI {
                 elderly: .init(id: id, preferredName: profile.preferredName, addressForm: profile.addressForm, noahName: settingsByElderly[id]?.noahName ?? "Noah"),
                 access: profile.access,
                 lastConversationAt: conversationsByElderly[id]?.first?.startedAt,
-                nextReminder: next,
+                // Backend v2.4 §8: a restricted phone gets no reminder.
+                nextReminder: restrictedPhone && !v23Backend ? nil : next,
                 managedBy: profile.managedBy,
                 restricted: v23Backend ? nil : restrictedPhone,
-                restrictedUntil: restrictedPhone && !v23Backend ? Date().addingTimeInterval(60 * 3600) : nil
+                restrictedUntil: restrictedPhone && !v23Backend ? Date().addingTimeInterval(60 * 3600) : nil,
+                outboundPaused: v23Backend ? nil : outboundPaused.contains(id)
             )
         }
     }
@@ -1450,6 +1453,7 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceCallMe() async throws {
         try await simulate()
+        try requireUnrestricted()
         try sync {
             guard profiles[deviceElderlyId]?.access == .active else {
                 throw fail(409, "inactive", "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
@@ -1468,6 +1472,7 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceConversationAudio(conversationId: String) async throws -> ConversationAudio {
         try await simulate()
+        try requireUnrestricted()
         return try sync {
             try audio(for: conversationsByElderly[deviceElderlyId]?.first { $0.id == conversationId })
         }
@@ -1475,6 +1480,7 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceReminders() async throws -> [Reminder] {
         try await simulate()
+        try requireUnrestricted()
         return sync {
             refreshedReminders(deviceElderlyId).filter { $0.active && $0.nextAt != nil }.sorted { $0.nextAt! < $1.nextAt! }
         }
@@ -1642,6 +1648,7 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceEmergencyContacts() async throws -> [EmergencyContact] {
         try await simulate()
+        try requireUnrestricted()
         return try sync { (contacts[try requireSelfManaged()] ?? []).sorted { $0.priority < $1.priority } }
     }
 

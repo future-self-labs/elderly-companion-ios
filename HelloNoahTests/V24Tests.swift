@@ -158,6 +158,16 @@ final class LiveV24PathTests: XCTestCase {
         }
     }
 
+    func testBackendV24Additions() throws {
+        let me = try NoahJSON.decoder.decode(DeviceMe.self, from: Data(#"{ "elderly": { "id": "e", "preferredName": "Wim" }, "access": "active", "nextReminder": null, "restricted": true, "outboundPaused": true }"#.utf8))
+        XCTAssertEqual(me.outboundPaused, true)
+        XCTAssertNil(me.nextReminder)
+        let hidden = try NoahJSON.decoder.decode(ConversationSummary.self, from: Data(#"{ "id": "c", "startedAt": "2026-11-14T10:00:00Z", "durationSeconds": 60, "channel": "app", "summary": null, "moodScore": null, "topics": [], "hasConcern": false, "mode": null, "hasAudio": false, "hidden": true }"#.utf8))
+        XCTAssertTrue(hidden.hidden)
+        XCTAssertNil(hidden.mode)
+        XCTAssertFalse(hidden.hasAudio)
+    }
+
     func testOlderBackendRoutesAreRecognised() {
         XCTAssertTrue(APIError.server(status: 404, code: "niet_gevonden", message: nil).isFeatureUnavailable)
         XCTAssertTrue(APIError.server(status: 404, code: "http_404", message: nil).isFeatureUnavailable)
@@ -190,6 +200,25 @@ final class MockV24Tests: XCTestCase {
         defaults.set(MockIDs.anna, forKey: "mock.currentCaregiver")
         if v23 { defaults.set(true, forKey: "mockV23Backend") }
         return defaults
+    }
+
+    func testRestrictedPhoneGetsNoRemindersContactsOrCalls() async throws {
+        let defaults = makeDefaults("V24.restrictedPhone")
+        defaults.set(true, forKey: "mockRestricted")
+        let wim = MockNoahAPI(defaults: defaults, deviceToken: { "hnd_mock_\(MockIDs.wim)" })
+        let me = try await wim.deviceMe()
+        XCTAssertEqual(me.restricted, true)
+        XCTAssertNil(me.nextReminder)
+        for call in [{ _ = try await wim.deviceReminders() }, { try await wim.deviceCallMe() }] as [() async throws -> Void] {
+            do {
+                try await call()
+                XCTFail("restricted")
+            } catch let error as APIError {
+                XCTAssertEqual(error.code, "apparaat_wacht_op_bevestiging")
+                XCTAssertFalse(error.elderMessage.contains("mantelzorger"))
+            }
+        }
+        _ = try await wim.deviceTransparency() // still readable on a restricted phone
     }
 
     func testClaimFlow() async throws {

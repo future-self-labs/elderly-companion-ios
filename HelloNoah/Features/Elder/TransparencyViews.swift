@@ -166,11 +166,15 @@ struct ElderTransparencyView: View {
 
         if outboundPaused == true {
             NoahCard(padding: NoahSpacing.l, border: NoahColor.accent.opacity(0.7)) {
-                ElderText("Noah belt u nu niet meer uit zichzelf, omdat u zei dat u wilde stoppen.", color: NoahColor.text)
-                NoahAsyncButton(kind: .secondary, size: .elder, action: resumeCalls) {
-                    Text("Noah mag mij weer bellen")
+                ElderText("Noah belt u nu niet meer uit zichzelf, omdat u zei dat u wilde stoppen. In de app praten kan gewoon.", color: NoahColor.text)
+                if session.isSelfManaged, !session.isRestricted {
+                    NoahAsyncButton(kind: .secondary, size: .elder, action: resumeCalls) {
+                        Text("Noah mag mij weer bellen")
+                    }
+                    .accessibilityIdentifier("transparency.resumeCalls")
+                } else if !session.isSelfManaged {
+                    ElderText("Wilt u weer gebeld worden? Uw familie kan dat weer aanzetten.", color: NoahColor.textSecondary)
                 }
-                .accessibilityIdentifier("transparency.resumeCalls")
             }
         }
 
@@ -178,7 +182,9 @@ struct ElderTransparencyView: View {
             VStack(alignment: .leading, spacing: NoahSpacing.m) {
                 ElderSectionTitle(text: "Uitnodigingen die nog niet zijn gebruikt")
                 ForEach(snapshot.pendingInvitations) { invitation in
-                    invitationCard(invitation, canRevoke: session.canRemoveCaregivers(snapshot))
+                    // Backend v2.4 §10: self-managed may revoke any open invitation; a self-registered
+                    // profile that a family member helps with only the ones made on the phone.
+                    invitationCard(invitation, canRevoke: !session.isRestricted && (session.isSelfManaged || (snapshot.selfRegistered && invitation.isMadeByElderly)))
                 }
             }
         }
@@ -227,9 +233,14 @@ struct ElderTransparencyView: View {
         NoahCard(padding: NoahSpacing.l, border: NoahColor.accent.opacity(0.8)) {
             ElderSectionTitle(text: "\(request.name ?? "Iemand") wil helpen beheren")
             ElderText("Diegene kan dan alles lezen, instellen en verwijderen. U kunt diegene later zelf weer verwijderen. Kent u deze persoon en vindt u het goed?")
-            NoahAsyncButton(size: .elder, action: { await answer(request, approve: true) }) { Text("Ja, dat is goed") }
-                .accessibilityIdentifier("transparency.approveRequest")
-            NoahAsyncButton(kind: .secondary, size: .elder, action: { await answer(request, approve: false) }) { Text("Nee, liever niet") }
+            if session.isRestricted {
+                // Backend v2.4 §8: a phone that waits for approval cannot answer requests.
+                ElderText("Op deze telefoon kunt u dit nog niet beantwoorden, want hij is net aangemeld. Doe het op uw andere telefoon, of wacht tot deze telefoon is goedgekeurd.", color: NoahColor.textSecondary)
+            } else {
+                NoahAsyncButton(size: .elder, action: { await answer(request, approve: true) }) { Text("Ja, dat is goed") }
+                    .accessibilityIdentifier("transparency.approveRequest")
+                NoahAsyncButton(kind: .secondary, size: .elder, action: { await answer(request, approve: false) }) { Text("Nee, liever niet") }
+            }
         }
         .accessibilityIdentifier("transparency.request")
     }
@@ -275,7 +286,7 @@ struct ElderTransparencyView: View {
             if let expires = invitation.expiresAt {
                 ElderText("Geldig tot \(DutchFormat.dayAndTime(expires)).", color: NoahColor.textSoft)
             }
-            if canRevoke || invitation.isMadeByElderly {
+            if canRevoke {
                 NoahAsyncButton(kind: .secondary, size: .elder, action: { await revoke(invitation) }) {
                     NoahButtonLabel(title: "Intrekken", systemImage: "xmark.circle", iconTint: NoahColor.dangerText)
                 }
@@ -297,13 +308,8 @@ struct ElderTransparencyView: View {
             let apiError = APIError.from(error)
             if apiError != .cancelled, state.value == nil { state = .failed(apiError) }
         }
-        if session.isSelfManaged {
-            if let paused = session.profile?.outboundPaused {
-                outboundPaused = paused
-            } else {
-                outboundPaused = (try? await session.api.deviceSettings())?.outboundPaused
-            }
-        }
+        // Backend v2.4: on /device/me and /device/profile, for both kinds of profile.
+        outboundPaused = session.outboundPaused
     }
 
     private func remove(_ member: DeviceTransparency.Member) async {
@@ -352,7 +358,10 @@ struct ElderTransparencyView: View {
         patch.outboundPaused = false
         do {
             let settings = try await session.api.updateDeviceSettings(patch)
+            // The settings response has no `outboundPaused`; reload /device/me for the truth.
             outboundPaused = settings.outboundPaused ?? false
+            await session.load()
+            outboundPaused = session.outboundPaused ?? false
             message = ("Goed. Noah mag u weer bellen, zoals het was ingesteld.", false)
         } catch {
             message = (APIError.from(error).elderMessage(isSelfManaged: true), true)
@@ -386,7 +395,7 @@ struct ElderRestrictedNotice: View {
     var body: some View {
         let until = session.restrictedUntil.map { " tot \(DutchFormat.dayAndTime($0))" } ?? ""
         NoahNotice(kind: .info,
-                   text: "Deze telefoon is net aangemeld. Daarom kunt u\(until) alleen kort met Noah praten; uw verhaal, opnames en instellingen zijn nog even afgeschermd. \(session.isSelfManaged ? "Uw andere telefoon" : "Uw andere telefoon of uw familie") kan deze telefoon eerder goedkeuren.",
+                   text: "Deze telefoon is net aangemeld. Daarom kunt u\(until) alleen kort met Noah praten; uw verhaal, herinneringen, noodcontacten, opnames en instellingen zijn nog even afgeschermd, en Noah belt u nog niet. \(session.isSelfManaged ? "Uw andere telefoon" : "Uw andere telefoon of uw familie") kan deze telefoon eerder goedkeuren.",
                    large: true)
             .accessibilityIdentifier("elder.restricted")
     }

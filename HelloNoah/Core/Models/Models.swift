@@ -1259,6 +1259,8 @@ struct DeviceMe: Decodable {
     /// v2.4: this phone was just signed in on a profile in use and waits for approval.
     var restricted: Bool? = nil
     var restrictedUntil: Date? = nil
+    /// v2.4 (backend): Noah's scheduled calls are paused (the person said they want to stop).
+    var outboundPaused: Bool? = nil
 
     /// Wherever the backend put it; nil on an older backend.
     var resolvedManagedBy: ManagedBy? { managedBy ?? elderly.managedBy }
