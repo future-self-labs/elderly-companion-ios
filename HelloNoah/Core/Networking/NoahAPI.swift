@@ -14,7 +14,9 @@ protocol NoahAPI: AnyObject {
     func startElderSignUp(phoneNumber: String, channel: PhoneVerificationChannel) async throws
     /// v2.3: creates a self-managed profile, or pairs this phone to the caregiver-managed profile
     /// that already has this number.
-    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderVerifyOutcome
+    /// v2.4: answer "Kent u deze persoon?" after `status: "keuze_nodig"`.
+    func claimElderSignUp(_ request: ElderClaimRequest) async throws -> ElderSignUpResponse
 
     // Me (§3.1)
     func me() async throws -> MeResponse
@@ -22,7 +24,9 @@ protocol NoahAPI: AnyObject {
     func registerPushToken(_ token: String, environment: String) async throws
     func deletePushToken(_ token: String) async throws
     func exportMe() async throws -> Data
-    func deleteMe() async throws
+    /// v2.4: `409 abonnement_actief` unless `subscriptionAcknowledged` (a profile it would delete
+    /// still has a running store subscription).
+    func deleteMe(subscriptionAcknowledged: Bool) async throws
 
     // Elderly profiles (§3.2)
     func createElderly(_ input: ElderlyProfileInput) async throws -> ElderlyProfile
@@ -32,8 +36,15 @@ protocol NoahAPI: AnyObject {
     func startPhoneVerification(elderlyId: String, channel: PhoneVerificationChannel) async throws -> PhoneVerificationStart
     /// v2.2: confirm the number with that code. Wrong/expired: `400 ongeldige_code`.
     func verifyPhone(elderlyId: String, code: String) async throws -> ElderlyProfile
-    func deleteElderly(id: String) async throws
+    /// v2.4: `409 abonnement_actief` unless `subscriptionAcknowledged`; `403 profiel_van_oudere`
+    /// for a profile the older person registered themselves.
+    func deleteElderly(id: String, subscriptionAcknowledged: Bool) async throws
     func exportElderly(id: String) async throws -> Data
+    /// v2.4: "ik heb mijn naaste verteld dat ik meelees" (`POST /elderly/:id/told-elderly`).
+    func markToldElderly(elderlyId: String) async throws
+    /// v2.4: switch Noah's scheduled calls back on after the older person said they want to stop
+    /// (`PATCH /elderly/:id { "outboundPaused": false }`).
+    func setOutboundPaused(elderlyId: String, paused: Bool) async throws -> ElderlyProfile
 
     // Important people (§3.3)
     func people(elderlyId: String) async throws -> [Person]
@@ -59,10 +70,15 @@ protocol NoahAPI: AnyObject {
     func acceptInvitation(code: String) async throws -> AcceptInvitationResponse
     func updateCaregiverRole(elderlyId: String, caregiverId: String, role: Role) async throws
     func removeCaregiver(elderlyId: String, caregiverId: String) async throws
+    /// v2.4: invitations that were not used yet (beheerder).
+    func pendingInvitations(elderlyId: String) async throws -> [PendingInvitation]
+    func revokeInvitation(elderlyId: String, invitationId: String) async throws
 
     // Devices (§3.7)
     func devices(elderlyId: String) async throws -> [PairedDevice]
     func unpairDevice(elderlyId: String, deviceId: String) async throws
+    /// v2.4: approve a new (restricted) phone of the older person.
+    func approveDevice(elderlyId: String, deviceId: String) async throws
 
     // Dashboard, conversations, mood (§3.8–3.10)
     func dashboard(elderlyId: String) async throws -> Dashboard
@@ -122,13 +138,40 @@ protocol NoahAPI: AnyObject {
     /// Allowed for both; `paidByMe` = paid via this device.
     func deviceSubscription() async throws -> Subscription
     func submitDeviceAppStoreTransaction(signedTransaction: String) async throws -> Subscription
-    func createDeviceInvitation(role: Role) async throws -> Invitation
+    /// v2.4: a `beheerder` invitation needs `confirmed: true` (else `400 bevestiging_nodig`).
+    func createDeviceInvitation(role: Role, confirmed: Bool) async throws -> Invitation
     /// Allowed for both.
     func deviceCaregivers() async throws -> [CaregiverMembership]
     func removeDeviceCaregiver(caregiverId: String) async throws
     func exportDevice() async throws -> Data
-    /// Deletes the self profile and all its data.
-    func deleteDeviceAccount() async throws
+    /// Deletes the self profile and all its data. v2.4: `409 abonnement_actief` unless
+    /// `subscriptionAcknowledged`.
+    func deleteDeviceAccount(subscriptionAcknowledged: Bool) async throws
+
+    // v2.4: transparency and control for the older person (both kinds of profile).
+    func deviceTransparency() async throws -> DeviceTransparency
+    func markTransparencySeen() async throws
+    func updateSharing(_ level: SharingLevel) async throws -> DeviceTransparency
+    /// Caregiver-managed: delete the profile after 14 days (caregivers are told).
+    func requestDeletion(subscriptionAcknowledged: Bool) async throws -> DeletionRequest
+    func withdrawDeletion() async throws
+    func deviceDevices() async throws -> [PairedDevice]
+    func approveDeviceFromDevice(deviceId: String) async throws
+    func rejectDeviceFromDevice(deviceId: String) async throws
+    func approveCaregiverRequest(id: String) async throws
+    func rejectCaregiverRequest(id: String) async throws
+    func revokeDeviceInvitation(id: String) async throws
+    func reorderDeviceEmergencyContacts(ids: [String]) async throws
+}
+
+extension NoahAPI {
+    func deleteMe() async throws { try await deleteMe(subscriptionAcknowledged: false) }
+    func deleteElderly(id: String) async throws { try await deleteElderly(id: id, subscriptionAcknowledged: false) }
+    func deleteDeviceAccount() async throws { try await deleteDeviceAccount(subscriptionAcknowledged: false) }
+    func requestDeletion() async throws -> DeletionRequest { try await requestDeletion(subscriptionAcknowledged: false) }
+    func createDeviceInvitation(role: Role) async throws -> Invitation {
+        try await createDeviceInvitation(role: role, confirmed: role == .beheerder)
+    }
 }
 
 enum AlertListFilter: String {

@@ -135,6 +135,30 @@ final class SubscriptionStore: ObservableObject {
         }
     }
 
+    /// Offers every unfinished transaction to the backend again. Called once the session knows its
+    /// profiles (after `GET /me` or `GET /device/me`): at launch that wasn't the case yet, so a paid
+    /// purchase of a profile that wasn't known then would wait until the next launch (audit M12).
+    func retryUnfinished() {
+        guard !usesMockBackend, submit != nil, !isRetrying else { return }
+        isRetrying = true
+        Task {
+            for await result in Transaction.unfinished { await handle(result) }
+            isRetrying = false
+        }
+    }
+    private var isRetrying = false
+
+    /// HelloNoah-abonnementen of this Apple ID for profiles this account doesn't know (anymore):
+    /// a deleted profile, or one this person no longer helps with. The paywall says so instead of
+    /// silently selling the next product (audit M12).
+    func orphanedSubscriptions() async -> [OwnedSubscription] {
+        let known = Set(knownElderlyIds.map { $0.lowercased() })
+        return await ownedSubscriptions().filter { owned in
+            guard let id = owned.elderlyId else { return false }
+            return !known.contains(id.lowercased())
+        }
+    }
+
     // MARK: Prices (all three products have the same price and intro offer)
 
     private func product(_ productID: String?) -> Product? {
@@ -249,7 +273,7 @@ final class SubscriptionStore: ObservableObject {
                     errorMessage = text("De aankoop kon niet worden gecontroleerd. Probeer het opnieuw.", "De aankoop kon niet worden gecontroleerd. Probeert u het nog eens.")
                     return nil
                 }
-                return await redeem(transaction, jws: verification.jwsRepresentation, elderlyId: elderlyId)
+                return await redeem(transaction, jws: verification.jwsRepresentation, elderlyId: elderlyId, isNewPurchase: true)
             case .userCancelled:
                 return nil
             case .pending:
@@ -261,7 +285,8 @@ final class SubscriptionStore: ObservableObject {
                 return nil
             }
         } catch {
-            errorMessage = text("De aankoop is niet gelukt: \(error.localizedDescription)", "De aankoop is niet gelukt. Probeert u het nog eens.")
+            // Never the system's (possibly English) error text (audit L30).
+            errorMessage = text("De aankoop is niet gelukt. Er is niets afgeschreven. Probeer het opnieuw.", "De aankoop is niet gelukt. Probeert u het nog eens.")
             return nil
         }
     }
@@ -357,7 +382,9 @@ final class SubscriptionStore: ObservableObject {
 
     // MARK: Backend
 
-    private func redeem(_ transaction: Transaction, jws: String, elderlyId: String) async -> Subscription? {
+    /// - Parameter isNewPurchase: the transaction was created by a purchase just now, so the
+    ///   person did pay: never "niets afgeschreven", and never finished on a profile mix-up (H2).
+    private func redeem(_ transaction: Transaction, jws: String, elderlyId: String, isNewPurchase: Bool = false) async -> Subscription? {
         guard let submit else { return nil }
         do {
             let subscription = try await submit(elderlyId, jws)
@@ -368,7 +395,7 @@ final class SubscriptionStore: ObservableObject {
             #if DEBUG
             NSLog("[StoreKit] not redeemed: %@", String(describing: apiError))
             #endif
-            let outcome = Self.redeemOutcome(for: apiError, formal: audience == .elder)
+            let outcome = Self.redeemOutcome(for: apiError, formal: audience == .elder, isNewPurchase: isNewPurchase)
             if outcome.finish { await transaction.finish() }
             errorMessage = outcome.message
             return nil
@@ -378,9 +405,14 @@ final class SubscriptionStore: ObservableObject {
     /// What to tell the reader when the backend did not accept a transaction, and whether the
     /// transaction is done with. Only a temporary problem keeps it for a retry — and only then
     /// is "betaling ontvangen, we activeren zodra er verbinding is" true.
-    nonisolated static func redeemOutcome(for error: APIError, formal: Bool = false) -> (message: String, finish: Bool) {
+    nonisolated static func redeemOutcome(for error: APIError, formal: Bool = false, isNewPurchase: Bool = false) -> (message: String, finish: Bool) {
         func pick(_ caregiver: String, _ elder: String) -> String { formal ? elder : caregiver }
         switch error {
+        case .server(_, "abonnement_ander_profiel", _) where isNewPurchase:
+            // A purchase made just now was charged: keep it for another try (the backend re-links
+            // an expired subscription, v2.4) and say honestly what happened (audit H2).
+            return (pick("De betaling is gelukt, maar kon nog niet aan dit profiel worden gekoppeld. We proberen het opnieuw. Lukt het niet, \(SupportContact.line.lowercasedFirst).",
+                         "Uw betaling is gelukt, maar Noah kon nog niet worden geactiveerd. We proberen het opnieuw. Lukt het niet, mail ons dan: \(SupportContact.email)."), false)
         case .offline, .unexpected, .decoding, .cancelled:
             return (pick("Betaling ontvangen. We activeren Noah zodra er weer verbinding is met HelloNoah.",
                          "Betaling ontvangen. Noah wordt actief zodra er weer internet is."), false)
@@ -394,8 +426,8 @@ final class SubscriptionStore: ObservableObject {
             return (pick("Dit abonnement van je Apple ID hoort al bij een ander profiel. Er is niets extra afgeschreven.",
                          "Dit abonnement van uw Apple ID hoort al bij iemand anders. Er is niets extra afgeschreven."), true)
         case .server(_, "ongeldig_abonnement", _):
-            return (pick("Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam als er wel is afgeschreven.",
-                         "Deze aankoop kon niet worden gecontroleerd. Neemt u contact met ons op als er wel geld is afgeschreven."), true)
+            return (pick("Deze aankoop kon niet worden gecontroleerd. Is er wel afgeschreven? \(SupportContact.line).",
+                         "Deze aankoop kon niet worden gecontroleerd. Is er wel geld afgeschreven? Mail ons dan: \(SupportContact.email)."), true)
         case .server(let status, _, _) where (400..<500).contains(status):
             return (formal ? error.elderMessage : error.userMessage, true)
         default:

@@ -49,8 +49,12 @@ final class LiveNoahAPI: NoahAPI {
         try await client.sendVoid("POST", "/auth/elderly/phone/start", body: ElderSignUpStartRequest(phoneNumber: phoneNumber, channel: channel), auth: .none)
     }
 
-    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse {
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderVerifyOutcome {
         try await client.send("POST", "/auth/elderly/phone/verify", body: request, auth: .none)
+    }
+
+    func claimElderSignUp(_ request: ElderClaimRequest) async throws -> ElderSignUpResponse {
+        try await client.send("POST", "/auth/elderly/phone/claim", body: request, auth: .none)
     }
 
     // MARK: Me
@@ -76,8 +80,8 @@ final class LiveNoahAPI: NoahAPI {
         try await client.sendData("GET", "/me/export", auth: .caregiver)
     }
 
-    func deleteMe() async throws {
-        try await client.sendVoid("DELETE", "/me", body: ["confirm": "VERWIJDER"], auth: .caregiver)
+    func deleteMe(subscriptionAcknowledged: Bool) async throws {
+        try await client.sendVoid("DELETE", "/me", body: DeleteConfirmation(subscriptionAcknowledged: subscriptionAcknowledged), auth: .caregiver)
     }
 
     // MARK: Elderly
@@ -102,8 +106,16 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("POST", "/elderly/\(esc(elderlyId))/phone/verify", body: ["code": code], auth: .caregiver)
     }
 
-    func deleteElderly(id: String) async throws {
-        try await client.sendVoid("DELETE", "/elderly/\(esc(id))", body: ["confirm": "VERWIJDER"], auth: .caregiver)
+    func deleteElderly(id: String, subscriptionAcknowledged: Bool) async throws {
+        try await client.sendVoid("DELETE", "/elderly/\(esc(id))", body: DeleteConfirmation(subscriptionAcknowledged: subscriptionAcknowledged), auth: .caregiver)
+    }
+
+    func markToldElderly(elderlyId: String) async throws {
+        try await client.sendVoid("POST", "/elderly/\(esc(elderlyId))/told-elderly", auth: .caregiver)
+    }
+
+    func setOutboundPaused(elderlyId: String, paused: Bool) async throws -> ElderlyProfile {
+        try await client.send("PATCH", "/elderly/\(esc(elderlyId))", body: ["outboundPaused": paused], auth: .caregiver)
     }
 
     func exportElderly(id: String) async throws -> Data {
@@ -185,6 +197,15 @@ final class LiveNoahAPI: NoahAPI {
         try await client.sendVoid("DELETE", "/elderly/\(esc(elderlyId))/caregivers/\(esc(caregiverId))", auth: .caregiver)
     }
 
+    func pendingInvitations(elderlyId: String) async throws -> [PendingInvitation] {
+        let response: ItemsResponse<PendingInvitation> = try await client.send("GET", "/elderly/\(esc(elderlyId))/invitations", auth: .caregiver)
+        return response.items
+    }
+
+    func revokeInvitation(elderlyId: String, invitationId: String) async throws {
+        try await client.sendVoid("DELETE", "/elderly/\(esc(elderlyId))/invitations/\(esc(invitationId))", auth: .caregiver)
+    }
+
     // MARK: Devices
 
     func devices(elderlyId: String) async throws -> [PairedDevice] {
@@ -194,6 +215,10 @@ final class LiveNoahAPI: NoahAPI {
 
     func unpairDevice(elderlyId: String, deviceId: String) async throws {
         try await client.sendVoid("DELETE", "/elderly/\(esc(elderlyId))/devices/\(esc(deviceId))", auth: .caregiver)
+    }
+
+    func approveDevice(elderlyId: String, deviceId: String) async throws {
+        try await client.sendVoid("POST", "/elderly/\(esc(elderlyId))/devices/\(esc(deviceId))/approve", auth: .caregiver)
     }
 
     // MARK: Dashboard, conversations, mood
@@ -372,8 +397,8 @@ final class LiveNoahAPI: NoahAPI {
         try await client.send("POST", "/device/subscriptions/app-store", body: ["signedTransaction": signedTransaction], auth: .device)
     }
 
-    func createDeviceInvitation(role: Role) async throws -> Invitation {
-        try await client.send("POST", "/device/invitations", body: ["role": role.rawValue], auth: .device)
+    func createDeviceInvitation(role: Role, confirmed: Bool) async throws -> Invitation {
+        try await client.send("POST", "/device/invitations", body: DeviceInvitationRequest(role: role, confirmed: confirmed), auth: .device)
     }
 
     func deviceCaregivers() async throws -> [CaregiverMembership] {
@@ -389,7 +414,90 @@ final class LiveNoahAPI: NoahAPI {
         try await client.sendData("GET", "/device/export", auth: .device)
     }
 
-    func deleteDeviceAccount() async throws {
-        try await client.sendVoid("DELETE", "/device/account", body: ["confirm": "VERWIJDER"], auth: .device)
+    func deleteDeviceAccount(subscriptionAcknowledged: Bool) async throws {
+        try await client.sendVoid("DELETE", "/device/account", body: DeleteConfirmation(subscriptionAcknowledged: subscriptionAcknowledged), auth: .device)
+    }
+
+    // MARK: Device, transparency and control (v2.4)
+
+    func deviceTransparency() async throws -> DeviceTransparency {
+        try await client.send("GET", "/device/transparency", auth: .device)
+    }
+
+    func markTransparencySeen() async throws {
+        try await client.sendVoid("POST", "/device/transparency/seen", auth: .device)
+    }
+
+    func updateSharing(_ level: SharingLevel) async throws -> DeviceTransparency {
+        try await client.send("PATCH", "/device/sharing", body: ["sharing": level.rawValue], auth: .device)
+    }
+
+    func requestDeletion(subscriptionAcknowledged: Bool) async throws -> DeletionRequest {
+        if subscriptionAcknowledged {
+            return try await client.send("POST", "/device/deletion-request", body: ["subscriptionAcknowledged": true], auth: .device)
+        }
+        return try await client.send("POST", "/device/deletion-request", auth: .device)
+    }
+
+    func withdrawDeletion() async throws {
+        try await client.sendVoid("DELETE", "/device/deletion-request", auth: .device)
+    }
+
+    func deviceDevices() async throws -> [PairedDevice] {
+        let response: ItemsResponse<PairedDevice> = try await client.send("GET", "/device/devices", auth: .device)
+        return response.items
+    }
+
+    func approveDeviceFromDevice(deviceId: String) async throws {
+        try await client.sendVoid("POST", "/device/devices/\(esc(deviceId))/approve", auth: .device)
+    }
+
+    func rejectDeviceFromDevice(deviceId: String) async throws {
+        try await client.sendVoid("DELETE", "/device/devices/\(esc(deviceId))", auth: .device)
+    }
+
+    func approveCaregiverRequest(id: String) async throws {
+        try await client.sendVoid("POST", "/device/caregiver-requests/\(esc(id))/approve", auth: .device)
+    }
+
+    func rejectCaregiverRequest(id: String) async throws {
+        try await client.sendVoid("POST", "/device/caregiver-requests/\(esc(id))/reject", auth: .device)
+    }
+
+    func revokeDeviceInvitation(id: String) async throws {
+        try await client.sendVoid("DELETE", "/device/invitations/\(esc(id))", auth: .device)
+    }
+
+    func reorderDeviceEmergencyContacts(ids: [String]) async throws {
+        try await client.sendVoid("PUT", "/device/emergency-contacts/order", body: ["ids": ids], auth: .device)
+    }
+}
+
+/// Body of the deletes: `{ "confirm": "VERWIJDER" }`, plus v2.4 `"subscriptionAcknowledged": true`
+/// once the person has read that the store subscription does not stop by itself.
+struct DeleteConfirmation: Encodable, Equatable {
+    var confirm = "VERWIJDER"
+    var subscriptionAcknowledged = false
+
+    enum CodingKeys: String, CodingKey { case confirm, subscriptionAcknowledged }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(confirm, forKey: .confirm)
+        if subscriptionAcknowledged { try c.encode(true, forKey: .subscriptionAcknowledged) }
+    }
+}
+
+/// v2.4 `POST /device/invitations`: `confirmed` only for a beheerder invitation.
+struct DeviceInvitationRequest: Encodable, Equatable {
+    let role: Role
+    var confirmed = false
+
+    enum CodingKeys: String, CodingKey { case role, confirmed }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(role, forKey: .role)
+        if role == .beheerder, confirmed { try c.encode(true, forKey: .confirmed) }
     }
 }

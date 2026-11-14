@@ -17,6 +17,10 @@ enum MockIDs {
     static let toos = "5B2E9F40-7C1D-4A8B-9E3F-0A1B2C3D4E5F"
     static let toosDevice = "D3C1B2A0-0000-4000-8000-000000000002"
     static let ellen = "6F1C2B7E-1D7A-4E36-9C55-2F0B6A1C9D04"
+    /// v2.4: a profile Mark made for Bep, who never used Noah (claim flow).
+    static let bep = "7C4A1E20-2B3D-4E5F-8A9B-0C1D2E3F4A5B"
+    /// v2.4: a new phone of Wim that waits for approval.
+    static let wimNewDevice = "D3C1B2A0-0000-4000-8000-000000000003"
 }
 
 struct MockConversationTemplate {
@@ -257,12 +261,12 @@ enum MockData {
                      nextAt: active ? schedule.nextOccurrence(after: now) : nil, lastCompletedAt: nil)
         }
         return [
-            make(1, "Pillen innemen", "De witte na het ontbijt", .medicatie, .daily(time: "08:30"), .inGesprek),
+            make(1, "Koffie met buurvrouw Ria", "Ria komt om half elf langs", .afspraak, .daily(time: "08:30"), .inGesprek),
             make(2, "Afspraak bij de huisarts", "Dokter Smit, vragen naar de knie", .afspraak, .once(at: tuesday), .bellen),
             make(3, "Wandelen na de lunch", "Rondje langs het Spaarne", .routine, .weekly(time: "14:00", weekdays: [2, 4, 6]), .inGesprek),
             make(4, "Verjaardag van Sara", "Ze wordt 16! Kaartje sturen.", .verjaardag, .once(at: sixDays), .inGesprek, by: .noah),
             make(5, "Plantjes water geven", nil, .overig, .weekly(time: "10:00", weekdays: [1, 5]), .inGesprek),
-            make(6, "Avondpillen", "Het kleine roze pilletje", .medicatie, .daily(time: "20:00"), .bellen, active: false),
+            make(6, "Medicijndoos van de avond", "Kijk even in het vakje van vandaag", .medicatie, .daily(time: "20:00"), .bellen, active: false),
         ]
     }
 }

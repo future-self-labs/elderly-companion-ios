@@ -88,7 +88,7 @@ extension RecordingSetting {
 
     func explanation(name: String) -> String {
         switch self {
-        case .uit: return "Er wordt niets opgenomen. Je leest wel de samenvattingen."
+        case .uit: return "Er wordt geen geluid opgenomen. Je leest wel de samenvatting en de uitgeschreven tekst van elk gesprek."
         case .levensverhaal: return "Alleen verhaal-gesprekken, zodat je later de eigen stem van \(name) bij het levensverhaal kunt terughoren."
         case .alleGesprekken: return "Elk gesprek met Noah, als \(name) daar toestemming voor geeft."
         case .unknown: return ""
@@ -96,10 +96,86 @@ extension RecordingSetting {
     }
 }
 
+/// v2.4: what the family sees, in the older person's words ("u"). The server builds these
+/// sentences (`familySees`); this is the same text for when it doesn't (older backend).
+enum FamilySees {
+    static func sentences(sharing: SharingLevel, recording: RecordingSetting) -> [String] {
+        var lines: [String]
+        switch sharing {
+        case .alles, .unknown:
+            lines = [
+                "Een korte samenvatting van elk gesprek.",
+                "De uitgeschreven tekst van elk gesprek, woord voor woord.",
+                "Een inschatting van hoe u zich voelde.",
+            ]
+        case .samenvattingen:
+            lines = [
+                "Een korte samenvatting van elk gesprek.",
+                "Een inschatting van hoe u zich voelde.",
+                "Niet de uitgeschreven tekst van uw gesprekken.",
+            ]
+        case .alleenMeldingen:
+            lines = ["Alleen dát u met Noah heeft gepraat, en hoe lang. Niet waarover."]
+        }
+        lines.append("Een melding als Noah zich zorgen maakt of als u om hulp vraagt.")
+        switch recording {
+        case .levensverhaal: lines.append("Opnames van uw verhalen, als u daar in dat gesprek ja op zegt.")
+        case .alleGesprekken: lines.append("Opnames van uw gesprekken, als u daar in dat gesprek ja op zegt.")
+        case .uit, .unknown: break
+        }
+        return lines
+    }
+}
+
+extension SharingLevel {
+    /// The older person's words (they decide).
+    var elderLabel: String {
+        switch self {
+        case .alles, .unknown: return "Alles"
+        case .samenvattingen: return "Alleen samenvattingen"
+        case .alleenMeldingen: return "Alleen meldingen"
+        }
+    }
+
+    var elderExplanation: String {
+        switch self {
+        case .alles, .unknown: return "Uw familie leest de samenvatting en de uitgeschreven tekst van uw gesprekken, en ziet hoe u zich voelde."
+        case .samenvattingen: return "Uw familie leest alleen een korte samenvatting en ziet hoe u zich voelde. Niet wat u woord voor woord zei."
+        case .alleenMeldingen: return "Uw familie ziet alleen dát u met Noah praatte. Bij zorgen of nood krijgen ze wel een melding."
+        }
+    }
+
+    /// For the caregiver ("je"), about the older person.
+    func caregiverExplanation(name: String) -> String {
+        switch self {
+        case .alles, .unknown: return "Je leest de samenvatting en de uitgeschreven tekst van de gesprekken van \(name)."
+        case .samenvattingen: return "\(name) heeft gekozen dat de familie alleen de samenvattingen leest, niet de uitgeschreven tekst."
+        case .alleenMeldingen: return "\(name) heeft gekozen dat de familie alleen ziet dát er gepraat is, plus meldingen bij zorgen of nood."
+        }
+    }
+}
+
+extension AlertDelivery {
+    /// What really went out for an alert (v2.4), for the caregiver.
+    var caregiverText: String {
+        if reachedNobody {
+            return "Hier is niemand een bericht over gestuurd. Je ziet deze melding alleen in de app."
+        }
+        var parts: [String] = []
+        if pushedDevices > 0 { parts.append(pushedDevices == 1 ? "een melding op 1 telefoon" : "een melding op \(pushedDevices) telefoons") }
+        if sms > 0 { parts.append(sms == 1 ? "1 sms" : "\(sms) sms'jes") }
+        if calls > 0 { parts.append(calls == 1 ? "1 telefoontje" : "\(calls) telefoontjes") }
+        return "Verstuurd: " + DutchList.join(parts) + "."
+    }
+}
+
 /// Copy that must say exactly the same everywhere (contract v2.1, founder corrections).
 enum ProductCopy {
     /// Point 6: honest privacy. Never claim "geen geluidsopnames" or "alle gegevens in de EU".
     static let privacy = String(localized: "Gesprekken en gegevens worden versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten; die bewaren geen gegevens langer dan nodig. Opnames alleen als jij dat aanzet én je naaste toestemming geeft.")
+
+    /// Audit 2026-11-14 M9 / product §2e: the family reads more than summaries; say so plainly.
+    static let familyReads = String(localized: "Mantelzorgers lezen van elk gesprek de samenvatting én de uitgeschreven tekst, en zien een inschatting van de stemming. Je naaste kan dat zelf beperken in de app op de eigen telefoon.")
 
     /// Point 5: reminders are a memory aid. Shown on every caregiver reminder screen.
     static let reminderDisclaimer = String(localized: "Noah's herinneringen zijn een extra geheugensteuntje, naast wat er al is (zoals een medicijndoos, de apotheek, thuiszorg of je eigen berichtjes). Noah houdt geen medicijngebruik bij en is geen medisch hulpmiddel. Vertrouw er niet als enige op: een gemist gesprek of een storing kan altijd.")
@@ -217,6 +293,10 @@ extension AlertType {
         case .noodgeval: return "Noodgeval"
         case .verbruik: return "Redelijk gebruik"
         case .apparaatGekoppeld: return "Telefoon gekoppeld"
+        case .privacyGewijzigd: return "Privacy aangepast"
+        case .wilStoppen: return "Wil stoppen"
+        case .verwijderverzoek: return "Verzoek om te verwijderen"
+        case .nummerLosgekoppeld: return "Nummer losgekoppeld"
         case .unknown: return "Melding"
         }
     }
@@ -232,6 +312,10 @@ extension AlertType {
         case .noodgeval: return "staroflife.fill"
         case .verbruik: return "clock.fill"
         case .apparaatGekoppeld: return "iphone.radiowaves.left.and.right"
+        case .privacyGewijzigd: return "eye.slash.fill"
+        case .wilStoppen: return "hand.raised.slash.fill"
+        case .verwijderverzoek: return "trash.fill"
+        case .nummerLosgekoppeld: return "phone.circle"
         case .unknown: return "bell.fill"
         }
     }

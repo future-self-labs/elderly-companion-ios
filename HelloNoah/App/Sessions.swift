@@ -27,8 +27,26 @@ final class ElderSession: ObservableObject {
     /// v2.3: a new self-managed profile still walks through name, voice, emergency contact and
     /// subscription. Kept across launches, so a closed app resumes where it was.
     @Published private(set) var isOnboarding: Bool
+    /// v2.4 `GET /device/transparency`: who reads along and what. nil until loaded, and on an
+    /// older backend (then `transparencyFallback` is used).
+    @Published private(set) var transparency: DeviceTransparency?
+    /// v2.4: the backend has no transparency endpoint yet; the screen is built from
+    /// `GET /device/caregivers` instead.
+    @Published private(set) var transparencyUnsupported = false
+    /// "Wie kijkt er mee" opens once after pairing/sign-in (v2.4: while `appShownAt` is null).
+    @Published var isTransparencyIntroPresented = false
+    /// Set to open "Wie kijkt er mee" on the home stack (from a device push).
+    @Published var opensTransparency = false
+
+    func openTransparency() { opensTransparency = true }
 
     static let onboardingKey = "elder.selfOnboardingPending"
+    /// Offline, the home screen still greets by name and knows the last conversation (audit L18).
+    static let cachedNameKey = "elder.cachedName"
+    static let cachedLastConversationKey = "elder.cachedLastConversation"
+    /// Older backend: the transparency intro was shown on this phone.
+    static let transparencyShownLocallyKey = "elder.transparencyShownLocally"
+    private var loadTask: Task<Void, Never>?
 
     init(api: NoahAPI, reachability: Reachability, subscriptions: SubscriptionStore, defaults: UserDefaults = .standard,
          makeEngine: @escaping () -> VoiceEngine) {
@@ -41,7 +59,16 @@ final class ElderSession: ObservableObject {
         configureSubscriptions()
     }
 
-    var name: String { profile?.preferredName.nilIfEmpty ?? me.value?.elderly.preferredName ?? "" }
+    var name: String {
+        profile?.preferredName.nilIfEmpty ?? me.value?.elderly.preferredName.nilIfEmpty ?? defaults.string(forKey: Self.cachedNameKey) ?? ""
+    }
+    /// The last conversation, also when offline (cached).
+    var lastConversationAt: Date? {
+        me.value?.lastConversationAt ?? (defaults.object(forKey: Self.cachedLastConversationKey) as? Date)
+    }
+    /// v2.4: this phone was just signed in on a profile in use and waits for approval.
+    var isRestricted: Bool { me.value?.restricted == true }
+    var restrictedUntil: Date? { me.value?.restrictedUntil }
     var noahName: String { me.value?.elderly.noahName ?? "Noah" }
     var elderlyId: String? { me.value?.elderly.id ?? profile?.id }
     /// The older person manages everything themselves: show "Instellingen" (v2.3).
@@ -50,17 +77,84 @@ final class ElderSession: ObservableObject {
         return me.value?.resolvedManagedBy == .zelf
     }
 
+    /// Loads the home data. Calls that overlap (the screen appearing and the app becoming active
+    /// at the same moment) share one round of requests (audit L20).
     func load() async {
+        if let loadTask {
+            await loadTask.value
+            return
+        }
+        let task = Task { await performLoad() }
+        loadTask = task
+        await task.value
+        loadTask = nil
+    }
+
+    private func performLoad() async {
         if me.value == nil { me = .loading }
         async let profileResult = try? api.deviceProfile()
+        async let transparencyResult = loadTransparency()
         do {
-            me = .loaded(try await api.deviceMe())
+            let loaded = try await api.deviceMe()
+            me = .loaded(loaded)
+            if !loaded.elderly.preferredName.isEmpty { defaults.set(loaded.elderly.preferredName, forKey: Self.cachedNameKey) }
+            if let last = loaded.lastConversationAt { defaults.set(last, forKey: Self.cachedLastConversationKey) }
         } catch {
             let apiError = APIError.from(error)
             if apiError != .cancelled, me.value == nil { me = .failed(apiError) }
         }
         if let loaded = await profileResult { profile = loaded }
+        await transparencyResult
         configureSubscriptions()
+        // A purchase that was paid but not yet accepted gets another try now the profile is known (M12).
+        if isSelfManaged { subscriptions.retryUnfinished() }
+        presentTransparencyIntroIfNeeded()
+    }
+
+    /// v2.4: who reads along. 404 = older backend: fall back, never show an error.
+    func loadTransparency() async {
+        do {
+            transparency = try await api.deviceTransparency()
+            transparencyUnsupported = false
+        } catch {
+            let apiError = APIError.from(error)
+            if apiError.isFeatureUnavailable { transparencyUnsupported = true }
+        }
+    }
+
+    func didUpdate(transparency: DeviceTransparency) {
+        self.transparency = transparency
+    }
+
+    /// Shown once after pairing or signing in, for both kinds of profile (v2.4).
+    private func presentTransparencyIntroIfNeeded() {
+        guard !isOnboarding, !isTransparencyIntroPresented, !isConversationPresented else { return }
+        if let transparency {
+            if transparency.appShownAt == nil { isTransparencyIntroPresented = true }
+        } else if transparencyUnsupported, justPaired, !defaults.bool(forKey: Self.transparencyShownLocallyKey) {
+            // Older backend: show it once on this phone after pairing.
+            isTransparencyIntroPresented = true
+        }
+    }
+
+    /// "Ik heb het gelezen" on the intro.
+    func transparencyIntroSeen() async {
+        isTransparencyIntroPresented = false
+        defaults.set(true, forKey: Self.transparencyShownLocallyKey)
+        do {
+            try await api.markTransparencySeen()
+            transparency?.appShownAt = Date()
+        } catch {
+            // Older backend or offline: the local flag keeps it from coming back on this phone.
+        }
+    }
+
+    /// v2.4 device pushes ("iemand wil meekijken"): register this phone's token once the person
+    /// allowed notifications themselves (from the transparency screen). Never asked at launch.
+    func registerForDeviceNotices(push: PushManager) {
+        push.tokenHandler = { [weak self] token in
+            try? await self?.api.registerDevicePushToken(token, environment: AppConfig.pushEnvironment)
+        }
     }
 
     /// Settings changed the name or "u"/"jij".
@@ -77,6 +171,8 @@ final class ElderSession: ObservableObject {
 
     func finishOnboarding() {
         defaults.removeObject(forKey: Self.onboardingKey)
+        // The self route explains "Wie kijkt er mee" itself (nobody yet); don't show it again now.
+        defaults.set(true, forKey: Self.transparencyShownLocallyKey)
         isOnboarding = false
         arrivalMessage = "Alles staat klaar. Tik op de grote knop om met \(noahName) te praten."
         Task { await load() }
@@ -84,6 +180,12 @@ final class ElderSession: ObservableObject {
 
     static func clearOnboarding(defaults: UserDefaults = .standard) {
         defaults.removeObject(forKey: onboardingKey)
+    }
+
+    /// The phone left HelloNoah: forget everything cached about the person.
+    static func clearCache(defaults: UserDefaults = .standard) {
+        clearOnboarding(defaults: defaults)
+        for key in [cachedNameKey, cachedLastConversationKey, transparencyShownLocallyKey] { defaults.removeObject(forKey: key) }
     }
 
     /// Purchases on this phone go to the device endpoint, and only for this person's own profile:
@@ -157,6 +259,8 @@ enum CaregiverRoute: Hashable {
     case subscription
     case account
     case elderlyList
+    /// v2.4: "Vertel het Wim" (read-aloud text, then "Ik heb het verteld").
+    case tellElderly
 }
 
 enum CaregiverSheet: Identifiable, Equatable {
@@ -221,6 +325,8 @@ final class CaregiverSession: ObservableObject {
     @Published private(set) var selectedElderlyId: String?
     /// Bumped whenever data changed somewhere, so other screens reload.
     @Published private(set) var dataVersion = 0
+    /// A one-off message on the dashboard (e.g. a link that is meant for another phone).
+    @Published var notice: String?
     /// Whether to show the push pre-prompt card on the dashboard.
     @Published var pushPromptDismissed = UserDefaults.standard.bool(forKey: "caregiver.pushPromptDismissed") {
         didSet { UserDefaults.standard.set(pushPromptDismissed, forKey: "caregiver.pushPromptDismissed") }
@@ -282,13 +388,40 @@ final class CaregiverSession: ObservableObject {
             let response = try await api.me()
             me = response
             meError = nil
+            Self.cache(response)
             if selected?.id != selectedElderlyId { selectedElderlyId = selected?.id }
             subscriptions.knownElderlyIds = response.elderly.map(\.id)
             subscriptions.knownElderlyNames = Dictionary(response.elderly.map { ($0.id.lowercased(), $0.preferredName) }, uniquingKeysWith: { first, _ in first })
+            // A paid but not yet accepted purchase gets another try now the profiles are known (M12).
+            subscriptions.retryUnfinished()
         } catch {
             let apiError = APIError.from(error)
             if apiError != .cancelled { meError = apiError }
+            // Offline at launch: keep the tab bar with the last known people (audit L21); every
+            // screen then shows its own offline state and the banner says why.
+            if me == nil, apiError.isOffline, let cached = Self.cachedMe() { me = cached }
         }
+    }
+
+    private static let cachedMeKey = "caregiver.cachedMe"
+
+    private struct CachedMe: Codable {
+        let caregiver: Caregiver
+        let elderly: [ElderlySummary]
+    }
+
+    private static func cache(_ response: MeResponse) {
+        UserDefaults.standard.set(try? JSONEncoder().encode(CachedMe(caregiver: response.caregiver, elderly: response.elderly)), forKey: cachedMeKey)
+    }
+
+    private static func cachedMe() -> MeResponse? {
+        guard let data = UserDefaults.standard.data(forKey: cachedMeKey),
+              let cached = try? JSONDecoder().decode(CachedMe.self, from: data) else { return nil }
+        return MeResponse(caregiver: cached.caregiver, elderly: cached.elderly)
+    }
+
+    static func clearCache() {
+        UserDefaults.standard.removeObject(forKey: cachedMeKey)
     }
 
     func select(_ id: String) {

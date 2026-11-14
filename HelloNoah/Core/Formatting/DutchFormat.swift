@@ -200,6 +200,12 @@ enum Weekdays {
         let names = Array(Set(weekdays)).sorted().compactMap { Self.names[$0] }
         return DutchList.join(names)
     }
+
+    /// ISO weekday (1 = Monday … 7 = Sunday) of a date in Europe/Amsterdam.
+    static func isoWeekday(of date: Date) -> Int {
+        let weekday = DutchFormat.calendar.component(.weekday, from: date) // 1 = Sunday
+        return weekday == 1 ? 7 : weekday - 1
+    }
 }
 
 enum DutchList {
@@ -295,5 +301,10 @@ extension String {
     var capitalizedFirst: String {
         guard let first else { return self }
         return first.uppercased() + dropFirst()
+    }
+
+    var lowercasedFirst: String {
+        guard let first else { return self }
+        return first.lowercased() + dropFirst()
     }
 }

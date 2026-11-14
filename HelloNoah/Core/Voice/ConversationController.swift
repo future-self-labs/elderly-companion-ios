@@ -34,7 +34,7 @@ final class ConversationController: ObservableObject {
         var text: String {
             switch self {
             case .micDenied: return "Noah kan u niet horen, omdat de microfoon uit staat. U kunt de microfoon aanzetten bij Instellingen."
-            case .inactive: return "Noah is nog niet actief. Vraag uw mantelzorger om hulp."
+            case .inactive: return "Noah is nog niet actief. Vraag uw familie om hulp."
             case .inactiveSelf: return "Noah is nog niet actief. U kunt uw abonnement starten bij Instellingen, onderaan het beginscherm."
             case .offline: return "Er is nu geen internet. Probeert u het straks nog eens."
             case .connectionLost: return "De verbinding met Noah is weggevallen. Probeert u het gerust nog een keer."
@@ -66,7 +66,7 @@ final class ConversationController: ObservableObject {
     /// How long before the maximum duration Noah is asked to round the conversation off.
     static let wrapUpLead: TimeInterval = 60
     /// Extra time after the maximum so Noah can finish the goodbye he is saying.
-    static let goodbyeGrace: TimeInterval = 30
+    nonisolated static let goodbyeGrace: TimeInterval = 30
     static let wrapUpContext = "De afgesproken gesprekstijd is bijna om. Rond het gesprek in de komende minuut rustig en vriendelijk af: vat kort samen, neem warm afscheid en zeg dat je er de volgende keer graag weer bent. Begin geen nieuw onderwerp. Beëindig daarna zelf het gesprek."
 
     /// Configurable name of Noah, for the status line.
@@ -158,7 +158,7 @@ final class ConversationController: ObservableObject {
             case .server(_, "inactive", _): return fail(isSelfManaged ? .inactiveSelf : .inactive)
             case .offline: return fail(.offline)
             case .cancelled: return
-            default: return fail(.message(apiError.elderMessage))
+            default: return fail(.message(apiError.elderMessage(isSelfManaged: isSelfManaged)))
             }
         }
         // Hung up while the session was being prepared: don't open the microphone at all.

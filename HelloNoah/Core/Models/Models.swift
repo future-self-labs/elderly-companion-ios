@@ -94,6 +94,8 @@ struct AppleSignInRequest: Encodable {
     let identityToken: String
     let authorizationCode: String?
     let fullName: FullName?
+    /// The raw nonce whose SHA-256 is in the identity token (security audit L2; additive field).
+    var nonce: String? = nil
 }
 
 struct PairingCode: Codable, Hashable {
@@ -185,10 +187,80 @@ struct ElderSignUpResponse: Decodable {
     /// `mantelzorger`: the number already belonged to a caregiver-managed profile and this phone
     /// is now paired to it.
     var managedBy: ManagedBy
+    /// v2.4: a new phone on a profile that is in use is restricted for 72 h (limited Noah, no
+    /// life story, settings or deletion) until another phone or a beheerder approves it.
+    @DefaultFalse var restricted: Bool = false
+    var restrictedUntil: Date? = nil
 
     /// A brand-new self profile: walk through name, voice, emergency contact and subscription.
     var needsOnboarding: Bool { managedBy == .zelf && isNewProfile }
     var isLinkedToFamily: Bool { managedBy == .mantelzorger }
+}
+
+/// v2.4: `POST /auth/elderly/phone/verify` either signs in (`status: "gekoppeld"`, or no status on
+/// an older backend) or asks first: the number is on a profile someone else created and the older
+/// person never used (`status: "keuze_nodig"`).
+enum ElderVerifyOutcome {
+    case signedIn(ElderSignUpResponse)
+    case choiceNeeded(ElderClaimChoice)
+}
+
+extension ElderVerifyOutcome: Decodable {
+    private enum CodingKeys: String, CodingKey { case status }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if try c.decodeIfPresent(String.self, forKey: .status) == "keuze_nodig" {
+            self = .choiceNeeded(try ElderClaimChoice(from: decoder))
+        } else {
+            self = .signedIn(try ElderSignUpResponse(from: decoder))
+        }
+    }
+}
+
+/// v2.4 `status: "keuze_nodig"`: "Er is al een profiel voor dit nummer aangemaakt door …".
+struct ElderClaimChoice: Decodable, Equatable {
+    struct Profile: Decodable, Equatable {
+        var preferredName: String?
+        var createdBy: String?
+    }
+    let claimToken: String
+    var expiresAt: Date?
+    var profile: Profile?
+
+    /// "Anna de Vries" → "Anna".
+    var creatorFirstName: String? {
+        profile?.createdBy?.split(separator: " ").first.map(String.init)
+    }
+}
+
+/// v2.4 `POST /auth/elderly/phone/claim`.
+enum ElderClaimDecision: String, Encodable {
+    /// Pair to that profile (the person who created it looks along).
+    case koppelen
+    /// Take the number off that profile and start an own profile.
+    case eigenProfiel = "eigen_profiel"
+}
+
+struct ElderClaimRequest: Encodable {
+    let claimToken: String
+    let choice: ElderClaimDecision
+    var deviceName: String?
+    var platform: String? = "ios"
+    var preferredName: String?
+    var addressForm: AddressForm?
+
+    enum CodingKeys: String, CodingKey { case claimToken, choice, deviceName, platform, preferredName, addressForm }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(claimToken, forKey: .claimToken)
+        try c.encode(choice, forKey: .choice)
+        try c.encodeIfPresent(deviceName.nilIfBlank, forKey: .deviceName)
+        try c.encodeIfPresent(platform, forKey: .platform)
+        try c.encodeIfPresent(preferredName.nilIfBlank, forKey: .preferredName)
+        if let addressForm, addressForm != .unknown { try c.encode(addressForm, forKey: .addressForm) }
+    }
 }
 
 // MARK: - Me
@@ -240,9 +312,21 @@ struct ElderlyProfile: Codable, Hashable, Identifiable {
     var phoneVerifiedVia: String? = nil
     /// v2.3: whether the older person manages the profile themselves. nil = older backend.
     var managedBy: ManagedBy? = nil
+    /// v2.4: who was told what (Noah, the older person's app, the caregiver). nil = older backend.
+    var transparency: Transparency? = nil
+    /// v2.4: what the older person lets the family see (decided by the older person).
+    var sharing: SharingLevel? = nil
+    /// v2.4: the older person told Noah they want to stop: no scheduled outbound calls until a
+    /// beheerder switches them back on.
+    var outboundPaused: Bool? = nil
 
     /// The number still needs confirming before Noah can call it (v2.2).
     var needsPhoneConfirmation: Bool { phoneVerified == false && !(phoneNumber ?? "").isEmpty }
+    /// v2.4: the number was taken off this profile (or never set).
+    var hasPhoneNumber: Bool { !(phoneNumber ?? "").isEmpty }
+    /// v2.4: the caregiver has not yet confirmed telling the older person that family reads along.
+    /// False on an older backend (nothing to ask then).
+    var needsTellingElderly: Bool { transparency != nil && transparency?.caregiverToldAt == nil }
 
     var fullName: String {
         [firstName, lastName].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
@@ -303,7 +387,8 @@ struct ElderlyProfileInput: Encodable, Equatable {
         try c.encode(addressForm, forKey: .addressForm)
         try c.encode(gender, forKey: .gender)
         try c.encode(birthYear, forKey: .birthYear)
-        try c.encode(phoneNumber, forKey: .phoneNumber)
+        // v2.4: a profile may have no number (`phoneNumber: null`); never send an empty one.
+        if !phoneNumber.isEmpty { try c.encode(phoneNumber, forKey: .phoneNumber) }
         try c.encode(city.nilIfBlank, forKey: .city)
         try c.encode(livingSituation, forKey: .livingSituation)
         try c.encode(about.nilIfBlank, forKey: .about)
@@ -314,6 +399,25 @@ struct ElderlyProfileInput: Encodable, Equatable {
         try c.encode(routines.nilIfBlank, forKey: .routines)
         try c.encode(caregiverNotes.nilIfBlank, forKey: .caregiverNotes)
     }
+}
+
+/// v2.4 `ElderlyProfile.transparency`.
+struct Transparency: Codable, Hashable {
+    var noahToldAt: Date?
+    var appShownAt: Date?
+    var caregiverToldAt: Date?
+}
+
+/// v2.4: what the family sees, chosen by the older person (`PATCH /device/sharing`).
+enum SharingLevel: String, TolerantEnum {
+    /// Summary, written-out conversation and an estimate of mood (default).
+    case alles
+    /// Summary and mood, but not the written-out conversation.
+    case samenvattingen
+    /// Only that there was a conversation, and alerts.
+    case alleenMeldingen = "alleen_meldingen"
+    case unknown
+    static var unknownCase: SharingLevel { .unknown }
 }
 
 extension Optional where Wrapped == String {
@@ -388,6 +492,9 @@ struct NoahSettings: Codable, Hashable {
     var quietHours: QuietHours
     /// v2.1: whether conversations are recorded (only a beheerder can change it). Missing → `.uit`.
     var recording: RecordingSetting = .uit
+    /// v2.4 (self-managed, `GET /device/settings`): Noah's scheduled calls are paused because the
+    /// older person said they want to stop. nil = not sent.
+    var outboundPaused: Bool? = nil
 
     static let speedRange: ClosedRange<Double> = 0.8...1.2
     static let minutesRange: ClosedRange<Int> = 5...30
@@ -418,7 +525,7 @@ enum RecordingSetting: String, TolerantEnum {
 // In an extension so the memberwise initialiser stays available.
 extension NoahSettings {
     enum CodingKeys: String, CodingKey {
-        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording
+        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording, outboundPaused
     }
 
     init(from decoder: Decoder) throws {
@@ -432,7 +539,8 @@ extension NoahSettings {
             morningCall: try c.decode(MorningCall.self, forKey: .morningCall),
             quietHours: try c.decode(QuietHours.self, forKey: .quietHours),
             // Older backends don't know the field yet.
-            recording: try c.decodeIfPresent(RecordingSetting.self, forKey: .recording) ?? .uit
+            recording: try c.decodeIfPresent(RecordingSetting.self, forKey: .recording) ?? .uit,
+            outboundPaused: try c.decodeIfPresent(Bool.self, forKey: .outboundPaused)
         )
     }
 
@@ -447,6 +555,7 @@ extension NoahSettings {
         try c.encode(quietHours, forKey: .quietHours)
         // Never send back a value this app doesn't know.
         if recording != .unknown { try c.encode(recording, forKey: .recording) }
+        try c.encodeIfPresent(outboundPaused, forKey: .outboundPaused)
     }
 }
 
@@ -462,6 +571,8 @@ struct NoahSettingsPatch: Encodable, Equatable {
     var morningCall: NoahSettings.MorningCall?
     var quietHours: NoahSettings.QuietHours?
     var recording: RecordingSetting?
+    /// v2.4 (self-managed): `false` switches Noah's scheduled calls back on.
+    var outboundPaused: Bool?
 
     init() {}
 
@@ -498,11 +609,12 @@ struct NoahSettingsPatch: Encodable, Equatable {
         if let morningCall { result.morningCall = morningCall }
         if let quietHours { result.quietHours = quietHours }
         if let recording { result.recording = recording }
+        if let outboundPaused { result.outboundPaused = outboundPaused }
         return result
     }
 
     enum CodingKeys: String, CodingKey {
-        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording
+        case noahName, voice, speakingSpeed, maxConversationMinutes, noContactAlertDays, morningCall, quietHours, recording, outboundPaused
     }
 
     func encode(to encoder: Encoder) throws {
@@ -515,6 +627,7 @@ struct NoahSettingsPatch: Encodable, Equatable {
         try c.encodeIfPresent(morningCall, forKey: .morningCall)
         try c.encodeIfPresent(quietHours, forKey: .quietHours)
         try c.encodeIfPresent(recording, forKey: .recording)
+        try c.encodeIfPresent(outboundPaused, forKey: .outboundPaused)
     }
 }
 
@@ -560,6 +673,18 @@ struct EmergencyContactInput: Encodable, Equatable {
     var relation: String?
     var notifyBySms = true
     var notifyByCall = true
+
+    /// A contact with neither SMS nor a call would never be warned (audit 2026-11-14 M11).
+    var hasChannel: Bool { notifyBySms || notifyByCall }
+}
+
+extension EmergencyContact {
+    var isReachable: Bool { notifyBySms || notifyByCall }
+}
+
+/// v2.4: at most this many emergency contacts per profile (`409 te_veel_noodcontacten`).
+enum EmergencyContactLimit {
+    static let max = 5
 }
 
 // MARK: - Caregivers & invitations
@@ -588,6 +713,59 @@ struct AcceptInvitationResponse: Decodable {
     }
     let elderly: ElderlyRef
     let role: Role
+    /// v2.4: `"actief"`, or `"wacht_op_bevestiging"` when the older person still has to approve a
+    /// beheerder invitation they made on their own phone. nil on an older backend (= active).
+    var status: String? = nil
+
+    var isWaitingForApproval: Bool { status == "wacht_op_bevestiging" }
+}
+
+/// v2.4 `GET /elderly/:id/invitations` and `GET /device/transparency` → `pendingInvitations`.
+struct PendingInvitation: Codable, Hashable, Identifiable {
+    let id: String
+    var code: String?
+    var role: Role
+    var createdAt: Date?
+    var expiresAt: Date?
+    /// `"zelf"` (the older person) or the name of the caregiver who made it.
+    var createdBy: String?
+
+    var isMadeByElderly: Bool { createdBy == "zelf" }
+}
+
+/// v2.4: someone accepted a beheerder invitation the older person made; it waits for approval.
+struct CaregiverRequest: Codable, Hashable, Identifiable {
+    let id: String
+    var name: String?
+    var role: Role
+    var requestedAt: Date?
+}
+
+/// v2.4: the older person asked to delete their caregiver-managed profile (after 14 days).
+struct DeletionRequest: Codable, Hashable {
+    var requestedAt: Date?
+    var executesAt: Date?
+}
+
+/// v2.4 `GET /device/transparency`: who reads along and what, for the older person.
+struct DeviceTransparency: Codable, Hashable {
+    struct Member: Codable, Hashable, Identifiable {
+        let id: String
+        var name: String?
+        var role: Role
+        var joinedAt: Date?
+    }
+    var managedBy: ManagedBy?
+    @DefaultEmpty var caregivers: [Member] = []
+    @DefaultEmpty var pendingInvitations: [PendingInvitation] = []
+    @DefaultEmpty var caregiverRequests: [CaregiverRequest] = []
+    /// Dutch sentences ("u"-form) built by the server from `sharing` and `recording`.
+    @DefaultEmpty var familySees: [String] = []
+    var sharing: SharingLevel?
+    var recording: RecordingSetting?
+    var appShownAt: Date?
+    var deletionRequest: DeletionRequest?
+    @DefaultFalse var selfRegistered: Bool = false
 }
 
 // MARK: - Devices
@@ -598,6 +776,10 @@ struct PairedDevice: Codable, Hashable, Identifiable {
     var platform: String?
     var pairedAt: Date?
     var lastSeenAt: Date?
+    /// v2.4: a new phone that waits for approval (at most 72 h).
+    @DefaultFalse var restricted: Bool = false
+    /// v2.4 (`GET /device/devices`): the phone that is asking.
+    @DefaultFalse var isThisDevice: Bool = false
 }
 
 // MARK: - Conversations
@@ -636,6 +818,8 @@ struct ConversationSummary: Codable, Hashable, Identifiable {
     var mode: ConversationMode?
     /// v2.1: a recording can be played (`GET /conversations/:id/audio`).
     @DefaultFalse var hasAudio: Bool = false
+    /// v2.4: the older person kept this conversation to themselves (or shares only alerts).
+    @DefaultFalse var hidden: Bool = false
 }
 
 enum TranscriptRole: String, TolerantEnum {
@@ -672,6 +856,8 @@ struct ConversationDetail: Codable, Hashable, Identifiable {
     /// v2.1
     var mode: ConversationMode?
     @DefaultFalse var hasAudio: Bool = false
+    /// v2.4: kept private by the older person: no summary, transcript, topics or mood.
+    @DefaultFalse var hidden: Bool = false
 }
 
 /// v2.1 `GET /conversations/:id/audio` and `GET /device/conversations/:id/audio`.
@@ -899,6 +1085,14 @@ enum AlertType: String, TolerantEnum {
     /// v2.3 (backend): the older person paired their own phone by signing up with the profile's
     /// number (info, never pushed, beheerders only).
     case apparaatGekoppeld = "apparaat_gekoppeld"
+    /// v2.4: the older person changed what the family sees.
+    case privacyGewijzigd = "privacy_gewijzigd"
+    /// v2.4: the older person told Noah they want to stop.
+    case wilStoppen = "wil_stoppen"
+    /// v2.4: the older person asked for their profile to be deleted (in 14 days).
+    case verwijderverzoek
+    /// v2.4: the older person took their number off this profile.
+    case nummerLosgekoppeld = "nummer_losgekoppeld"
     case unknown
     static var unknownCase: AlertType { .unknown }
 }
@@ -930,6 +1124,32 @@ struct NoahAlert: Codable, Hashable, Identifiable {
     var status: AlertStatus
     var createdAt: Date
     var acknowledgedBy: String?
+    /// v2.4: what actually went out (not what was intended). nil = older backend.
+    var delivery: AlertDelivery? = nil
+}
+
+/// v2.4 `Alert.delivery`.
+struct AlertDelivery: Codable, Hashable {
+    var pushedDevices: Int = 0
+    var sms: Int = 0
+    var calls: Int = 0
+
+    enum CodingKeys: String, CodingKey { case pushedDevices, sms, calls }
+
+    init(pushedDevices: Int = 0, sms: Int = 0, calls: Int = 0) {
+        self.pushedDevices = pushedDevices
+        self.sms = sms
+        self.calls = calls
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pushedDevices = try c.decodeIfPresent(Int.self, forKey: .pushedDevices) ?? 0
+        sms = try c.decodeIfPresent(Int.self, forKey: .sms) ?? 0
+        calls = try c.decodeIfPresent(Int.self, forKey: .calls) ?? 0
+    }
+
+    var reachedNobody: Bool { pushedDevices == 0 && sms == 0 && calls == 0 }
 }
 
 // MARK: - Dashboard
@@ -1036,6 +1256,9 @@ struct DeviceMe: Decodable {
     var nextReminder: Reminder?
     /// v2.3 (backend): whether the older person manages the profile themselves.
     var managedBy: ManagedBy? = nil
+    /// v2.4: this phone was just signed in on a profile in use and waits for approval.
+    var restricted: Bool? = nil
+    var restrictedUntil: Date? = nil
 
     /// Wherever the backend put it; nil on an older backend.
     var resolvedManagedBy: ManagedBy? { managedBy ?? elderly.managedBy }
@@ -1083,10 +1306,12 @@ struct DeviceProfile: Codable, Hashable {
     var phoneNumber: String?
     var managedBy: ManagedBy
     var access: Access?
+    /// v2.4 (if the server sends it): Noah's scheduled calls are paused.
+    var outboundPaused: Bool? = nil
 
     var isSelfManaged: Bool { managedBy == .zelf }
 
-    enum CodingKeys: String, CodingKey { case id, preferredName, addressForm, phoneNumber, managedBy, access }
+    enum CodingKeys: String, CodingKey { case id, preferredName, addressForm, phoneNumber, managedBy, access, outboundPaused }
 
     init(id: String? = nil, preferredName: String, addressForm: AddressForm, phoneNumber: String?, managedBy: ManagedBy, access: Access?) {
         self.id = id
@@ -1106,6 +1331,7 @@ struct DeviceProfile: Codable, Hashable {
         // Missing: an older backend, so nobody but a caregiver manages it.
         managedBy = try c.decodeIfPresent(ManagedBy.self, forKey: .managedBy) ?? .mantelzorger
         access = try c.decodeIfPresent(Access.self, forKey: .access)
+        outboundPaused = try c.decodeIfPresent(Bool.self, forKey: .outboundPaused)
     }
 }
 

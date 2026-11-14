@@ -22,6 +22,12 @@ final class PushManager: NSObject, ObservableObject {
     var onOpenAlert: ((String, String?) -> Void)?
     /// A tapped alert that arrived before anyone listened.
     private(set) var pendingAlert: (alertId: String, elderlyId: String?)?
+    /// v2.4: the older person tapped a device notice (new phone, someone wants to look along,
+    /// someone now looks along): open "Wie kijkt er mee".
+    var onDeviceNotice: ((String) -> Void)?
+    private(set) var pendingDeviceNotice: String?
+
+    var isAuthorized: Bool { authorization == .authorized || authorization == .provisional || authorization == .ephemeral }
 
     func configure() {
         UNUserNotificationCenter.current().delegate = self
@@ -55,6 +61,15 @@ final class PushManager: NSObject, ObservableObject {
         return pendingAlert
     }
 
+    func consumePendingDeviceNotice() -> String? {
+        defer { pendingDeviceNotice = nil }
+        return pendingDeviceNotice
+    }
+
+    fileprivate func handleDeviceNotice(kind: String) {
+        if let onDeviceNotice { onDeviceNotice(kind) } else { pendingDeviceNotice = kind }
+    }
+
     fileprivate func handleTap(alertId: String, elderlyId: String?) {
         if let onOpenAlert {
             onOpenAlert(alertId, elderlyId)
@@ -71,6 +86,12 @@ extension PushManager: UNUserNotificationCenterDelegate {
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let userInfo = response.notification.request.content.userInfo
+        // v2.4 device push: { "type": "device_notice", "kind": "nieuw_apparaat" | "meekijkverzoek" | "meekijker_toegevoegd" }.
+        if (userInfo["type"] as? String) == "device_notice" {
+            let kind = userInfo["kind"] as? String ?? ""
+            await MainActor.run { self.handleDeviceNotice(kind: kind) }
+            return
+        }
         // Push payload for a new alert: { "type": "alert", "alertId", "elderlyId", "severity" }.
         guard (userInfo["type"] as? String) == "alert", let alertId = userInfo["alertId"] as? String else { return }
         let elderlyId = userInfo["elderlyId"] as? String

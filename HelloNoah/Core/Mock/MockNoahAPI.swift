@@ -21,6 +21,13 @@ import Foundation
 ///   (06 23456789) pairs to Wim instead ("gekoppeld aan het account van uw familie"), Toos's number
 ///   (06 45678901) signs Toos in again. Device endpoints answer `403 beheerd_door_mantelzorger` for
 ///   Wim and Riet. The phone's profile follows the (mock) device token.
+/// - v2.4: one of Wim's conversations is private ("wilde dit gesprek voor zichzelf houden"), alerts
+///   say what really went out (`delivery`). Bep's number (06 11223344) was set up by Mark and never
+///   used: self sign-up asks "Kent u deze persoon?". Signing up again on a profile that is in use
+///   gives a restricted phone (`-mockRestricted YES` makes this phone restricted). Wim's pending
+///   requests, invitations and devices are seeded for the transparency screen;
+///   `-mockTransparencyUnseen YES` makes Wim's phone show "Wie kijkt er mee" once.
+///   `-mockV23Backend YES` answers 404 on every v2.4 endpoint (graceful degradation).
 /// Data lives in memory and resets at each launch, except self sign-ups (kept in UserDefaults so
 /// a relaunch still knows the new profile).
 final class MockNoahAPI: NoahAPI {
@@ -52,8 +59,36 @@ final class MockNoahAPI: NoahAPI {
     private var alertsByElderly: [String: [NoahAlert]] = [:]
     private var devicesByElderly: [String: [PairedDevice]] = [:]
     private var subscriptions: [String: Subscription] = [:]
-    private var invitations: [String: (elderlyId: String, role: Role)] = [:]
+    private var invitations: [String: MockInvitation] = [:]
     private var pairingCodes: [String: String] = [:]
+    // v2.4
+    private struct MockInvitation {
+        let id: String
+        let code: String
+        let elderlyId: String
+        let role: Role
+        let createdAt: Date
+        let expiresAt: Date
+        /// "zelf" or the caregiver's name.
+        let createdBy: String
+        var fromDevice: Bool { createdBy == "zelf" }
+    }
+    private struct MockRequest {
+        let request: CaregiverRequest
+        let caregiverId: String
+        let elderlyId: String
+    }
+    private var caregiverRequests: [MockRequest] = []
+    private var transparency: [String: Transparency] = [:]
+    private var sharingByElderly: [String: SharingLevel] = [:]
+    private var outboundPaused: Set<String> = []
+    private var deletionRequests: [String: DeletionRequest] = [:]
+    private var selfRegistered: Set<String> = []
+    /// Device id per mock device token holder (this phone).
+    private var thisDeviceId: [String: String] = [:]
+    /// Answers 404 on every v2.4 endpoint, like a backend that is not updated yet.
+    private let v23Backend: Bool
+    private let restrictedPhone: Bool
 
     init(defaults: UserDefaults = .standard, now: Date = Date(), deviceToken: @escaping () -> String? = { nil }) {
         self.defaults = defaults
@@ -61,6 +96,8 @@ final class MockNoahAPI: NoahAPI {
         latency = defaults.object(forKey: "mockLatency") == nil ? 0.35 : defaults.double(forKey: "mockLatency")
         offline = defaults.bool(forKey: "mockOffline")
         overAllowance = defaults.bool(forKey: "mockOverAllowance")
+        v23Backend = defaults.bool(forKey: "mockV23Backend")
+        restrictedPhone = defaults.bool(forKey: "mockRestricted")
         seed(now: now, inactive: defaults.bool(forKey: "mockInactive"))
         seedSelfProfiles(now: now)
         restoreSelfSignUps()
@@ -165,6 +202,51 @@ final class MockNoahAPI: NoahAPI {
 
         devicesByElderly[MockIDs.wim] = [PairedDevice(id: MockIDs.wimDevice, deviceName: "iPhone van Wim", platform: "ios", pairedAt: now.addingTimeInterval(-86_400 * 39), lastSeenAt: now.addingTimeInterval(-3600 * 3))]
         devicesByElderly[MockIDs.riet] = []
+        thisDeviceId[MockIDs.wim] = MockIDs.wimDevice
+
+        // v2.4: who was told what, and a private conversation.
+        transparency[MockIDs.wim] = Transparency(noahToldAt: now.addingTimeInterval(-86_400 * 38),
+                                                 appShownAt: defaults.bool(forKey: "mockTransparencyUnseen") ? nil : now.addingTimeInterval(-86_400 * 38),
+                                                 caregiverToldAt: defaults.bool(forKey: "mockNotTold") ? nil : now.addingTimeInterval(-86_400 * 39))
+        transparency[MockIDs.riet] = Transparency(noahToldAt: now.addingTimeInterval(-86_400 * 19), appShownAt: nil, caregiverToldAt: now.addingTimeInterval(-86_400 * 20))
+        sharingByElderly[MockIDs.wim] = .alles
+        sharingByElderly[MockIDs.riet] = .samenvattingen
+        // `-mockOutboundPaused YES`: Wim told Noah he wants to stop (scheduled calls paused).
+        if defaults.bool(forKey: "mockOutboundPaused") { outboundPaused.insert(MockIDs.wim) }
+        if let index = conversationsByElderly[MockIDs.wim]?.indices.dropFirst(2).first {
+            var hidden = conversationsByElderly[MockIDs.wim]![index]
+            hidden.hidden = true
+            hidden.summary = nil
+            hidden.topics = []
+            hidden.moodScore = nil
+            hidden.cognitiveClarity = nil
+            hidden.transcript = []
+            hidden.emotionalMoments = []
+            hidden.moodIndicators = []
+            hidden.hasConcern = false
+            hidden.hasAudio = false
+            hidden.lifeStoryEntryIds = []
+            conversationsByElderly[MockIDs.wim]![index] = hidden
+        }
+        if alertsByElderly[MockIDs.wim]?.isEmpty == false {
+            alertsByElderly[MockIDs.wim]![0].delivery = AlertDelivery(pushedDevices: 0, sms: 0, calls: 0)
+            alertsByElderly[MockIDs.wim]![1].delivery = AlertDelivery(pushedDevices: 2, sms: 1, calls: 0)
+        }
+        // A beheerder invitation Anna made and a lezer invitation Wim made himself.
+        invitations["Q4R-7TW"] = MockInvitation(id: "I01", code: "Q4R-7TW", elderlyId: MockIDs.wim, role: .lezer, createdAt: now.addingTimeInterval(-86_400 * 2),
+                                                expiresAt: now.addingTimeInterval(86_400 * 5), createdBy: "Anna de Vries")
+
+        // v2.4: Bep's number was put on a profile by Mark; Bep never used Noah (claim flow).
+        profiles[MockIDs.bep] = ElderlyProfile(
+            id: MockIDs.bep, firstName: "Elisabeth", lastName: "de Vries", preferredName: "Bep",
+            addressForm: .u, gender: .vrouw, birthYear: 1946, phoneNumber: "+31611223344", city: "Haarlem",
+            livingSituation: .alleen, about: nil, routines: nil, caregiverNotes: nil, access: .active, isBeta: false,
+            myRole: nil, createdAt: now.addingTimeInterval(-86_400 * 3), phoneVerified: false, managedBy: .mantelzorger
+        )
+        memberships[MockIDs.bep] = [MockIDs.mark: .beheerder]
+        settingsByElderly[MockIDs.bep] = NoahSettings.defaults
+        devicesByElderly[MockIDs.bep] = []
+        subscriptions[MockIDs.bep] = Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 1)
 
         subscriptions[MockIDs.wim] = inactive
             ? Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 0)
@@ -187,6 +269,10 @@ final class MockNoahAPI: NoahAPI {
         )
         memberships[id] = [MockIDs.ellen: .lezer]
         joinedAt[MockIDs.ellen + id] = now.addingTimeInterval(-86_400 * 10)
+        selfRegistered.insert(id)
+        thisDeviceId[id] = MockIDs.toosDevice
+        transparency[id] = Transparency(noahToldAt: now.addingTimeInterval(-86_400 * 9), appShownAt: now.addingTimeInterval(-86_400 * 14), caregiverToldAt: nil)
+        sharingByElderly[id] = .alles
         var settings = NoahSettings.defaults
         settings.speakingSpeed = 0.9
         settingsByElderly[id] = settings
@@ -243,6 +329,9 @@ final class MockNoahAPI: NoahAPI {
         )
         profiles[id] = profile
         memberships[id] = [:]
+        selfRegistered.insert(id)
+        transparency[id] = Transparency(noahToldAt: nil, appShownAt: nil, caregiverToldAt: nil)
+        sharingByElderly[id] = .alles
         settingsByElderly[id] = NoahSettings.defaults
         contacts[id] = []
         conversationsByElderly[id] = []
@@ -269,6 +358,51 @@ final class MockNoahAPI: NoahAPI {
 
     private func fail(_ status: Int, _ code: String, _ message: String) -> APIError {
         .server(status: status, code: code, message: message)
+    }
+
+    /// v2.4 endpoints answer 404 with `-mockV23Backend YES`, like a backend not yet updated.
+    private func requireV24() throws {
+        if v23Backend { throw fail(404, "niet_gevonden", "Deze route bestaat niet.") }
+    }
+
+    /// v2.4: the profile as caregivers see it, with transparency and sharing filled in.
+    private func decorated(_ profile: ElderlyProfile) -> ElderlyProfile {
+        guard !v23Backend else { return profile }
+        var copy = profile
+        copy.transparency = transparency[profile.id] ?? Transparency()
+        copy.sharing = sharingByElderly[profile.id] ?? .alles
+        copy.outboundPaused = outboundPaused.contains(profile.id)
+        return copy
+    }
+
+    /// v2.4: what caregivers may see of a conversation, given the older person's choice.
+    private func shared(_ c: ConversationDetail, elderlyId: String) -> ConversationDetail {
+        var copy = c
+        switch sharingByElderly[elderlyId] ?? .alles {
+        case .samenvattingen:
+            copy.transcript = []
+            copy.emotionalMoments = []
+            copy.cognitiveClarity = nil
+        case .alleenMeldingen:
+            copy = ConversationDetail(id: c.id, startedAt: c.startedAt, durationSeconds: c.durationSeconds, channel: c.channel,
+                                      summary: nil, moodScore: nil, mode: c.mode, hasAudio: false, hidden: true)
+        case .alles, .unknown:
+            break
+        }
+        return copy
+    }
+
+    /// This phone is restricted (v2.4): a new phone on a profile in use, waiting for approval.
+    private func requireUnrestricted() throws {
+        if restrictedPhone, !v23Backend {
+            throw fail(403, "apparaat_wacht_op_bevestiging", "Deze telefoon is net aangemeld. Uw andere telefoon of uw familie kan hem goedkeuren.")
+        }
+    }
+
+    private func makeInvitationCode() -> String {
+        let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+        let raw = String((0..<6).map { _ in alphabet.randomElement()! })
+        return String(raw.prefix(3)) + "-" + String(raw.suffix(3))
     }
 
     private func role(for elderlyId: String) throws -> Role {
@@ -322,7 +456,7 @@ final class MockNoahAPI: NoahAPI {
     private func summary(_ c: ConversationDetail) -> ConversationSummary {
         ConversationSummary(id: c.id, startedAt: c.startedAt, durationSeconds: c.durationSeconds, channel: c.channel,
                             summary: c.summary, moodScore: c.moodScore, topics: c.topics, hasConcern: c.hasConcern,
-                            mode: c.mode, hasAudio: c.hasAudio)
+                            mode: c.mode, hasAudio: c.hasAudio, hidden: v23Backend ? false : c.hidden)
     }
 
     /// Fair use this month (v2.1): minutes of this calendar month (Europe/Amsterdam).
@@ -423,6 +557,9 @@ final class MockNoahAPI: NoahAPI {
             pairingCodes[code] = nil
             let device = PairedDevice(id: UUID().uuidString, deviceName: deviceName, platform: "ios", pairedAt: Date(), lastSeenAt: Date())
             devicesByElderly[elderlyId, default: []].append(device)
+            thisDeviceId[elderlyId] = device.id
+            // v2.4: the older person sees "Wie kijkt er mee" once on the new phone.
+            transparency[elderlyId, default: Transparency()].appShownAt = nil
             let profile = profiles[elderlyId]
             return PairDeviceResponse(
                 deviceToken: "hnd_mock_\(elderlyId)",
@@ -488,13 +625,19 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func deleteMe() async throws {
+    func deleteMe(subscriptionAcknowledged: Bool) async throws {
         try await simulate()
-        sync {
+        try sync {
             let me = currentCaregiverId
+            if !subscriptionAcknowledged, !v23Backend {
+                let wouldDelete = memberships.filter { $0.value[me] == .beheerder && $0.value.filter({ $0.value == .beheerder }).count == 1 && !selfRegistered.contains($0.key) }.keys
+                if wouldDelete.contains(where: { subscriptions[$0]?.status == .actief || subscriptions[$0]?.status == .intro }) {
+                    throw fail(409, "abonnement_actief", "Er loopt nog een abonnement. Zeg het eerst op in de App Store.")
+                }
+            }
             for (elderlyId, members) in memberships where members[me] != nil {
                 memberships[elderlyId]?[me] = nil
-                if members.filter({ $0.value == .beheerder && $0.key != me }).isEmpty, members[me] == .beheerder {
+                if members.filter({ $0.value == .beheerder && $0.key != me }).isEmpty, members[me] == .beheerder, !selfRegistered.contains(elderlyId) {
                     profiles[elderlyId] = nil
                     memberships[elderlyId] = nil
                 }
@@ -517,15 +660,17 @@ final class MockNoahAPI: NoahAPI {
                 city: input.city, livingSituation: input.livingSituation, about: input.about, likes: input.likes,
                 dislikes: input.dislikes, topicsToRaise: input.topicsToRaise, topicsToAvoid: input.topicsToAvoid,
                 routines: input.routines, caregiverNotes: input.caregiverNotes, access: .active, isBeta: false,
-                myRole: .beheerder, createdAt: Date(), phoneVerified: false
+                myRole: .beheerder, createdAt: Date(), phoneVerified: false, managedBy: .mantelzorger
             )
             profiles[id] = profile
+            transparency[id] = Transparency()
+            sharingByElderly[id] = .alles
             memberships[id] = [currentCaregiverId: .beheerder]
             joinedAt[currentCaregiverId + id] = Date()
             settingsByElderly[id] = NoahSettings.defaults
             // Free trial (backend changelog): active while free conversations are left.
             subscriptions[id] = Subscription(status: .geen, productId: nil, renewsAt: nil, expiresAt: nil, platform: nil, paidByMe: nil, freeConversationsLeft: 1)
-            return profile
+            return decorated(profile)
         }
     }
 
@@ -552,7 +697,7 @@ final class MockNoahAPI: NoahAPI {
             profile.phoneVerifiedVia = "code"
             profiles[elderlyId] = profile
             profile.myRole = .beheerder
-            return profile
+            return decorated(profile)
         }
     }
 
@@ -560,7 +705,7 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             let role = try role(for: id)
-            var profile = profiles[id]!
+            var profile = decorated(profiles[id]!)
             profile.myRole = role
             return profile
         }
@@ -570,7 +715,7 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             try requireBeheerder(id)
-            if profiles.values.contains(where: { $0.id != id && $0.phoneNumber == input.phoneNumber }) {
+            if !input.phoneNumber.isEmpty, profiles.values.contains(where: { $0.id != id && $0.phoneNumber == input.phoneNumber }) {
                 throw fail(409, "phone_number_taken", "Dit telefoonnummer hoort al bij een ander profiel.")
             }
             var profile = profiles[id]!
@@ -580,13 +725,13 @@ final class MockNoahAPI: NoahAPI {
             profile.addressForm = input.addressForm
             profile.gender = input.gender
             profile.birthYear = input.birthYear
-            // Like the backend: a new number must be confirmed again.
-            if profile.phoneNumber != input.phoneNumber {
+            // Like the backend: a new number must be confirmed again (no number sent: unchanged).
+            if !input.phoneNumber.isEmpty, profile.phoneNumber != input.phoneNumber {
                 profile.phoneVerified = false
                 profile.phoneVerifiedAt = nil
                 profile.phoneVerifiedVia = nil
             }
-            profile.phoneNumber = input.phoneNumber
+            if !input.phoneNumber.isEmpty { profile.phoneNumber = input.phoneNumber }
             profile.city = input.city.nilIfBlank
             profile.livingSituation = input.livingSituation
             profile.about = input.about.nilIfBlank
@@ -597,16 +742,45 @@ final class MockNoahAPI: NoahAPI {
             profile.routines = input.routines.nilIfBlank
             profile.caregiverNotes = input.caregiverNotes.nilIfBlank
             profiles[id] = profile
-            return profile
+            return decorated(profile)
         }
     }
 
-    func deleteElderly(id: String) async throws {
+    func deleteElderly(id: String, subscriptionAcknowledged: Bool) async throws {
         try await simulate()
         try sync {
             try requireBeheerder(id)
+            if !v23Backend {
+                if selfRegistered.contains(id) {
+                    throw fail(403, "profiel_van_oudere", "Dit profiel is van de oudere zelf.")
+                }
+                if !subscriptionAcknowledged, subscriptions[id]?.status == .actief || subscriptions[id]?.status == .intro {
+                    throw fail(409, "abonnement_actief", "Er loopt nog een abonnement. Zeg het eerst op in de App Store.")
+                }
+            }
             profiles[id] = nil
             memberships[id] = nil
+        }
+    }
+
+    func markToldElderly(elderlyId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireBeheerder(elderlyId)
+            transparency[elderlyId, default: Transparency()].caregiverToldAt = Date()
+        }
+    }
+
+    func setOutboundPaused(elderlyId: String, paused: Bool) async throws -> ElderlyProfile {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            try requireBeheerder(elderlyId)
+            if paused { outboundPaused.insert(elderlyId) } else { outboundPaused.remove(elderlyId) }
+            var profile = decorated(profiles[elderlyId]!)
+            profile.myRole = .beheerder
+            return profile
         }
     }
 
@@ -717,6 +891,9 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
+            if !v23Backend, (contacts[elderlyId]?.count ?? 0) >= EmergencyContactLimit.max {
+                throw fail(409, "te_veel_noodcontacten", "Er kunnen maximaal 5 noodcontacten zijn.")
+            }
             let contact = EmergencyContact(id: UUID().uuidString, name: input.name, phoneNumber: input.phoneNumber, relation: input.relation,
                                            priority: (contacts[elderlyId]?.count ?? 0) + 1, notifyBySms: input.notifyBySms, notifyByCall: input.notifyByCall)
             contacts[elderlyId, default: []].append(contact)
@@ -783,10 +960,9 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             try requireBeheerder(elderlyId)
-            let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-            let raw = String((0..<6).map { _ in alphabet.randomElement()! })
-            let code = String(raw.prefix(3)) + "-" + String(raw.suffix(3))
-            invitations[code] = (elderlyId, role)
+            let code = makeInvitationCode()
+            invitations[code] = MockInvitation(id: UUID().uuidString, code: code, elderlyId: elderlyId, role: role, createdAt: Date(),
+                                               expiresAt: Date().addingTimeInterval(7 * 86_400), createdBy: caregiverRecords[currentCaregiverId]?.name ?? "Mantelzorger")
             let name = profiles[elderlyId]?.preferredName ?? ""
             let url = "https://hellonoah.ai/uitnodiging/\(code)"
             return Invitation(code: code, url: url, expiresAt: Date().addingTimeInterval(7 * 86_400),
@@ -800,14 +976,16 @@ final class MockNoahAPI: NoahAPI {
             let normalized = code.uppercased().replacingOccurrences(of: " ", with: "")
             if let invitation = invitations[normalized] {
                 invitations[normalized] = nil
-                memberships[invitation.elderlyId, default: [:]][currentCaregiverId] = invitation.role
-                joinedAt[currentCaregiverId + invitation.elderlyId] = Date()
-                // v2.3: a beheerder takes over a self-managed profile.
-                if invitation.role == .beheerder, profiles[invitation.elderlyId]?.managedBy == .zelf {
-                    profiles[invitation.elderlyId]?.managedBy = .mantelzorger
-                    persistSelfSignUps()
+                let name = profiles[invitation.elderlyId]?.preferredName ?? ""
+                // v2.4: a beheerder invitation the older person made waits for their approval.
+                if invitation.fromDevice, invitation.role == .beheerder, !v23Backend {
+                    caregiverRequests.append(MockRequest(
+                        request: CaregiverRequest(id: UUID().uuidString, name: caregiverRecords[currentCaregiverId]?.name ?? "Familielid", role: .beheerder, requestedAt: Date()),
+                        caregiverId: currentCaregiverId, elderlyId: invitation.elderlyId))
+                    return AcceptInvitationResponse(elderly: .init(id: invitation.elderlyId, preferredName: name), role: invitation.role, status: "wacht_op_bevestiging")
                 }
-                return AcceptInvitationResponse(elderly: .init(id: invitation.elderlyId, preferredName: profiles[invitation.elderlyId]?.preferredName ?? ""), role: invitation.role)
+                addMember(currentCaregiverId, to: invitation.elderlyId, role: invitation.role)
+                return AcceptInvitationResponse(elderly: .init(id: invitation.elderlyId, preferredName: name), role: invitation.role, status: v23Backend ? nil : "actief")
             }
             // Demo: the code K7P-2QX from the contract joins Riet as lezer.
             if normalized == "K7P-2QX" {
@@ -816,6 +994,36 @@ final class MockNoahAPI: NoahAPI {
                 return AcceptInvitationResponse(elderly: .init(id: MockIDs.riet, preferredName: "Riet"), role: .lezer)
             }
             throw fail(404, "uitnodiging_ongeldig", "Deze uitnodiging bestaat niet of is verlopen. Vraag om een nieuwe uitnodiging.")
+        }
+    }
+
+    private func addMember(_ caregiverId: String, to elderlyId: String, role: Role) {
+        memberships[elderlyId, default: [:]][caregiverId] = role
+        joinedAt[caregiverId + elderlyId] = Date()
+        // v2.3: a beheerder takes over a self-managed profile.
+        if role == .beheerder, profiles[elderlyId]?.managedBy == .zelf {
+            profiles[elderlyId]?.managedBy = .mantelzorger
+            persistSelfSignUps()
+        }
+    }
+
+    func pendingInvitations(elderlyId: String) async throws -> [PendingInvitation] {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            try requireBeheerder(elderlyId)
+            return invitations.values.filter { $0.elderlyId == elderlyId && $0.expiresAt > Date() }
+                .sorted { $0.createdAt > $1.createdAt }
+                .map { PendingInvitation(id: $0.id, code: $0.code, role: $0.role, createdAt: $0.createdAt, expiresAt: $0.expiresAt, createdBy: $0.createdBy) }
+        }
+    }
+
+    func revokeInvitation(elderlyId: String, invitationId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireBeheerder(elderlyId)
+            invitations = invitations.filter { !($0.value.elderlyId == elderlyId && $0.value.id == invitationId) }
         }
     }
 
@@ -861,6 +1069,18 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
+    func approveDevice(elderlyId: String, deviceId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireBeheerder(elderlyId)
+            guard let index = devicesByElderly[elderlyId]?.firstIndex(where: { $0.id == deviceId }) else {
+                throw fail(404, "niet_gevonden", "Deze telefoon bestaat niet (meer).")
+            }
+            devicesByElderly[elderlyId]![index].restricted = false
+        }
+    }
+
     // MARK: Dashboard, conversations, mood
 
     func dashboard(elderlyId: String) async throws -> Dashboard {
@@ -880,7 +1100,7 @@ final class MockNoahAPI: NoahAPI {
                 week: .init(conversations: week.count, minutes: week.compactMap(\.durationSeconds).reduce(0, +) / 60,
                             averageMood: moods.isEmpty ? nil : (moods.reduce(0, +) / Double(moods.count) * 10).rounded() / 10),
                 moodTrend: moodDays(elderlyId, days: 7),
-                latestConversation: conversations.first.map(summary),
+                latestConversation: conversations.first.map { summary(shared($0, elderlyId: elderlyId)) },
                 openAlerts: (alertsByElderly[elderlyId] ?? []).filter { $0.status == .open },
                 upcomingReminders: Array(refreshedReminders(elderlyId).filter { $0.active && $0.nextAt != nil }.sorted { $0.nextAt! < $1.nextAt! }.prefix(5)),
                 lifeStory: .init(entries: stories.count, latest: stories.max { ($0.createdAt ?? .distantPast) < ($1.createdAt ?? .distantPast) })
@@ -892,7 +1112,7 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             _ = try role(for: elderlyId)
-            return paginate((conversationsByElderly[elderlyId] ?? []).map(summary), cursor: cursor, limit: limit)
+            return paginate((conversationsByElderly[elderlyId] ?? []).map { summary(shared($0, elderlyId: elderlyId)) }, cursor: cursor, limit: limit)
         }
     }
 
@@ -901,7 +1121,7 @@ final class MockNoahAPI: NoahAPI {
         return try sync {
             guard let elderlyId = elderlyId(ofConversation: id) else { throw fail(404, "niet_gevonden", "Dit gesprek bestaat niet (meer).") }
             _ = try role(for: elderlyId)
-            return conversationsByElderly[elderlyId]!.first { $0.id == id }!
+            return shared(conversationsByElderly[elderlyId]!.first { $0.id == id }!, elderlyId: elderlyId)
         }
     }
 
@@ -1115,7 +1335,7 @@ final class MockNoahAPI: NoahAPI {
         return PhoneLine(
             phoneNumber: "+3197010203456",
             displayNumber: "097 0102 3456",
-            instructions: "Bel dit nummer vanaf de telefoon die in het profiel staat. Noah herkent het nummer en neemt meteen op, dag en nacht. Bellen kost hetzelfde als een gewoon gesprek naar een vast nummer."
+            instructions: "Bel dit nummer vanaf de telefoon die in het profiel staat. Aan de telefoon kent Noah alleen de voornaam; het volledige gesprek met levensverhaal en herinneringen is er in de app. Bellen kost hetzelfde als een gewoon gesprek naar een vast nummer."
         )
     }
 
@@ -1183,7 +1403,9 @@ final class MockNoahAPI: NoahAPI {
                 access: profile.access,
                 lastConversationAt: conversationsByElderly[id]?.first?.startedAt,
                 nextReminder: next,
-                managedBy: profile.managedBy
+                managedBy: profile.managedBy,
+                restricted: v23Backend ? nil : restrictedPhone,
+                restrictedUntil: restrictedPhone && !v23Backend ? Date().addingTimeInterval(60 * 3600) : nil
             )
         }
     }
@@ -1240,6 +1462,7 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceLifeStory(cursor: String?, limit: Int) async throws -> Page<LifeStoryEntry> {
         try await simulate()
+        try requireUnrestricted()
         return sync { paginate(sortedStory(deviceElderlyId, category: nil), cursor: cursor, limit: limit) }
     }
 
@@ -1274,12 +1497,57 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderSignUpResponse {
+    func verifyElderSignUp(_ request: ElderSignUpVerifyRequest) async throws -> ElderVerifyOutcome {
         try await simulate()
         return try sync {
             guard request.code.count == 6, request.code != "000000" else {
                 throw fail(400, "ongeldige_code", "Deze code klopt niet of is verlopen.")
             }
+            // v2.4: a number someone else put on a profile the older person never used: ask first.
+            if !v23Backend, let existing = profiles.values.first(where: { $0.phoneNumber == request.phoneNumber }),
+               existing.managedBy != .zelf, existing.phoneVerified != true, (devicesByElderly[existing.id] ?? []).isEmpty {
+                let creator = memberships[existing.id]?.first { $0.value == .beheerder }.flatMap { caregiverRecords[$0.key]?.name }
+                return .choiceNeeded(ElderClaimChoice(claimToken: "hnc_mock_\(existing.id)", expiresAt: Date().addingTimeInterval(900),
+                                                      profile: .init(preferredName: existing.preferredName, createdBy: creator)))
+            }
+            return .signedIn(try signIn(phoneNumber: request.phoneNumber, preferredName: request.preferredName, addressForm: request.addressForm))
+        }
+    }
+
+    func claimElderSignUp(_ request: ElderClaimRequest) async throws -> ElderSignUpResponse {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            guard request.claimToken.hasPrefix("hnc_mock_") else { throw fail(400, "claim_ongeldig", "Begin opnieuw.") }
+            let id = String(request.claimToken.dropFirst("hnc_mock_".count))
+            guard let existing = profiles[id], let phone = existing.phoneNumber else { throw fail(400, "claim_ongeldig", "Begin opnieuw.") }
+            switch request.choice {
+            case .koppelen:
+                profiles[id]?.phoneVerified = true
+                profiles[id]?.phoneVerifiedVia = "code"
+                let deviceId = UUID().uuidString
+                devicesByElderly[id, default: []].append(PairedDevice(id: deviceId, deviceName: request.deviceName ?? "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date()))
+                thisDeviceId[id] = deviceId
+                transparency[id, default: Transparency()].appShownAt = nil
+                return ElderSignUpResponse(deviceToken: "hnd_mock_\(id)", device: .init(id: deviceId),
+                                           elderly: .init(id: id, preferredName: existing.preferredName, noahName: settingsByElderly[id]?.noahName ?? "Noah"),
+                                           isNewProfile: false, managedBy: .mantelzorger)
+            case .eigenProfiel:
+                profiles[id]?.phoneNumber = nil
+                profiles[id]?.phoneVerified = false
+                alertsByElderly[id, default: []].insert(
+                    NoahAlert(id: UUID().uuidString, type: .nummerLosgekoppeld, severity: .waarschuwing, title: "Het nummer is losgekoppeld van het profiel van \(existing.preferredName)",
+                              body: "Iemand met dit nummer heeft gekozen voor een eigen profiel. Het profiel van \(existing.preferredName) heeft nu geen telefoonnummer.",
+                              conversationId: nil, status: .open, createdAt: Date(), acknowledgedBy: nil), at: 0)
+                return try signIn(phoneNumber: phone, preferredName: request.preferredName, addressForm: request.addressForm)
+            }
+        }
+    }
+
+    /// v2.3/v2.4 sign-in with a verified number (inside `sync`).
+    private func signIn(phoneNumber: String, preferredName: String?, addressForm: AddressForm?) throws -> ElderSignUpResponse {
+        do {
+            let request = (phoneNumber: phoneNumber, preferredName: preferredName, addressForm: addressForm)
             let deviceId = UUID().uuidString
             if let existing = profiles.values.first(where: { $0.phoneNumber == request.phoneNumber }) {
                 // Caregiver-managed: this phone is paired to that profile, the family gets a notice.
@@ -1290,15 +1558,21 @@ final class MockNoahAPI: NoahAPI {
                                   body: "\(existing.preferredName) heeft zich aangemeld met het eigen telefoonnummer. Die telefoon is nu gekoppeld aan dit profiel.",
                                   conversationId: nil, status: .open, createdAt: Date(), acknowledgedBy: nil), at: 0)
                 }
-                devicesByElderly[existing.id, default: []].append(PairedDevice(id: deviceId, deviceName: "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date()))
+                // v2.4: a profile in use (a phone seen lately, or beheerders) gets a restricted phone.
+                let inUse = !(devicesByElderly[existing.id] ?? []).isEmpty || memberships[existing.id]?.values.contains(.beheerder) == true
+                let restricted = inUse && !v23Backend
+                devicesByElderly[existing.id, default: []].append(PairedDevice(id: deviceId, deviceName: "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date(), restricted: restricted))
                 return ElderSignUpResponse(deviceToken: "hnd_mock_\(existing.id)", device: .init(id: deviceId),
                                            elderly: .init(id: existing.id, preferredName: existing.preferredName, noahName: settingsByElderly[existing.id]?.noahName ?? "Noah"),
-                                           isNewProfile: false, managedBy: managedBy)
+                                           isNewProfile: false, managedBy: managedBy, restricted: restricted,
+                                           restrictedUntil: restricted ? Date().addingTimeInterval(72 * 3600) : nil)
             }
             let id = UUID().uuidString
             let profile = createSelfProfile(id: id, phoneNumber: request.phoneNumber, preferredName: request.preferredName ?? "",
                                             addressForm: request.addressForm ?? .u)
+            _ = profile
             devicesByElderly[id] = [PairedDevice(id: deviceId, deviceName: "iPhone", platform: "ios", pairedAt: Date(), lastSeenAt: Date())]
+            thisDeviceId[id] = deviceId
             return ElderSignUpResponse(deviceToken: "hnd_mock_\(id)", device: .init(id: deviceId),
                                        elderly: .init(id: id, preferredName: profile.preferredName, noahName: "Noah"),
                                        isNewProfile: true, managedBy: .zelf)
@@ -1312,8 +1586,10 @@ final class MockNoahAPI: NoahAPI {
         return sync {
             let id = deviceElderlyId
             let profile = profiles[id]!
-            return DeviceProfile(id: id, preferredName: profile.preferredName, addressForm: profile.addressForm, phoneNumber: profile.phoneNumber,
-                                 managedBy: profile.managedBy ?? .mantelzorger, access: profile.access)
+            var result = DeviceProfile(id: id, preferredName: profile.preferredName, addressForm: profile.addressForm, phoneNumber: profile.phoneNumber,
+                                       managedBy: profile.managedBy ?? .mantelzorger, access: profile.access)
+            if !v23Backend { result.outboundPaused = outboundPaused.contains(id) }
+            return result
         }
     }
 
@@ -1334,7 +1610,12 @@ final class MockNoahAPI: NoahAPI {
 
     func deviceSettings() async throws -> NoahSettings {
         try await simulate()
-        return try sync { settingsByElderly[try requireSelfManaged()] ?? .defaults }
+        return try sync {
+            let id = try requireSelfManaged()
+            var settings = settingsByElderly[id] ?? .defaults
+            if !v23Backend { settings.outboundPaused = outboundPaused.contains(id) }
+            return settings
+        }
     }
 
     func updateDeviceSettings(_ patch: NoahSettingsPatch) async throws -> NoahSettings {
@@ -1347,8 +1628,14 @@ final class MockNoahAPI: NoahAPI {
             if let speed = patch.speakingSpeed, !NoahSettings.speedRange.contains(speed) {
                 throw fail(400, "ongeldige_invoer", "Spreektempo moet tussen 0.8 en 1.2 liggen.")
             }
-            let updated = patch.applied(to: settingsByElderly[id] ?? .defaults)
+            try requireUnrestricted()
+            if let paused = patch.outboundPaused {
+                if paused { outboundPaused.insert(id) } else { outboundPaused.remove(id) }
+            }
+            var updated = patch.applied(to: settingsByElderly[id] ?? .defaults)
+            updated.outboundPaused = nil
             settingsByElderly[id] = updated
+            if !v23Backend { updated.outboundPaused = outboundPaused.contains(id) }
             return updated
         }
     }
@@ -1362,7 +1649,11 @@ final class MockNoahAPI: NoahAPI {
         try await simulate()
         return try sync {
             let id = try requireSelfManaged()
+            try requireUnrestricted()
             guard PhoneNumberFormat.e164(input.phoneNumber) != nil else { throw fail(400, "ongeldige_invoer", "Dit telefoonnummer klopt niet.") }
+            if !v23Backend, (contacts[id]?.count ?? 0) >= EmergencyContactLimit.max {
+                throw fail(409, "te_veel_noodcontacten", "U kunt maximaal 5 noodcontacten hebben.")
+            }
             let contact = EmergencyContact(id: UUID().uuidString, name: input.name, phoneNumber: input.phoneNumber, relation: input.relation,
                                            priority: (contacts[id]?.count ?? 0) + 1, notifyBySms: input.notifyBySms, notifyByCall: input.notifyByCall)
             contacts[id, default: []].append(contact)
@@ -1424,17 +1715,22 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func createDeviceInvitation(role: Role) async throws -> Invitation {
+    func createDeviceInvitation(role: Role, confirmed: Bool) async throws -> Invitation {
         try await simulate()
         return try sync {
             let id = try requireSelfManaged()
-            let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-            let raw = String((0..<6).map { _ in alphabet.randomElement()! })
-            let code = String(raw.prefix(3)) + "-" + String(raw.suffix(3))
-            invitations[code] = (id, role)
+            try requireUnrestricted()
+            if role == .beheerder, !confirmed, !v23Backend {
+                throw fail(400, "bevestiging_nodig", "Bevestig eerst dat deze persoon mag helpen beheren.")
+            }
+            let code = makeInvitationCode()
+            // v2.4: invitations made on the phone are valid for 24 hours.
+            let validity: TimeInterval = v23Backend ? 7 * 86_400 : 86_400
+            invitations[code] = MockInvitation(id: UUID().uuidString, code: code, elderlyId: id, role: role, createdAt: Date(),
+                                               expiresAt: Date().addingTimeInterval(validity), createdBy: "zelf")
             let url = "https://hellonoah.ai/uitnodiging/\(code)"
             let what = role == .beheerder ? "om mee te kijken en mee te helpen" : "om mee te kijken"
-            return Invitation(code: code, url: url, expiresAt: Date().addingTimeInterval(7 * 86_400),
+            return Invitation(code: code, url: url, expiresAt: Date().addingTimeInterval(validity),
                               shareText: "Ik gebruik Noah en nodig je uit \(what). Installeer de HelloNoah-app en open deze link: \(url) (code \(code))")
         }
     }
@@ -1450,18 +1746,32 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
+    /// v2.3: self-managed profiles; v2.4: also self-registered profiles while a family member helps.
+    private func requireOwnProfile() throws -> String {
+        let id = deviceElderlyId
+        if profiles[id]?.managedBy == .zelf || (!v23Backend && selfRegistered.contains(id)) { return id }
+        throw fail(403, "beheerd_door_mantelzorger", "Dit regelt uw familie voor u.")
+    }
+
     func removeDeviceCaregiver(caregiverId: String) async throws {
         try await simulate()
         try sync {
-            let id = try requireSelfManaged()
+            let id = try requireOwnProfile()
+            try requireUnrestricted()
             memberships[id]?[caregiverId] = nil
+            if profiles[id]?.managedBy == .mantelzorger, memberships[id]?.values.contains(.beheerder) != true {
+                profiles[id]?.managedBy = .zelf
+                persistSelfSignUps()
+            }
         }
     }
 
     func exportDevice() async throws -> Data {
         try await simulate()
+        try requireUnrestricted()
         return try sync {
-            let id = try requireSelfManaged()
+            // v2.4: the older person may always download their own data.
+            let id = v23Backend ? try requireSelfManaged() : deviceElderlyId
             let export: [String: AnyEncodable] = [
                 "profiel": AnyEncodable(profiles[id]),
                 "instellingen": AnyEncodable(settingsByElderly[id]),
@@ -1475,10 +1785,14 @@ final class MockNoahAPI: NoahAPI {
         }
     }
 
-    func deleteDeviceAccount() async throws {
+    func deleteDeviceAccount(subscriptionAcknowledged: Bool) async throws {
         try await simulate()
         try sync {
-            let id = try requireSelfManaged()
+            let id = try requireOwnProfile()
+            try requireUnrestricted()
+            if !subscriptionAcknowledged, !v23Backend, subscriptions[id]?.status == .actief || subscriptions[id]?.status == .intro {
+                throw fail(409, "abonnement_actief", "Uw abonnement loopt nog. Zegt u het eerst op in de App Store.")
+            }
             profiles[id] = nil
             memberships[id] = nil
             settingsByElderly[id] = nil
@@ -1490,6 +1804,172 @@ final class MockNoahAPI: NoahAPI {
             devicesByElderly[id] = nil
             subscriptions[id] = nil
             persistSelfSignUps()
+        }
+    }
+
+    // MARK: Device, transparency and control (v2.4)
+
+    private func transparencyObject(_ id: String) -> DeviceTransparency {
+        let profile = profiles[id]
+        let members = (memberships[id] ?? [:]).map { caregiverId, role in
+            DeviceTransparency.Member(id: caregiverId, name: caregiverRecords[caregiverId]?.name ?? "Familielid", role: role, joinedAt: joinedAt[caregiverId + id])
+        }.sorted { ($0.name ?? "") < ($1.name ?? "") }
+        let sharing = sharingByElderly[id] ?? .alles
+        let recording = settingsByElderly[id]?.recording ?? .uit
+        return DeviceTransparency(
+            managedBy: profile?.managedBy,
+            caregivers: members,
+            pendingInvitations: invitations.values.filter { $0.elderlyId == id && $0.expiresAt > Date() }.sorted { $0.createdAt > $1.createdAt }
+                .map { PendingInvitation(id: $0.id, code: nil, role: $0.role, createdAt: $0.createdAt, expiresAt: $0.expiresAt, createdBy: $0.createdBy) },
+            caregiverRequests: caregiverRequests.filter { $0.elderlyId == id }.map(\.request),
+            familySees: members.isEmpty ? [] : FamilySees.sentences(sharing: sharing, recording: recording),
+            sharing: sharing,
+            recording: recording,
+            appShownAt: transparency[id]?.appShownAt,
+            deletionRequest: deletionRequests[id],
+            selfRegistered: selfRegistered.contains(id)
+        )
+    }
+
+    func deviceTransparency() async throws -> DeviceTransparency {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            return transparencyObject(deviceElderlyId)
+        }
+    }
+
+    func markTransparencySeen() async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            transparency[deviceElderlyId, default: Transparency()].appShownAt = Date()
+        }
+    }
+
+    func updateSharing(_ level: SharingLevel) async throws -> DeviceTransparency {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            try requireUnrestricted()
+            let id = deviceElderlyId
+            if sharingByElderly[id] != level, !(memberships[id] ?? [:]).isEmpty {
+                alertsByElderly[id, default: []].insert(
+                    NoahAlert(id: UUID().uuidString, type: .privacyGewijzigd, severity: .waarschuwing,
+                              title: "\(profiles[id]?.preferredName ?? "Uw naaste") heeft aangepast wat de familie ziet",
+                              body: nil, conversationId: nil, status: .open, createdAt: Date(), acknowledgedBy: nil), at: 0)
+            }
+            sharingByElderly[id] = level
+            return transparencyObject(id)
+        }
+    }
+
+    func requestDeletion(subscriptionAcknowledged: Bool) async throws -> DeletionRequest {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            try requireUnrestricted()
+            let id = deviceElderlyId
+            if !subscriptionAcknowledged, subscriptions[id]?.status == .actief || subscriptions[id]?.status == .intro {
+                throw fail(409, "abonnement_actief", "Er loopt nog een abonnement.")
+            }
+            let request = DeletionRequest(requestedAt: Date(), executesAt: Date().addingTimeInterval(14 * 86_400))
+            deletionRequests[deviceElderlyId] = request
+            return request
+        }
+    }
+
+    func withdrawDeletion() async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            deletionRequests[deviceElderlyId] = nil
+        }
+    }
+
+    func deviceDevices() async throws -> [PairedDevice] {
+        try await simulate()
+        return try sync {
+            try requireV24()
+            let id = deviceElderlyId
+            return (devicesByElderly[id] ?? []).map { device in
+                var copy = device
+                copy.isThisDevice = device.id == thisDeviceId[id]
+                return copy
+            }
+        }
+    }
+
+    func approveDeviceFromDevice(deviceId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireUnrestricted()
+            let id = deviceElderlyId
+            guard let index = devicesByElderly[id]?.firstIndex(where: { $0.id == deviceId }) else { throw fail(404, "niet_gevonden", "Deze telefoon bestaat niet (meer).") }
+            devicesByElderly[id]![index].restricted = false
+        }
+    }
+
+    func rejectDeviceFromDevice(deviceId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireUnrestricted()
+            devicesByElderly[deviceElderlyId]?.removeAll { $0.id == deviceId }
+        }
+    }
+
+    func approveCaregiverRequest(id requestId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            try requireUnrestricted()
+            guard let index = caregiverRequests.firstIndex(where: { $0.request.id == requestId }) else { throw fail(404, "niet_gevonden", "Dit verzoek bestaat niet (meer).") }
+            let request = caregiverRequests.remove(at: index)
+            addMember(request.caregiverId, to: request.elderlyId, role: request.request.role)
+        }
+    }
+
+    func rejectCaregiverRequest(id requestId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            caregiverRequests.removeAll { $0.request.id == requestId }
+        }
+    }
+
+    func revokeDeviceInvitation(id invitationId: String) async throws {
+        try await simulate()
+        try sync {
+            try requireV24()
+            _ = try requireOwnProfile()
+            invitations = invitations.filter { $0.value.id != invitationId }
+        }
+    }
+
+    func reorderDeviceEmergencyContacts(ids: [String]) async throws {
+        try await simulate()
+        try sync {
+            let id = try requireSelfManaged()
+            try requireUnrestricted()
+            let current = contacts[id] ?? []
+            contacts[id] = ids.enumerated().compactMap { index, contactId in
+                guard var contact = current.first(where: { $0.id == contactId }) else { return nil }
+                contact.priority = index + 1
+                return contact
+            }
+        }
+    }
+
+    /// Debug helper for screenshots: a pending "helpen beheren" request and a new phone on Wim.
+    func seedPendingRequestsForWim() {
+        sync {
+            guard caregiverRequests.isEmpty else { return }
+            caregiverRequests.append(MockRequest(request: CaregiverRequest(id: "CR1", name: "Mark de Vries", role: .beheerder, requestedAt: Date().addingTimeInterval(-1800)),
+                                                 caregiverId: MockIDs.mark, elderlyId: MockIDs.wim))
+            devicesByElderly[MockIDs.wim, default: []].append(PairedDevice(id: MockIDs.wimNewDevice, deviceName: "iPhone", platform: "ios",
+                                                                           pairedAt: Date().addingTimeInterval(-3600), lastSeenAt: Date().addingTimeInterval(-600), restricted: true))
         }
     }
 }

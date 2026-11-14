@@ -136,10 +136,23 @@ final class AppModel: ObservableObject {
         enterElder(justPaired: true)
     }
 
+    /// Keeps a device token before the interface switches (audit L29).
+    func rememberDeviceToken(_ token: String) {
+        environment.storage.deviceToken = token
+    }
+
     /// v2.3 self route: the older person verified their own number.
     func didSignUpElder(_ response: ElderSignUpResponse) {
         environment.storage.deviceToken = response.deviceToken
-        if response.needsOnboarding {
+        if response.restricted {
+            // v2.4: a new phone on a profile in use waits for approval; the home screen explains.
+            enterElder(justPaired: true)
+            elder?.arrivalMessage = nil
+            return
+        }
+        // A reinstall halfway through the sign-up left a profile without a name: ask it again (L29).
+        let namelessSelf = response.managedBy == .zelf && response.elderly.preferredName.isEmpty
+        if response.needsOnboarding || namelessSelf {
             ElderSession.clearOnboarding()
             enterElder(justPaired: true)
             elder?.startOnboarding()
@@ -157,7 +170,7 @@ final class AppModel: ObservableObject {
     /// v2.3: the older person deleted their own account.
     func elderAccountDeleted() {
         environment.storage.deviceToken = nil
-        ElderSession.clearOnboarding()
+        ElderSession.clearCache()
         elder = nil
         welcomeNotice = "Uw account en al uw gegevens zijn verwijderd."
         if environment.storage.caregiverTokens != nil { enterCaregiver() } else { mode = .welcome }
@@ -178,6 +191,7 @@ final class AppModel: ObservableObject {
             try? await api.logout(refreshToken: refresh)
         }
         environment.storage.caregiverTokens = nil
+        CaregiverSession.clearCache()
         push.tokenHandler = nil
         caregiver = nil
         if environment.storage.deviceToken != nil { enterElder() } else { mode = .welcome }
@@ -186,6 +200,7 @@ final class AppModel: ObservableObject {
     /// Account deleted: tokens are already invalid on the server.
     func accountDeleted() {
         environment.storage.caregiverTokens = nil
+        CaregiverSession.clearCache()
         push.tokenHandler = nil
         caregiver = nil
         welcomeNotice = "Je account is verwijderd."
@@ -195,7 +210,7 @@ final class AppModel: ObservableObject {
     func unpairThisDevice() async {
         try? await api.unpairThisDevice()
         environment.storage.deviceToken = nil
-        ElderSession.clearOnboarding()
+        ElderSession.clearCache()
         elder = nil
         welcomeNotice = "Deze telefoon is ontkoppeld."
         if environment.storage.caregiverTokens != nil { enterCaregiver() } else { mode = .welcome }
@@ -210,7 +225,7 @@ final class AppModel: ObservableObject {
     }
 
     private func deviceUnpairedRemotely() {
-        ElderSession.clearOnboarding()
+        ElderSession.clearCache()
         elder = nil
         welcomeNotice = "Deze telefoon is niet meer gekoppeld aan HelloNoah. U kunt zich opnieuw aanmelden met uw telefoonnummer, of uw familie om een nieuwe code vragen."
         mode = environment.storage.caregiverTokens != nil ? .caregiver : .welcome
@@ -225,6 +240,14 @@ final class AppModel: ObservableObject {
         session.justPaired = justPaired
         elder = session
         mode = .elder
+        // v2.4 device notices: only when the person allowed notifications themselves.
+        push.tokenHandler = nil
+        if push.isAuthorized { session.registerForDeviceNotices(push: push) }
+        push.onDeviceNotice = { [weak session] _ in
+            session?.isTransparencyIntroPresented = false
+            session?.openTransparency()
+        }
+        if push.consumePendingDeviceNotice() != nil { session.openTransparency() }
         // The widget token lets the app's own widget start a conversation with one tap.
         if WidgetLaunch.ensureToken() { WidgetCenter.shared.reloadAllTimelines() }
         if let link = pendingLink {
@@ -236,6 +259,7 @@ final class AppModel: ObservableObject {
 
     private func enterCaregiver() {
         elder = nil
+        push.onDeviceNotice = nil
         let session = CaregiverSession(api: api, subscriptions: subscriptions, push: push, isMock: isMock)
         caregiver = session
         mode = .caregiver
@@ -272,9 +296,15 @@ final class AppModel: ObservableObject {
         case (_, .welcome), (_, .launching):
             // Kept until the right interface is ready (pairing, sign-in).
             pendingLink = link
+        case (.pair, .elder):
+            // Audit L22: say why nothing happens instead of ignoring the link.
+            elder?.arrivalMessage = "Deze telefoon is al gekoppeld. Wilt u een andere koppeling? Kijk dan bij \u{201C}Wie kijkt er mee\u{201D}."
+            pendingLink = nil
+        case (.talk, .caregiver), (.story, .caregiver):
+            caregiver?.notice = "Deze link is voor de telefoon van iemand die met Noah praat. Op jouw telefoon kun je het gesprek niet starten."
+            pendingLink = nil
         default:
-            // Not for this interface (e.g. a pairing link on a paired phone, the widget on a
-            // caregiver's phone): ignore it instead of keeping it around.
+            // Not for this interface: ignore it instead of keeping it around.
             pendingLink = nil
         }
     }

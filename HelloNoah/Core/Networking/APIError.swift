@@ -28,6 +28,20 @@ enum APIError: Error, Equatable {
 
     var isOffline: Bool { self == .offline }
 
+    /// The server doesn't know this route yet (an endpoint of a newer contract version than the
+    /// deployed backend). New features hide themselves instead of showing an error.
+    var isFeatureUnavailable: Bool {
+        guard case .server(let status, let code, _) = self else { return false }
+        if status == 405 || status == 501 { return true }
+        return status == 404 && ["niet_gevonden", "not_found", "http_404", "route_niet_gevonden"].contains(code)
+    }
+
+    /// v2.4: this phone was just signed in and waits for approval (72 h at most).
+    var isDeviceRestricted: Bool { code == "apparaat_wacht_op_bevestiging" }
+
+    /// v2.4: a store subscription is still running for what would be deleted.
+    var isSubscriptionStillActive: Bool { code == "abonnement_actief" }
+
     /// Text for the caregiver interface (informal "je").
     ///
     /// The server's messages are written for the older person ("u", "vraag uw mantelzorger"), so
@@ -52,22 +66,43 @@ enum APIError: Error, Equatable {
         }
     }
 
-    /// Text for the older person's interface (formal "u", calm).
-    var elderMessage: String {
+    /// Text for the older person's interface (formal "u", calm), on a phone the family set up.
+    var elderMessage: String { elderMessage(isSelfManaged: false) }
+
+    /// Text for the older person's interface (formal "u", calm). Someone who manages Noah
+    /// themselves is never told to ask a caregiver they don't have (audit 2026-11-14 M13); towards
+    /// the older person it is "uw familie", never "uw mantelzorger".
+    func elderMessage(isSelfManaged: Bool) -> String {
+        let askFamily = isSelfManaged ? "" : " Vraag uw familie gerust om hulp."
         switch self {
         case .offline:
             return "Er is nu geen internet. Probeert u het straks nog eens."
         case .server(_, "inactive", _):
-            return "Noah is nog niet actief. Vraag uw mantelzorger om hulp."
+            return isSelfManaged
+                ? "Noah is nog niet actief. Met een abonnement kunt u weer met Noah praten."
+                : "Noah is nog niet actief. Vraag uw familie om hulp."
         case .server(_, "telefoonnummer_niet_bevestigd", _):
-            return "Noah kan u nog niet opbellen, want uw telefoonnummer is nog niet bevestigd. Vraag uw mantelzorger om hulp. Hier in de app kunt u wel met Noah praten."
+            return "Noah kan u nog niet opbellen, want uw telefoonnummer is nog niet bevestigd." + askFamily + " Hier in de app kunt u wel met Noah praten."
         case .server(_, "telefoonnummer_niet_ondersteund", _):
-            return "Noah kan dit telefoonnummer niet bellen. Vraag uw mantelzorger om hulp. Hier in de app kunt u wel met Noah praten."
+            return "Noah kan dit telefoonnummer niet bellen." + askFamily + " Hier in de app kunt u wel met Noah praten."
+        // v2.4
+        case .server(_, "apparaat_wacht_op_bevestiging", _):
+            return "Deze telefoon is net aangemeld. Daarom kan dit nog even niet. " + (isSelfManaged ? "Uw andere telefoon kan deze telefoon goedkeuren" : "Uw andere telefoon of uw familie kan deze telefoon goedkeuren") + "; anders kan het vanzelf na drie dagen."
+        case .server(_, "bevestiging_nodig", _):
+            return "Bevestigt u eerst dat u deze persoon wilt laten helpen beheren."
+        case .server(_, "te_veel_noodcontacten", _):
+            return "U kunt maximaal \(EmergencyContactLimit.max) noodcontacten hebben. Verwijdert u eerst iemand."
+        case .server(_, "abonnement_actief", _):
+            return "Uw abonnement loopt nog. Zegt u het eerst op via Instellingen › uw naam › Abonnementen op uw iPhone, of kies hieronder dat u dat weet."
+        case .server(_, "claim_ongeldig", _):
+            return "Dit duurde te lang. Begint u opnieuw met uw telefoonnummer."
         case .server(_, "belgrens_bereikt", _):
             return "Noah heeft vandaag al vaak gebeld. Hier in de app kunt u wel met Noah praten."
         // v2.3: self sign-up and the older person's own settings.
         case .server(_, "beheerd_door_mantelzorger", _):
             return "Uw familie regelt dit nu voor u. Vraag hen gerust om hulp."
+        case .server(_, "geen_toegang", _):
+            return "Dit kan op deze telefoon niet." + askFamily
         case .server(_, "ongeldige_code", _), .server(_, "invalid_code", _), .server(_, "code_expired", _):
             return "Deze code klopt niet of is verlopen. Probeert u het nog eens, of vraag een nieuwe code."
         case .server(_, "te_veel_verzoeken", _), .server(_, "rate_limited", _):
@@ -81,9 +116,10 @@ enum APIError: Error, Equatable {
         case .server(_, "uitnodiging_ongeldig", _):
             return "Deze uitnodiging is verlopen. Maakt u een nieuwe uitnodiging."
         case .server(_, _, let message?) where !message.isEmpty:
-            return message
+            // Server texts may still say "uw mantelzorger"; towards the older person it is family.
+            return isSelfManaged ? message : message.replacingOccurrences(of: "uw mantelzorger", with: "uw familie")
         case .deviceUnpaired:
-            return "Deze telefoon is niet meer gekoppeld. Vraag uw mantelzorger om hulp."
+            return "Deze telefoon is niet meer gekoppeld. U kunt zich opnieuw aanmelden met uw telefoonnummer."
         default:
             return "Het lukt nu even niet. Probeert u het over een paar minuten nog eens."
         }
@@ -106,9 +142,16 @@ enum APIError: Error, Equatable {
         case "niet_gevonden": return "Dit bestaat niet (meer), of je hebt er geen toegang toe."
         case "sms_mislukt": return "De sms kon niet worden verstuurd. Controleer het nummer en probeer het opnieuw."
         case "telefoonnummer_is_inlog": return "Je logt in met dit telefoonnummer. Dat nummer kun je hier daarom niet wijzigen."
-        case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel. Er is niets extra afgeschreven."
+        case "abonnement_ander_profiel": return "Dit abonnement hoort bij een ander profiel."
         case "beheerd_door_mantelzorger": return "Dit profiel wordt beheerd door een mantelzorger."
-        case "ongeldig_abonnement": return "Deze aankoop kon niet worden gecontroleerd. Neem contact op met ons supportteam."
+        case "ongeldig_abonnement": return "Deze aankoop kon niet worden gecontroleerd. Is er wel afgeschreven? Mail ons: \(SupportContact.email)."
+        // v2.4
+        case "apparaat_wacht_op_bevestiging": return "Deze telefoon is net aangemeld en wacht op goedkeuring."
+        case "bevestiging_nodig": return "Bevestig eerst dat je dit wilt."
+        case "profiel_van_oudere": return "Dit profiel is van je naaste zelf. Je kunt het niet verwijderen, wel stoppen met meekijken."
+        case "te_veel_noodcontacten": return "Er kunnen maximaal \(EmergencyContactLimit.max) noodcontacten zijn. Verwijder eerst iemand."
+        case "abonnement_actief": return "Het abonnement loopt nog. Zeg het eerst op via Instellingen › je naam › Abonnementen, of bevestig hieronder dat je dat weet."
+        case "claim_ongeldig": return "Dit duurde te lang. Begin opnieuw."
         case "link_verlopen": return "Deze link is verlopen. Probeer het opnieuw."
         // v2.2
         case "telefoonnummer_niet_bevestigd": return "Noah belt pas naar dit nummer als het is bevestigd. Bevestig het nummer bij Meer › Profiel."
@@ -167,6 +210,14 @@ enum APIError: Error, Equatable {
         if error is DecodingError { return .decoding(String(describing: error)) }
         return .unexpected(error.localizedDescription)
     }
+}
+
+/// The one honest support channel (audit 2026-11-14: no "supportteam" promises).
+enum SupportContact {
+    static let email = "support@hellonoah.ai"
+    static var mailURL: URL { URL(string: "mailto:\(email)")! }
+    /// "Mail ons: support@hellonoah.ai"
+    static var line: String { "Mail ons: \(email)" }
 }
 
 /// What a caregiver may do for one elderly profile, from their role (contract §1).
