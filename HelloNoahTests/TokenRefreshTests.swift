@@ -165,7 +165,7 @@ final class TokenRefreshTests: XCTestCase {
         } catch let error as APIError {
             XCTAssertEqual(error.code, "inactive")
             XCTAssertEqual(error.status, 409)
-            XCTAssertEqual(error.elderMessage, "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+            XCTAssertEqual(error.elderMessage, "Noah is nog niet actief. Vraag uw familie om hulp.")
         }
     }
 

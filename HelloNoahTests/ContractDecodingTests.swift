@@ -169,7 +169,7 @@ final class ContractDecodingTests: XCTestCase {
     func testErrorBody() throws {
         let error = APIClient.error(from: Data(ContractFixtures.error.utf8), status: 409)
         XCTAssertEqual(error, .server(status: 409, code: "inactive", message: "Noah is nog niet actief. Vraag uw mantelzorger om hulp."))
-        XCTAssertEqual(error.elderMessage, "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+        XCTAssertEqual(error.elderMessage, "Noah is nog niet actief. Vraag uw familie om hulp.")
         XCTAssertEqual(APIClient.error(from: Data("not json".utf8), status: 500).userMessage, "Er is een storing bij HelloNoah. Probeer het later opnieuw.")
     }
 

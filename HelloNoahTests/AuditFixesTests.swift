@@ -173,7 +173,8 @@ final class CaregiverErrorCopyTests: XCTestCase {
     func testKnownCodesUseCaregiverCopy() {
         let inactive = APIError.server(status: 409, code: "inactive", message: "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
         XCTAssertEqual(inactive.userMessage, "Noah is nog niet actief voor dit profiel. Start eerst het abonnement.")
-        XCTAssertEqual(inactive.elderMessage, "Noah is nog niet actief. Vraag uw mantelzorger om hulp.")
+        XCTAssertEqual(inactive.elderMessage, "Noah is nog niet actief. Vraag uw familie om hulp.")
+        XCTAssertEqual(inactive.elderMessage(isSelfManaged: true), "Noah is nog niet actief. Met een abonnement kunt u weer met Noah praten.")
         XCTAssertEqual(APIError.server(status: 403, code: "alleen_lezen", message: "U kunt dit alleen bekijken.").userMessage,
                        "Je kijkt mee als lezer. Alleen een beheerder kan dit doen.")
         XCTAssertEqual(APIError.server(status: 401, code: "niet_ingelogd", message: "U bent niet (meer) ingelogd.").userMessage,

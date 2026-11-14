@@ -120,7 +120,7 @@ final class SelfRouteContractTests: XCTestCase {
         XCTAssertEqual(body(of: request), #"{"phoneNumber":"+31612345678"}"#)
 
         StubURLProtocol.handler = { _ in (200, ContractFixtures.elderSignUpNew) }
-        let response = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612345678", code: "123456"))
+        let response = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612345678", code: "123456")).signedInResponse()
         request = try XCTUnwrap(StubURLProtocol.requests.first)
         XCTAssertEqual(request.url?.path, "/api/v2/auth/elderly/phone/verify")
         XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
@@ -175,7 +175,8 @@ final class SelfRouteContractTests: XCTestCase {
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer hnd_self", path)
             if path.hasSuffix("/account") { XCTAssertEqual(body(of: request), #"{"confirm":"VERWIJDER"}"#) }
             if path.hasSuffix("/app-store") { XCTAssertEqual(body(of: request), #"{"signedTransaction":"jws"}"#) }
-            if path.hasSuffix("/invitations") { XCTAssertEqual(body(of: request), #"{"role":"beheerder"}"#) }
+            // v2.4: a beheerder invitation from the phone is confirmed.
+            if path.hasSuffix("/invitations") { XCTAssertEqual(body(of: request), #"{"confirmed":true,"role":"beheerder"}"#) }
         }
     }
 
@@ -190,7 +191,8 @@ final class SelfRouteContractTests: XCTestCase {
         // A self-managed person is never told to ask a caregiver.
         XCTAssertFalse(ConversationController.Failure.inactiveSelf.text.contains("mantelzorger"))
         XCTAssertTrue(ConversationController.Failure.inactiveSelf.isInactive)
-        XCTAssertTrue(ConversationController.Failure.inactive.text.contains("mantelzorger"))
+        // Towards the older person it is "uw familie", never "uw mantelzorger" (audit 2026-11-14 §3.3).
+        XCTAssertTrue(ConversationController.Failure.inactive.text.contains("familie"))
     }
 
     private func body(of request: URLRequest) -> String? {
@@ -327,7 +329,7 @@ final class SelfRouteMockTests: XCTestCase {
             XCTAssertEqual(error.code, "ongeldige_code")
         }
 
-        let new = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612349876", code: "123456"))
+        let new = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612349876", code: "123456")).signedInResponse()
         XCTAssertTrue(new.needsOnboarding)
         token = new.deviceToken
         let profile = try await api.deviceProfile()
@@ -338,13 +340,13 @@ final class SelfRouteMockTests: XCTestCase {
         XCTAssertEqual(renamed.addressForm, .jij)
 
         // The number of a caregiver-managed profile pairs this phone to it.
-        let family = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31623456789", code: "123456", preferredName: "Willem"))
+        let family = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31623456789", code: "123456", preferredName: "Willem")).signedInResponse()
         XCTAssertTrue(family.isLinkedToFamily)
         XCTAssertEqual(family.elderly.id, MockIDs.wim)
         XCTAssertEqual(family.elderly.preferredName, "Wim")
 
         // Signing up again with the self number signs the same person in.
-        let again = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612349876", code: "654321"))
+        let again = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612349876", code: "654321")).signedInResponse()
         XCTAssertEqual(again.elderly.id, new.elderly.id)
         XCTAssertEqual(again.managedBy, .zelf)
         XCTAssertFalse(again.isNewProfile)
@@ -359,7 +361,7 @@ final class SelfRouteMockTests: XCTestCase {
     func testFreeFirstConversationThenInactive() async throws {
         var token: String?
         let api = MockNoahAPI(defaults: makeDefaults("SelfRoute.trial"), deviceToken: { token })
-        let new = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612340001", code: "123456"))
+        let new = try await api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: "+31612340001", code: "123456")).signedInResponse()
         token = new.deviceToken
         let before = try await api.deviceSubscription()
         XCTAssertEqual(before.freeConversationsLeft, 1)
@@ -429,6 +431,13 @@ final class SelfRouteMockTests: XCTestCase {
         XCTAssertTrue(invitation.shareText?.hasPrefix("Ik gebruik Noah en nodig je uit") == true)
         let accepted = try await toos.acceptInvitation(code: invitation.code)
         XCTAssertEqual(accepted.role, .beheerder)
+        // v2.4: a "helpen beheren" invitation made on the phone waits for the older person.
+        XCTAssertTrue(accepted.isWaitingForApproval)
+        let stillSelf = try await toos.deviceProfile().isSelfManaged
+        XCTAssertTrue(stillSelf)
+        let request = try await toos.deviceTransparency().caregiverRequests.first
+        XCTAssertNotNil(request)
+        try await toos.approveCaregiverRequest(id: request!.id)
         let v11 = try await toos.deviceProfile().isSelfManaged
         XCTAssertFalse(v11)
         do {
@@ -442,7 +451,13 @@ final class SelfRouteMockTests: XCTestCase {
         let other = MockNoahAPI(defaults: makeDefaults("SelfRoute.delete"), deviceToken: { "hnd_mock_\(MockIDs.toos)" })
         let export = try await other.exportDevice()
         XCTAssertNotNil(try JSONSerialization.jsonObject(with: export) as? [String: Any])
-        try await other.deleteDeviceAccount()
+        do {
+            try await other.deleteDeviceAccount()
+            XCTFail("v2.4: a running subscription is confirmed first")
+        } catch let error as APIError {
+            XCTAssertEqual(error.code, "abonnement_actief")
+        }
+        try await other.deleteDeviceAccount(subscriptionAcknowledged: true)
         await MainActor.run {} // let the mock settle
         let v12 = try await other.deviceProfile().preferredName
         XCTAssertNotEqual(v12, "Toos")
@@ -508,5 +523,16 @@ final class ElderSessionSelfTests: XCTestCase {
         XCTAssertTrue(ElderSpeed.allCases.allSatisfy { NoahSettings.speedRange.contains($0.value) })
         XCTAssertEqual(Role.lezer.elderLabel, "Meekijken")
         XCTAssertEqual(Role.beheerder.elderLabel, "Helpen beheren")
+    }
+}
+
+extension ElderVerifyOutcome {
+    /// Tests: the sign-in response, failing when the server asked "Kent u deze persoon?".
+    func signedInResponse(file: StaticString = #filePath, line: UInt = #line) throws -> ElderSignUpResponse {
+        guard case .signedIn(let response) = self else {
+            XCTFail("expected a sign-in", file: file, line: line)
+            throw APIError.unexpected("keuze_nodig")
+        }
+        return response
     }
 }
