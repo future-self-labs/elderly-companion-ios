@@ -87,6 +87,10 @@ struct NoahAvatar: View {
     var body: some View {
         Text(verbatim: initials)
             .font(NoahFont.semibold(size * 0.38))
+            // The circle has a fixed size: initials never grow past it at large text sizes.
+            .dynamicTypeSize(...DynamicTypeSize.large)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
             .foregroundColor(NoahColor.onAccent)
             .frame(width: size, height: size)
             .background(Circle().fill(tint))
