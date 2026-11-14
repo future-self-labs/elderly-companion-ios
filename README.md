@@ -55,6 +55,26 @@ Meer: Noah settings (incl. recording: uit / alleen bij levensverhalen / alle ges
 caregivers & invitations, pairing, paired devices, subscription (with fair-use usage this month), account (GDPR export, delete with "VERWIJDER"),
 switching between older people. A `lezer` sees no edit controls and none of the beheerder-only screens.
 
+**API v2.4 (2026-11-15): transparency and control for the older person.** On both kinds of profile the older person
+sees "Wie kijkt er mee" once after pairing or signing in (while `appShownAt` is null) and can always reach it from the
+home screen: who looks along and what they see (`familySees`), approve or refuse a "helpen beheren" request, revoke
+unused invitations, choose what the family sees (alles / alleen samenvattingen / alleen meldingen), approve or refuse a
+new phone, download their data, stop (14-day deletion request on a family-managed profile, account deletion on their
+own) and unpair this phone (never hidden). A phone that signs in on a profile in use is restricted for 72 h (banner,
+friendly `403 apparaat_wacht_op_bevestiging`). Self sign-up asks "Kent u deze persoon?" for a number someone else put on
+a profile (`keuze_nodig` → claim). Caregivers: the wizard confirms the phone number right after entering it and has a
+"Vertel het Wim" step with a read-aloud text; the dashboard shows "Volgende stappen" (number, telling, pairing,
+emergency contact), paused outbound calls ("Noah mag weer bellen"), private conversations ("Wim wilde dit gesprek voor
+zichzelf houden"), what an alert really sent (`delivery`), pending invitations with "Intrekken", restricted phones
+with "Goedkeuren", and deletes that explain the store subscription (`409 abonnement_actief` → `subscriptionAcknowledged`).
+Every new call degrades gracefully: a `404` from an older backend hides the feature (`APIError.isFeatureUnavailable`);
+"Wie kijkt er mee" then falls back to `GET /device/caregivers`.
+
+Links: terms `https://hellonoah.ai/voorwaarden` (replaces Apple's English standard EULA; set the same URL in App Store
+Connect), privacy `/privacy`, help `/hulp`, account deletion `/account-verwijderen`, invitations `/uitnodiging/<code>`
+(universal link, `applinks:hellonoah.ai`). Support: `support@hellonoah.ai` (`SupportContact`). The app is iPhone-only
+(`TARGETED_DEVICE_FAMILY = 1` on every target).
+
 ## Run it
 
 ```sh
@@ -89,7 +109,12 @@ Uncheck the argument in *Edit Scheme → Run → Arguments* to use the live back
   `storyConversation`, `myStory`, `storyEntry`; see `CaregiverRootView.applyDebugRoute` / `ElderRootView`),
   `-mockOffline YES`, `-mockInactive YES`, `-mockOverAllowance YES` (fair use used up), `-mockLatency 0`,
   `-mockMaxDurationSeconds 70` (short sessions: Noah is asked to say goodbye a minute before the end),
-  `-mockRecordingUnavailable YES` (recording changes answer 503), `-mockAppleIDPaysFor <id1>,<id2>,…` (this Apple ID
+  `-mockRecordingUnavailable YES` (recording changes answer 503), v2.4: `-mockV23Backend YES` (every v2.4 endpoint answers
+  404, to see the graceful fallback), `-mockRestricted YES` (this phone waits for approval), `-mockTransparencyUnseen YES`
+  (Wim's phone shows "Wie kijkt er mee" once), `-mockNotTold YES` (Anna hasn't told Wim yet), `-mockOutboundPaused YES`
+  (Wim asked Noah to stop calling); Bep's number 06 11223344 triggers the claim question; routes `transparency`,
+  `transparencyRequests`, `transparencyIntro`, `sharing`, `stopNoah`, `devices` (elder), `claim` (welcome), `tellElderly`
+  (caregiver), `-mockAppleIDPaysFor <id1>,<id2>,…` (this Apple ID
   already owns `.maand`, `.maand.2`, … for those profiles, in order: the paywall offers the next free product, says
   "al een abonnement" for an owned profile and explains a 4th), `-mockPhoneUnverified YES` (Wim's number
   still needs confirming; any 6 digits except `000000` confirm it).
@@ -114,7 +139,7 @@ Base URL: `Config/HelloNoah.xcconfig` (`API_BASE_URL`, default
 xcodebuild -scheme HelloNoah -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build test
 ```
 
-110+ unit tests (incl. `AuditFixesTests` and `ConversationControllerTests` for the 2026-10-18 audit fixes and
+130+ unit tests (incl. `AuditFixesTests` and `ConversationControllerTests` for the 2026-10-18 audit fixes and
 `SelfRouteTests` for v2.3: sign-up/device-profile decoding, request bodies and paths, product selection, simulated
 multi-product purchases, the mock's self route and the older person's session): every example of the contract decodes, tolerant decoding (unknown fields/enum values, missing
 arrays), request encoding, single-flight token refresh (5 parallel 401s → exactly 1 refresh), sign-out on an invalid
