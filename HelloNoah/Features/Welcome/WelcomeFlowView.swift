@@ -30,7 +30,7 @@ struct WelcomeFlowView: View {
                         WelcomeChoiceCard(
                             systemImage: "person.2.fill",
                             title: "Ik ben mantelzorger",
-                            subtitle: "Ik stel Noah in voor een naaste en kijk mee hoe het gaat."
+                            subtitle: "Ik stel Noah in voor een naaste."
                         ) {
                             app.welcomeNotice = nil
                             path.append(.caregiverIntro)
@@ -41,7 +41,7 @@ struct WelcomeFlowView: View {
                         WelcomeChoiceCard(
                             systemImage: "mic.fill",
                             title: "Ik wil zelf met Noah praten",
-                            subtitle: "U meldt zich aan met uw eigen telefoonnummer."
+                            subtitle: "Met uw eigen telefoonnummer."
                         ) {
                             app.welcomeNotice = nil
                             path.append(.elderSignUp)
@@ -50,7 +50,7 @@ struct WelcomeFlowView: View {
 
                         WelcomeChoiceCard(
                             systemImage: "iphone.radiowaves.left.and.right",
-                            title: "Deze telefoon koppelen met een code",
+                            title: LocalizedStringKey(PairingCopy.welcomeButton),
                             subtitle: "Met de code van 6 cijfers van uw familie."
                         ) {
                             app.welcomeNotice = nil
@@ -134,17 +134,14 @@ struct WelcomeFlowView: View {
             .accessibilityLabel(Text(verbatim: "HelloNoah"))
             .accessibilityAddTraits(.isHeader)
 
-            Text("Welkom")
-                .font(NoahFont.largeTitle).noahTitleScaling()
-                .foregroundColor(NoahColor.text)
-            Text("Noah is een warme metgezel om mee te praten.")
+            // Audit H3: compact, so all three choices (also the pairing one) fit without scrolling.
+            Text("Welkom. Noah is een warme metgezel om mee te praten.")
                 .font(NoahFont.bodyText)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
             Text("Hoe wilt u beginnen?")
-                .font(NoahFont.title3)
+                .font(NoahFont.title2).noahTitleScaling()
                 .foregroundColor(NoahColor.text)
-                .padding(.top, NoahSpacing.s)
         }
     }
 
@@ -168,7 +165,7 @@ struct WelcomeFlowView: View {
             case "signIn": path = [.caregiverIntro, .signIn]
             case "phoneSignIn": path = [.caregiverIntro, .signIn, .phoneSignIn]
             case "pairing": path = [.pairing]
-            case "elderSignUp", "elderSignUpCode", "familyLinked": path = [.elderSignUp]
+            case "elderSignUp", "elderSignUpCode", "familyLinked", "claim": path = [.elderSignUp]
             default: break
             }
         }
@@ -204,9 +201,10 @@ struct WelcomeChoiceCard: View {
                     .padding(.top, NoahSpacing.xs)
                     .accessibilityHidden(true)
             }
-            .padding(NoahSpacing.l)
+            .padding(.horizontal, NoahSpacing.l)
+            .padding(.vertical, NoahSpacing.m)
             // Huge targets for everyone who opens the app for the first time (also older people).
-            .frame(maxWidth: .infinity, minHeight: NoahSize.elderButton + NoahSpacing.l, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: NoahSize.elderButton, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
             .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
             .contentShape(RoundedRectangle(cornerRadius: NoahRadius.large))

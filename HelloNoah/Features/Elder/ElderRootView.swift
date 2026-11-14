@@ -15,6 +15,11 @@ enum ElderRoute: Hashable {
     case settingsCaregivers
     case settingsExport
     case settingsDelete
+    // v2.4: transparency and control, for both kinds of profile.
+    case transparency
+    case sharing
+    case stopNoah
+    case devices
 }
 
 /// The older person's interface: home, conversation (full screen), my story, reminders.
@@ -53,7 +58,10 @@ struct ElderRootView: View {
                                 ElderPaywallView { if !path.isEmpty { path.removeLast() } }
                             }
                         case .settingsInvite: ElderInviteView()
-                        case .settingsCaregivers: ElderCaregiversView(path: $path)
+                        case .settingsCaregivers, .transparency: ElderTransparencyView(path: $path)
+                        case .sharing: ElderSharingView()
+                        case .stopNoah: ElderStopView()
+                        case .devices: ElderDevicesView()
                         case .settingsExport: ElderExportView()
                         case .settingsDelete: ElderDeleteAccountView()
                         }
@@ -66,8 +74,22 @@ struct ElderRootView: View {
             ConversationScreen(controller: session.makeConversationController(), noahName: session.noahName,
                                needsConfirmation: session.conversationNeedsConfirmation) {
                 session.isConversationPresented = false
-                Task { await session.load() }
+                Task {
+                    await session.load()
+                    // The summary and "laatste gesprek" arrive shortly after the call (audit L19).
+                    try? await Task.sleep(nanoseconds: 15_000_000_000)
+                    await session.load()
+                }
             }
+        }
+        .fullScreenCover(isPresented: $session.isTransparencyIntroPresented) {
+            ElderTransparencyIntroView { path = [.transparency] }
+                .environmentObject(session)
+        }
+        .onChange(of: session.opensTransparency) { opens in
+            guard opens else { return }
+            session.opensTransparency = false
+            path = [.transparency]
         }
         .onAppear { afterFirstLayout(applyDebugRoute) }
     }
@@ -91,6 +113,16 @@ struct ElderRootView: View {
         case "settingsPaywall": path = [.settings, .settingsSubscription, .settingsPaywall]
         case "settingsInvite": path = [.settings, .settingsInvite]
         case "settingsCaregivers": path = [.settings, .settingsCaregivers]
+        case "transparency": path = [.transparency]
+        case "transparencyRequests":
+            (session.api as? MockNoahAPI)?.seedPendingRequestsForWim()
+            path = [.transparency]
+        case "sharing": path = [.transparency, .sharing]
+        case "stopNoah": path = [.transparency, .stopNoah]
+        case "devices":
+            (session.api as? MockNoahAPI)?.seedPendingRequestsForWim()
+            path = [.transparency, .devices]
+        case "transparencyIntro": session.isTransparencyIntroPresented = true
         case "settingsExport": path = [.settings, .settingsExport]
         case "settingsDelete": path = [.settings, .settingsDelete]
         default: break
@@ -129,6 +161,7 @@ extension View {
     /// Standard chrome for the older person's sub-screens.
     func elderSubscreen() -> some View {
         self
+            .noahStatusBarBackdrop()
             .noahScreenBackground()
             .toolbar(.hidden, for: .navigationBar)
             .navigationBarBackButtonHidden(true)

@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 // MARK: - Uw gegevens downloaden
@@ -10,7 +11,7 @@ struct ElderExportView: View {
     var body: some View {
         ElderScrollScreen {
             ElderScreenTitle(title: "Uw gegevens downloaden")
-            ElderText("U heeft altijd recht op uw gegevens. U krijgt één bestand met alles wat HelloNoah van u bewaart: uw gesprekken, uw levensverhaal, herinneringen, noodcontacten en instellingen.")
+            ElderText("U heeft altijd recht op uw gegevens, ook als uw familie Noah voor u regelt. U krijgt één bestand met alles wat HelloNoah van u bewaart: uw gesprekken, uw levensverhaal, herinneringen, noodcontacten en instellingen.")
             ElderText("U kunt het bestand bewaren in Bestanden, of naar iemand sturen die u vertrouwt.", color: NoahColor.textSecondary)
             if let error { ElderMessage(text: error) }
             NoahAsyncButton(size: .elder, action: export) {
@@ -27,7 +28,7 @@ struct ElderExportView: View {
             let data = try await session.api.exportDevice()
             share = ShareItem(items: [try ExportFile.write(data, name: "HelloNoah-mijn-gegevens")])
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: session.isSelfManaged)
         }
     }
 }
@@ -44,6 +45,8 @@ struct ElderDeleteAccountView: View {
     @State private var isSure = false
     @State private var isArmed = false
     @State private var error: String?
+    /// v2.4 `409 abonnement_actief`: the store subscription still runs; ask once more.
+    @State private var needsSubscriptionAck = false
 
     var body: some View {
         ElderScrollScreen(showsBack: !isSure) {
@@ -92,21 +95,40 @@ struct ElderDeleteAccountView: View {
             .buttonStyle(.noah(.primary, size: .elder))
             .accessibilityIdentifier("delete.cancel")
             if let error { ElderMessage(text: error) }
-            NoahAsyncButton(kind: .destructive, size: .elder, action: delete) {
-                Text("Definitief verwijderen")
+            if needsSubscriptionAck {
+                NoahNotice(kind: .warning, text: "Uw abonnement loopt nog en stopt niet vanzelf. Zeg het op via Instellingen › uw naam › Abonnementen op uw iPhone. Wilt u toch nu alles verwijderen?", large: true)
+                Button { Task { await manageSubscriptions() } } label: {
+                    NoahButtonLabel(title: "Abonnement opzeggen", systemImage: "creditcard")
+                }
+                .buttonStyle(.noah(.secondary, size: .elder))
+                NoahAsyncButton(kind: .destructive, size: .elder, action: { await delete(acknowledged: true) }) {
+                    Text("Ik weet het, verwijder alles")
+                }
+                .accessibilityIdentifier("delete.confirmAck")
+            } else {
+                NoahAsyncButton(kind: .destructive, size: .elder, action: { await delete(acknowledged: false) }) {
+                    Text("Definitief verwijderen")
+                }
+                .disabled(!isArmed)
+                .accessibilityIdentifier("delete.confirm")
             }
-            .disabled(!isArmed)
-            .accessibilityIdentifier("delete.confirm")
         }
     }
 
-    private func delete() async {
+    private func manageSubscriptions() async {
+        guard let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else { return }
+        try? await AppStore.showManageSubscriptions(in: scene)
+    }
+
+    private func delete(acknowledged: Bool) async {
         error = nil
         do {
-            try await session.api.deleteDeviceAccount()
+            try await session.api.deleteDeviceAccount(subscriptionAcknowledged: acknowledged)
             app.elderAccountDeleted()
+        } catch let apiError as APIError where apiError.isSubscriptionStillActive {
+            needsSubscriptionAck = true
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: session.isSelfManaged)
         }
     }
 }

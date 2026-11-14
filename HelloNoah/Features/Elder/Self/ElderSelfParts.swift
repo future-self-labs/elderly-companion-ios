@@ -161,7 +161,7 @@ extension Role {
     var elderExplanation: String {
         switch self {
         case .lezer, .unknown:
-            return "Ziet hoe het met u gaat: korte samenvattingen van uw gesprekken, hoe u zich voelt en uw levensverhaal. Kan niets veranderen."
+            return "Ziet hoe het met u gaat: de samenvatting en de uitgeschreven tekst van uw gesprekken (dat kunt u zelf beperken), hoe u zich voelt en uw levensverhaal. Kan niets veranderen."
         case .beheerder:
             return "Kan meekijken én dingen voor u regelen, zoals herinneringen, noodcontacten en het abonnement. Diegene regelt dan voortaan de instellingen; praten met Noah blijft precies hetzelfde."
         }

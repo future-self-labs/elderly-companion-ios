@@ -71,6 +71,18 @@ extension View {
             .background(color.ignoresSafeArea())
     }
 
+    /// Screens without a navigation bar: an opaque strip behind the status bar, so scrolled
+    /// content never runs through the clock (audit M8).
+    func noahStatusBarBackdrop(_ color: Color = NoahColor.ground) -> some View {
+        overlay(alignment: .top) {
+            color
+                .frame(height: 0)
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
     /// For screens pushed onto a NavigationStack: opaque full-bleed background plus a soft shade
     /// just outside the leading edge. The shade is off-screen at rest and only visible while the
     /// screen slides in, so the edge stays readable on dark-on-dark.

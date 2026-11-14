@@ -15,12 +15,16 @@ struct ElderSignUpView: View {
     @State private var resendAvailableAt = Date()
     /// The number belongs to a profile the family manages (shown before the home screen).
     @State private var linked: ElderSignUpResponse?
+    /// v2.4: someone else put this number on a profile; ask first ("Kent u deze persoon?").
+    @State private var claim: ElderClaimChoice?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
                 if let linked {
                     linkedView(linked)
+                } else if let claim {
+                    claimView(claim)
                 } else if let e164 {
                     codeView(e164)
                 } else {
@@ -86,6 +90,14 @@ struct ElderSignUpView: View {
 
             ElderResendButton(availableAt: resendAvailableAt) { Task { await start(channel) } }
 
+            if channel == .sms {
+                // Audit L28: a landline can't receive the SMS; switch to a spoken code.
+                NoahAsyncButton(kind: .secondary, size: .elder, action: { await start(.call) }) {
+                    NoahButtonLabel(title: "Bel mij met de code", systemImage: "phone.fill", iconTint: NoahColor.accent)
+                }
+                .accessibilityHint(Text("Voor een vaste telefoon: een stem leest de code voor"))
+            }
+
             Button {
                 e164 = nil
                 code = ""
@@ -97,6 +109,33 @@ struct ElderSignUpView: View {
         }
     }
 
+    // MARK: Someone else made a profile with this number (v2.4)
+
+    private func claimView(_ choice: ElderClaimChoice) -> some View {
+        let creator = choice.profile?.createdBy ?? "iemand"
+        let firstName = choice.creatorFirstName ?? "diegene"
+        return VStack(alignment: .leading, spacing: NoahSpacing.l) {
+            Image(systemName: "person.crop.circle.badge.questionmark")
+                .font(.system(size: 60))
+                .foregroundColor(NoahColor.accent)
+                .accessibilityHidden(true)
+            ElderScreenTitle(title: "Kent u deze persoon?")
+            ElderText("Er is al een profiel voor dit nummer aangemaakt door \(creator). Kent u \(firstName), en wilt u dat \(firstName) met u meekijkt?")
+            ElderText("Meekijken betekent: \(firstName) kan lezen waarover u met Noah praat en ziet hoe het met u gaat. U kunt dat later zelf aanpassen.", color: NoahColor.textSecondary)
+            if let error { ElderMessage(text: error) }
+            NoahAsyncButton(size: .elder, action: { await answerClaim(choice, .koppelen) }) {
+                Text("Ja, ik ken \(firstName)")
+            }
+            .accessibilityIdentifier("signUp.claimLink")
+            NoahAsyncButton(kind: .secondary, size: .elder, action: { await answerClaim(choice, .eigenProfiel) }) {
+                Text("Nee, ik begin voor mezelf")
+            }
+            .accessibilityIdentifier("signUp.claimOwn")
+            ElderText("Kiest u voor uzelf, dan wordt uw nummer van dat andere profiel gehaald en krijgt \(firstName) daar bericht van.", color: NoahColor.textSecondary)
+        }
+        .accessibilityIdentifier("signUp.claim")
+    }
+
     // MARK: Already set up by the family
 
     private func linkedView(_ response: ElderSignUpResponse) -> some View {
@@ -106,7 +145,7 @@ struct ElderSignUpView: View {
                 .foregroundColor(NoahColor.positive)
                 .accessibilityHidden(true)
             ElderScreenTitle(title: "Deze telefoon is gekoppeld aan het account van uw familie")
-            ElderText("Uw familie heeft Noah al voor u ingesteld. U kunt meteen met Noah praten. De instellingen regelt uw familie voor u.")
+            ElderText("Uw familie heeft Noah al voor u ingesteld. U kunt meteen met Noah praten. Op het beginscherm ziet u bij \u{201C}Wie kijkt er mee\u{201D} wie er meekijkt en wat ze zien; daar beslist u zelf over.")
             Button("Naar het beginscherm") { app.didSignUpElder(response) }
                 .buttonStyle(.noah(.primary, size: .elder))
                 .accessibilityIdentifier("signUp.linkedContinue")
@@ -129,7 +168,7 @@ struct ElderSignUpView: View {
             resendAvailableAt = Date().addingTimeInterval(30)
         } catch {
             let apiError = APIError.from(error)
-            self.error = apiError.code == "ongeldige_invoer" ? PhoneNumberFormat.invalidMessage : apiError.elderMessage
+            self.error = apiError.code == "ongeldige_invoer" ? PhoneNumberFormat.invalidMessage : apiError.elderMessage(isSelfManaged: true)
         }
     }
 
@@ -139,15 +178,41 @@ struct ElderSignUpView: View {
         error = nil
         defer { isWorking = false }
         do {
-            let response = try await app.api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: e164, code: code, deviceName: UIDevice.current.name))
-            if response.isLinkedToFamily {
-                linked = response
-            } else {
-                app.didSignUpElder(response)
+            let outcome = try await app.api.verifyElderSignUp(ElderSignUpVerifyRequest(phoneNumber: e164, code: code, deviceName: UIDevice.current.name))
+            switch outcome {
+            case .signedIn(let response): signedIn(response)
+            case .choiceNeeded(let choice): claim = choice
             }
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: true)
             code = ""
+        }
+    }
+
+    private func signedIn(_ response: ElderSignUpResponse) {
+        if response.isLinkedToFamily, !response.restricted {
+            // Keep the token right away, so closing the app on the next screen loses nothing (L29).
+            app.rememberDeviceToken(response.deviceToken)
+            linked = response
+        } else {
+            app.didSignUpElder(response)
+        }
+    }
+
+    private func answerClaim(_ choice: ElderClaimChoice, _ decision: ElderClaimDecision) async {
+        error = nil
+        do {
+            let response = try await app.api.claimElderSignUp(ElderClaimRequest(claimToken: choice.claimToken, choice: decision, deviceName: UIDevice.current.name))
+            claim = nil
+            signedIn(response)
+        } catch {
+            let apiError = APIError.from(error)
+            if apiError.code == "claim_ongeldig" {
+                claim = nil
+                e164 = nil
+                code = ""
+            }
+            self.error = apiError.elderMessage(isSelfManaged: true)
         }
     }
 
@@ -157,6 +222,9 @@ struct ElderSignUpView: View {
         switch route {
         case "elderSignUpCode":
             e164 = "+31645678901"
+        case "claim":
+            e164 = "+31611223344"
+            claim = ElderClaimChoice(claimToken: "hnc_mock_\(MockIDs.bep)", expiresAt: nil, profile: .init(preferredName: "Bep", createdBy: "Mark de Vries"))
         case "familyLinked":
             linked = ElderSignUpResponse(deviceToken: "hnd_mock_\(MockIDs.wim)", device: .init(id: "d"),
                                          elderly: .init(id: MockIDs.wim, preferredName: "Wim", noahName: "Noah"),

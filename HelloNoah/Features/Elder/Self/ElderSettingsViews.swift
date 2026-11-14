@@ -5,7 +5,9 @@ import SwiftUI
 struct ElderSettingsView: View {
     @Binding var path: [ElderRoute]
     @EnvironmentObject private var session: ElderSession
+    @EnvironmentObject private var app: AppModel
     @State private var contactCount: Int?
+    @State private var confirmsSignOut = false
 
     var body: some View {
         ElderScrollScreen {
@@ -26,13 +28,24 @@ struct ElderSettingsView: View {
                     .accessibilityIdentifier("settings.subscription")
                 ElderTileButton(title: "Familie uitnodigen", systemImage: "person.badge.plus") { path.append(.settingsInvite) }
                     .accessibilityIdentifier("settings.invite")
-                ElderTileButton(title: "Wie kijkt er mee", systemImage: "person.2.fill") { path.append(.settingsCaregivers) }
+                ElderTileButton(title: "Wie kijkt er mee", systemImage: "person.2.fill") { path.append(.transparency) }
                     .accessibilityIdentifier("settings.caregivers")
                 ElderTileButton(title: "Uw gegevens downloaden", systemImage: "square.and.arrow.down") { path.append(.settingsExport) }
                     .accessibilityIdentifier("settings.export")
                 ElderTileButton(title: "Account verwijderen", systemImage: "trash.fill", iconTint: NoahColor.dangerText) { path.append(.settingsDelete) }
                     .accessibilityIdentifier("settings.delete")
             }
+            // Audit M13: a way off this phone without deleting everything.
+            Button { confirmsSignOut = true } label: {
+                NoahButtonLabel(title: "Uitloggen op deze telefoon", systemImage: "rectangle.portrait.and.arrow.right")
+            }
+            .buttonStyle(.noah(.secondary, size: .elder))
+            .accessibilityIdentifier("settings.signOut")
+            Link(destination: SupportContact.mailURL) {
+                NoahButtonLabel(title: "Vragen? Mail ons", systemImage: "envelope.fill")
+            }
+            .buttonStyle(.noah(.quiet, size: .elder))
+            ElderText("\(SupportContact.email)", color: NoahColor.textSecondary)
             Text("HelloNoah \(AppConfig.appVersion) · Een product van Aldery")
                 .font(NoahFont.footnote)
                 .foregroundColor(NoahColor.textSecondary)
@@ -40,6 +53,12 @@ struct ElderSettingsView: View {
                 .padding(.top, NoahSpacing.s)
         }
         .task { contactCount = (try? await session.api.deviceEmergencyContacts())?.count }
+        .confirmationDialog("Uitloggen op deze telefoon?", isPresented: $confirmsSignOut, titleVisibility: .visible) {
+            Button("Ja, uitloggen") { Task { await app.unpairThisDevice() } }
+            Button("Nee", role: .cancel) {}
+        } message: {
+            Text("Uw account en gegevens blijven bewaard. U kunt later weer inloggen met uw telefoonnummer en een sms-code.")
+        }
     }
 }
 
@@ -133,7 +152,7 @@ struct ElderNoahSettingsView: View {
             message = ("Bewaard. Noah gebruikt dit vanaf het volgende gesprek.", false)
             Task { await session.load() }
         } catch {
-            message = (APIError.from(error).elderMessage, true)
+            message = (APIError.from(error).elderMessage(isSelfManaged: true), true)
         }
     }
 }
@@ -209,7 +228,7 @@ struct ElderRecordingView: View {
                 choice = saved ?? .uit
                 message = ("Opnemen is op dit moment niet beschikbaar. Probeert u het later nog eens.", true)
             } else {
-                message = (apiError.elderMessage, true)
+                message = (apiError.elderMessage(isSelfManaged: true), true)
             }
         }
     }

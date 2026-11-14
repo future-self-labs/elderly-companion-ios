@@ -48,8 +48,11 @@ struct SelfOnboardingView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: step) { _ in proxy.scrollTo("top", anchor: .top) }
+            // Audit M8: the main button stays in view above the home indicator.
+            .safeAreaInset(edge: .bottom, spacing: 0) { primaryBar }
         }
         .noahElderScreenScaling()
+        .noahStatusBarBackdrop()
         .noahScreenBackground()
         .task { await prefill() }
         .onAppear(perform: applyDebugRoute)
@@ -95,9 +98,34 @@ struct SelfOnboardingView: View {
                 }
             }
             if let error { ElderMessage(text: error) }
-            NoahAsyncButton(size: .elder, action: saveName) { Text("Verder") }
-                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .accessibilityIdentifier("onboarding.next")
+        }
+    }
+
+    /// The step's main button, pinned to the bottom (steps 2–4; the paywall has its own).
+    @ViewBuilder
+    private var primaryBar: some View {
+        if step != .subscription {
+            VStack(spacing: NoahSpacing.s) {
+                switch step {
+                case .name:
+                    NoahAsyncButton(size: .elder, action: saveName) { Text("Verder") }
+                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityIdentifier("onboarding.next")
+                case .voice:
+                    NoahAsyncButton(size: .elder, action: saveVoice) { Text("Verder") }
+                        .accessibilityIdentifier("onboarding.next")
+                case .contact:
+                    NoahAsyncButton(size: .elder, action: saveContact) { Text("Bewaar en ga verder") }
+                        .disabled(contactName.trimmingCharacters(in: .whitespaces).isEmpty || contactPhone.filter(\.isNumber).count < 9)
+                        .accessibilityIdentifier("onboarding.saveContact")
+                case .subscription:
+                    EmptyView()
+                }
+            }
+            .padding(.horizontal, NoahSpacing.screen)
+            .padding(.vertical, NoahSpacing.s)
+            .frame(maxWidth: .infinity)
+            .background(NoahColor.surfaceDeep.ignoresSafeArea(edges: .bottom))
         }
     }
 
@@ -116,8 +144,6 @@ struct SelfOnboardingView: View {
                     .accessibilityIdentifier("onboarding.voice.man")
             }
             if let error { ElderMessage(text: error) }
-            NoahAsyncButton(size: .elder, action: saveVoice) { Text("Verder") }
-                .accessibilityIdentifier("onboarding.next")
         }
     }
 
@@ -130,9 +156,6 @@ struct SelfOnboardingView: View {
             NoahNotice(kind: .info, text: "We raden het u echt aan: zo is er altijd iemand die weet dat u hulp nodig heeft. Noah is geen alarmcentrale. Bij direct gevaar belt u altijd 112.", large: true)
             ElderContactFields(name: $contactName, phone: $contactPhone, phoneError: phoneError)
             if let error { ElderMessage(text: error) }
-            NoahAsyncButton(size: .elder, action: saveContact) { Text("Bewaar en ga verder") }
-                .disabled(contactName.trimmingCharacters(in: .whitespaces).isEmpty || contactPhone.filter(\.isNumber).count < 9)
-                .accessibilityIdentifier("onboarding.saveContact")
             Button {
                 error = nil
                 step = .subscription
@@ -169,7 +192,7 @@ struct SelfOnboardingView: View {
             session.didUpdate(profile: profile)
             step = .voice
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: true)
         }
     }
 
@@ -186,7 +209,7 @@ struct SelfOnboardingView: View {
             }
             step = .contact
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: true)
         }
     }
 
@@ -203,7 +226,7 @@ struct SelfOnboardingView: View {
             step = .subscription
         } catch {
             let apiError = APIError.from(error)
-            if apiError.code == "ongeldige_invoer" { phoneError = PhoneNumberFormat.invalidMessage } else { self.error = apiError.elderMessage }
+            if apiError.code == "ongeldige_invoer" { phoneError = PhoneNumberFormat.invalidMessage } else { self.error = apiError.elderMessage(isSelfManaged: true) }
         }
     }
 

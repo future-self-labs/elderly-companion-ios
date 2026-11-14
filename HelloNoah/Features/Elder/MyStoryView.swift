@@ -51,13 +51,15 @@ struct MyStoryView: View {
             .padding(.vertical, NoahSpacing.m)
             .noahReadableWidth()
         }
+        .noahElderScreenScaling()
         .elderSubscreen()
         .task { if state.value == nil { await load() } }
         .refreshable { await load() }
     }
 
     private var groupingPicker: some View {
-        HStack(spacing: NoahSpacing.s) {
+        // Audit M7: below each other at large text, so "Per onderwerp" never breaks mid-word.
+        AdaptiveStack(spacing: NoahSpacing.s) {
             groupingButton("Per onderwerp", .topic)
             groupingButton("Per periode", .period)
         }
@@ -70,6 +72,9 @@ struct MyStoryView: View {
             Text(title)
                 .font(NoahFont.Elder.label)
                 .foregroundColor(grouping == value ? NoahColor.onAccent : NoahColor.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, NoahSpacing.m)
                 .frame(maxWidth: .infinity, minHeight: NoahSize.elderMinTap)
                 .background(Capsule().fill(grouping == value ? NoahColor.accent : NoahColor.surface))
                 .overlay(Capsule().strokeBorder(grouping == value ? .clear : NoahColor.border, lineWidth: 1))
@@ -229,6 +234,7 @@ struct ElderStoryDetailView: View {
             .padding(.vertical, NoahSpacing.m)
             .noahReadableWidth()
         }
+        .noahElderScreenScaling()
         .elderSubscreen()
     }
 

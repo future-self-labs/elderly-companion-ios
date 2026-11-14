@@ -284,6 +284,14 @@ struct ConversationScreen: View {
                 }
                 .padding(NoahSpacing.m)
             }
+            // Audit M14: older lines fade out at the top instead of being cut through the middle.
+            .mask(
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                        .frame(height: isAccessibilitySize ? 16 : 36)
+                    Color.black
+                }
+            )
             .frame(minHeight: isAccessibilitySize ? 120 : 140, maxHeight: .infinity)
             .background(RoundedRectangle(cornerRadius: NoahRadius.card, style: .continuous).fill(NoahColor.surface))
             .onChange(of: controller.subtitles) { _ in

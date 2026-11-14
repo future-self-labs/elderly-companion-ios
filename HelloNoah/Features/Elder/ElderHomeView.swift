@@ -13,6 +13,7 @@ struct ElderHomeView: View {
     @State private var callFailed = false
     @State private var isCalling = false
     @State private var showsHelp = false
+    @State private var confirmsCallMe = false
     @ScaledMetric(relativeTo: .title) private var orbSize: CGFloat = NoahSize.orb
 
     var body: some View {
@@ -26,8 +27,11 @@ struct ElderHomeView: View {
                 if let arrival = session.arrivalMessage {
                     NoahNotice(kind: .success, text: arrival, large: true)
                         .accessibilityIdentifier("elder.arrival")
-                } else if session.justPaired {
+                } else if session.justPaired, !session.isRestricted {
                     NoahNotice(kind: .success, text: "Gelukt! Deze telefoon is gekoppeld. U kunt nu met \(session.noahName) praten.", large: true)
+                }
+                if session.isRestricted {
+                    ElderRestrictedNotice()
                 }
                 if session.me.value?.access == .inactive {
                     if session.isSelfManaged {
@@ -36,18 +40,18 @@ struct ElderHomeView: View {
                                    actionTitle: "Abonnement starten") { path.append(.settingsSubscription) }
                             .accessibilityIdentifier("elder.inactiveSelf")
                     } else {
-                        NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Vraag uw mantelzorger om hulp.", large: true)
+                        NoahNotice(kind: .warning, text: "\(session.noahName) is nog niet actief. Uw familie kan het abonnement regelen; vraag hen gerust om hulp.", large: true)
                     }
                 }
                 if case .failed(let error) = session.me {
-                    NoahNotice(kind: .warning, text: error.elderMessage, large: true, actionTitle: "Opnieuw proberen") {
+                    NoahNotice(kind: .warning, text: error.elderMessage(isSelfManaged: session.isSelfManaged), large: true, actionTitle: "Opnieuw proberen") {
                         Task { await session.load() }
                     }
                 }
 
                 talkButton
 
-                Text(verbatim: DutchFormat.lastConversation(session.me.value?.lastConversationAt))
+                Text(verbatim: DutchFormat.lastConversation(session.lastConversationAt))
                     .font(NoahFont.Elder.label)
                     .foregroundColor(NoahColor.textSecondary)
                     .multilineTextAlignment(.center)
@@ -68,6 +72,7 @@ struct ElderHomeView: View {
             .padding(.vertical, NoahSpacing.l)
             .noahReadableWidth()
         }
+        .noahStatusBarBackdrop()
         .noahScreenBackground()
         .toolbar(.hidden, for: .navigationBar)
         .refreshable { await session.load() }
@@ -101,7 +106,7 @@ struct ElderHomeView: View {
         // Hidden: caregivers can long-press the greeting for settings (unpairing). A self-managed
         // profile has its own "Instellingen" instead (v2.3).
         .onLongPressGesture(minimumDuration: 2) { if !session.isSelfManaged { showsHelp = true } }
-        .accessibilityAction(named: Text("Instellingen voor de mantelzorger")) { if !session.isSelfManaged { showsHelp = true } }
+        .accessibilityAction(named: Text("Deze telefoon")) { if !session.isSelfManaged { showsHelp = true } }
     }
 
     private var greeting: String {
@@ -156,7 +161,8 @@ struct ElderHomeView: View {
     private var callMeButton: some View {
         VStack(spacing: NoahSpacing.s) {
             Button {
-                Task { await callMe() }
+                // Audit L10: a real phone call, so one more tap first.
+                confirmsCallMe = true
             } label: {
                 ZStack {
                     NoahButtonLabel(title: "Bel mij", systemImage: "phone.fill").opacity(isCalling ? 0 : 1)
@@ -167,6 +173,12 @@ struct ElderHomeView: View {
             .allowsHitTesting(!isCalling)
             .accessibilityHint(Text("\(session.noahName) belt u op uw telefoon"))
             .accessibilityIdentifier("elder.callMe")
+            .confirmationDialog("Wilt u dat \(session.noahName) u nu belt?", isPresented: $confirmsCallMe, titleVisibility: .visible) {
+                Button("Ja, bel mij nu") { Task { await callMe() } }
+                Button("Nee", role: .cancel) {}
+            } message: {
+                Text("\(session.noahName) belt dan het telefoonnummer dat bij uw account hoort, vast of mobiel.")
+            }
 
             if let callMessage {
                 Text(verbatim: callMessage)
@@ -217,6 +229,9 @@ struct ElderHomeView: View {
                 .accessibilityIdentifier("elder.myStory")
             ElderTileButton(title: "Herinneringen", systemImage: "bell.fill") { path.append(.reminders) }
                 .accessibilityIdentifier("elder.reminders")
+            // v2.4: always reachable, for both kinds of profile.
+            ElderTileButton(title: "Wie kijkt er mee", systemImage: "person.2.fill") { path.append(.transparency) }
+                .accessibilityIdentifier("elder.transparency")
             if session.isSelfManaged {
                 // v2.3: one calm entry, at the bottom, for people who manage Noah themselves.
                 ElderTileButton(title: "Instellingen", systemImage: "gearshape.fill", iconTint: NoahColor.textSoft) { path.append(.settings) }
@@ -238,7 +253,7 @@ struct ElderHomeView: View {
             callMessage = "\(session.noahName) belt u zo op uw telefoon."
         } catch {
             callFailed = true
-            callMessage = APIError.from(error).elderMessage
+            callMessage = APIError.from(error).elderMessage(isSelfManaged: session.isSelfManaged)
         }
     }
 }
@@ -320,10 +335,10 @@ struct ElderHelpSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: NoahSpacing.l) {
-                    Text("Voor de mantelzorger")
+                    Text("Deze telefoon")
                         .font(NoahFont.Elder.title).noahElderTitleScaling()
                         .foregroundColor(NoahColor.text)
-                    Text("Deze telefoon is gekoppeld aan HelloNoah. Instellingen wijzig je in de HelloNoah-app op je eigen telefoon.")
+                    Text("Deze telefoon is gekoppeld aan HelloNoah. De familie wijzigt instellingen in de HelloNoah-app op de eigen telefoon. Ontkoppelen kan ook bij \u{201C}Wie kijkt er mee\u{201D} op het beginscherm.")
                         .font(NoahFont.Elder.body)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)

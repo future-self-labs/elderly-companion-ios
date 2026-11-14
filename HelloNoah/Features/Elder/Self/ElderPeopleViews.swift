@@ -20,20 +20,35 @@ struct ElderEmergencyContactsView: View {
                                    large: true)
                 }
                 ForEach(Array(contacts.enumerated()), id: \.element.id) { index, contact in
-                    Button { editing = .edit(contact) } label: {
-                        contactCard(contact, number: index + 1)
+                    VStack(alignment: .leading, spacing: NoahSpacing.s) {
+                        Button { editing = .edit(contact) } label: {
+                            contactCard(contact, number: index + 1)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityHint(Text("Wijzigen of verwijderen"))
+                        if index > 0 {
+                            // Audit L28: the order matters ("in deze volgorde"), so it can be changed.
+                            NoahAsyncButton(kind: .quiet, size: .elder, action: { await moveUp(index, in: contacts) }) {
+                                NoahButtonLabel(title: "Eerder waarschuwen", systemImage: "arrow.up")
+                            }
+                            .accessibilityLabel(Text("\(contact.name) eerder waarschuwen"))
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint(Text("Wijzigen of verwijderen"))
+                }
+                if contacts.count >= EmergencyContactLimit.max {
+                    ElderText("U heeft het maximum van \(EmergencyContactLimit.max) noodcontacten. Wilt u iemand anders toevoegen? Verwijder dan eerst iemand.", color: NoahColor.textSecondary)
                 }
             }
-            Button { editing = .new } label: {
-                NoahButtonLabel(title: "Iemand toevoegen", systemImage: "person.badge.plus")
+            if (state.value?.count ?? 0) < EmergencyContactLimit.max {
+                Button { editing = .new } label: {
+                    NoahButtonLabel(title: "Iemand toevoegen", systemImage: "person.badge.plus")
+                }
+                .buttonStyle(.noah(.primary, size: .elder))
+                .accessibilityIdentifier("contacts.add")
             }
-            .buttonStyle(.noah(.primary, size: .elder))
-            .accessibilityIdentifier("contacts.add")
+            ElderText("Laat het de mensen die u toevoegt even weten: ze krijgen een sms of telefoontje van Noah als het niet goed met u gaat.", color: NoahColor.textSecondary)
         }
         .task { await load() }
         .sheet(item: $editing) { target in
@@ -73,6 +88,13 @@ struct ElderEmergencyContactsView: View {
         .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
         .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.border, lineWidth: 1))
         .contentShape(RoundedRectangle(cornerRadius: NoahRadius.large))
+    }
+
+    private func moveUp(_ index: Int, in contacts: [EmergencyContact]) async {
+        var ids = contacts.map(\.id)
+        ids.swapAt(index, index - 1)
+        try? await session.api.reorderDeviceEmergencyContacts(ids: ids)
+        await load()
     }
 
     private func load() async {
@@ -120,8 +142,11 @@ struct ElderContactEditorView: View {
                 }
                 .noahInputBox(large: true)
                 if let error { ElderMessage(text: error) }
+                if !notifyBySms && !notifyByCall {
+                    ElderText("Kies minstens één manier, anders kan Noah deze persoon niet waarschuwen.", color: NoahColor.dangerText)
+                }
                 NoahAsyncButton(size: .elder, action: save) { Text("Bewaar") }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || phone.filter(\.isNumber).count < 9)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || phone.filter(\.isNumber).count < 9 || (!notifyBySms && !notifyByCall))
                     .accessibilityIdentifier("contactEditor.save")
                 Button("Annuleren") { dismiss() }
                     .buttonStyle(.noah(.secondary, size: .elder))
@@ -179,7 +204,7 @@ struct ElderContactEditorView: View {
             dismiss()
         } catch {
             let apiError = APIError.from(error)
-            if apiError.code == "ongeldige_invoer" { phoneError = PhoneNumberFormat.invalidMessage } else { self.error = apiError.elderMessage }
+            if apiError.code == "ongeldige_invoer" { phoneError = PhoneNumberFormat.invalidMessage } else { self.error = apiError.elderMessage(isSelfManaged: session.isSelfManaged) }
         }
     }
 
@@ -190,7 +215,7 @@ struct ElderContactEditorView: View {
             onSaved()
             dismiss()
         } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: session.isSelfManaged)
         }
     }
 }
@@ -203,6 +228,8 @@ struct ElderInviteView: View {
     @State private var role: Role = .lezer
     @State private var invitation: Invitation?
     @State private var error: String?
+    /// v2.4: "helpen beheren" is confirmed first (`confirmed: true`).
+    @State private var confirmsBeheerder = false
 
     var body: some View {
         ElderScrollScreen {
@@ -223,7 +250,7 @@ struct ElderInviteView: View {
                 }
                 .buttonStyle(.noah(.primary, size: .elder))
                 .accessibilityIdentifier("invite.share")
-                ElderText("Diegene installeert de HelloNoah-app, kiest \u{201C}Ik ben mantelzorger\u{201D} en tikt op de link of vult de code in.", color: NoahColor.textSecondary)
+                ElderText("Diegene installeert de HelloNoah-app, kiest \u{201C}Ik ben mantelzorger\u{201D} en tikt op de link of vult de code in. Heeft u zich vergist? Bij \u{201C}Wie kijkt er mee\u{201D} kunt u de uitnodiging intrekken.", color: NoahColor.textSecondary)
                 Button("Nog iemand uitnodigen") { self.invitation = nil }
                     .buttonStyle(.noah(.secondary, size: .elder))
             } else {
@@ -237,12 +264,21 @@ struct ElderInviteView: View {
                     }
                 }
                 if role == .beheerder {
-                    NoahNotice(kind: .warning, text: "Zodra diegene de uitnodiging aanneemt, regelt diegene de instellingen voor u. U ziet hier dan geen Instellingen meer. Praten met Noah blijft precies hetzelfde.", large: true)
+                    NoahNotice(kind: .warning, text: "Deze persoon kan dan alles lezen, instellen en verwijderen. U kunt diegene later zelf weer verwijderen, bij \u{201C}Wie kijkt er mee\u{201D}. Als diegene de uitnodiging aanneemt, vraagt de app u eerst nog of het goed is.", large: true)
                 }
                 if let error { ElderMessage(text: error) }
-                NoahAsyncButton(size: .elder, action: create) { Text("Maak de uitnodiging") }
-                    .accessibilityIdentifier("invite.create")
+                Button {
+                    if role == .beheerder { confirmsBeheerder = true } else { Task { await create() } }
+                } label: { Text("Maak de uitnodiging") }
+                .buttonStyle(.noah(.primary, size: .elder))
+                .accessibilityIdentifier("invite.create")
             }
+        }
+        .confirmationDialog("Mag deze persoon helpen beheren?", isPresented: $confirmsBeheerder, titleVisibility: .visible) {
+            Button("Ja, maak de uitnodiging") { Task { await create() } }
+            Button("Nee", role: .cancel) {}
+        } message: {
+            Text("Deze persoon kan dan alles lezen, instellen en verwijderen. U kunt diegene later zelf weer verwijderen.")
         }
     }
 
@@ -253,102 +289,9 @@ struct ElderInviteView: View {
     private func create() async {
         error = nil
         do {
-            invitation = try await session.api.createDeviceInvitation(role: role)
+            invitation = try await session.api.createDeviceInvitation(role: role, confirmed: role == .beheerder)
         } catch {
-            self.error = APIError.from(error).elderMessage
-        }
-    }
-}
-
-// MARK: - Wie kijkt er mee
-
-struct ElderCaregiversView: View {
-    @Binding var path: [ElderRoute]
-    @EnvironmentObject private var session: ElderSession
-    @State private var state: Loadable<[CaregiverMembership]> = .idle
-    @State private var confirmRemove: CaregiverMembership?
-    @State private var error: String?
-
-    var body: some View {
-        ElderScrollScreen {
-            ElderScreenTitle(title: "Wie kijkt er mee")
-            ElderText("Deze mensen kunnen zien hoe het met u gaat. U kunt iemand altijd weer verwijderen.")
-            if let error { ElderMessage(text: error) }
-            LoadableView(state: state, large: true, retry: { Task { await load() } }) { members in
-                if members.isEmpty {
-                    EmptyStateView(systemImage: "person.2", title: "Er kijkt nog niemand mee",
-                                   message: "Wilt u dat iemand uit uw familie kan meekijken? Stuur diegene een uitnodiging.", large: true)
-                    Button { path.append(.settingsInvite) } label: {
-                        NoahButtonLabel(title: "Familie uitnodigen", systemImage: "person.badge.plus")
-                    }
-                    .buttonStyle(.noah(.primary, size: .elder))
-                }
-                ForEach(members) { member in
-                    memberCard(member)
-                }
-            }
-        }
-        .task { await load() }
-        .confirmationDialog(confirmTitle, isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
-            Button("Ja, verwijderen", role: .destructive) {
-                if let member = confirmRemove { Task { await remove(member) } }
-            }
-            Button("Nee", role: .cancel) {}
-        } message: {
-            Text("Diegene kan daarna niet meer zien hoe het met u gaat. U kunt diegene later opnieuw uitnodigen.")
-        }
-    }
-
-    private var confirmTitle: String {
-        "Wilt u dat \(confirmRemove?.name ?? "deze persoon") niet meer meekijkt?"
-    }
-
-    private func memberCard(_ member: CaregiverMembership) -> some View {
-        VStack(alignment: .leading, spacing: NoahSpacing.m) {
-            HStack(spacing: NoahSpacing.m) {
-                NoahAvatar(name: member.name ?? "?", size: 52, tint: member.role == .beheerder ? NoahColor.accent : NoahColor.textSoft)
-                VStack(alignment: .leading, spacing: NoahSpacing.xxs) {
-                    Text(verbatim: member.name ?? "Familielid")
-                        .font(NoahFont.Elder.bodyStrong)
-                        .foregroundColor(NoahColor.text)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(verbatim: member.role.elderLabel + (member.joinedAt.map { " · sinds \(DutchFormat.shortDate($0))" } ?? ""))
-                        .font(NoahFont.Elder.label)
-                        .foregroundColor(NoahColor.textSoft)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-            Button { confirmRemove = member } label: {
-                NoahButtonLabel(title: "Verwijderen", systemImage: "person.badge.minus", iconTint: NoahColor.dangerText)
-            }
-            .buttonStyle(.noah(.secondary, size: .elder))
-            .accessibilityLabel(Text("\(member.name ?? "Familielid") verwijderen"))
-            .accessibilityIdentifier("caregivers.remove")
-        }
-        .padding(NoahSpacing.l)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).fill(NoahColor.surface))
-        .overlay(RoundedRectangle(cornerRadius: NoahRadius.large, style: .continuous).strokeBorder(NoahColor.cardBorder, lineWidth: 1))
-    }
-
-    private func load() async {
-        if state.value == nil { state = .loading }
-        do {
-            state = .loaded(try await session.api.deviceCaregivers())
-        } catch {
-            let apiError = APIError.from(error)
-            if apiError != .cancelled { state = .failed(apiError) }
-        }
-    }
-
-    private func remove(_ member: CaregiverMembership) async {
-        error = nil
-        do {
-            try await session.api.removeDeviceCaregiver(caregiverId: member.caregiverId)
-            await load()
-        } catch {
-            self.error = APIError.from(error).elderMessage
+            self.error = APIError.from(error).elderMessage(isSelfManaged: session.isSelfManaged)
         }
     }
 }

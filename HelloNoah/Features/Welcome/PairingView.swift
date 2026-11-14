@@ -25,13 +25,13 @@ struct PairingView: View {
                     .foregroundColor(NoahColor.text)
                     .accessibilityAddTraits(.isHeader)
 
-                Text("Vul de code van 6 cijfers in die u van uw mantelzorger heeft gekregen.")
+                Text("Vul de code van 6 cijfers in die u van uw familie heeft gekregen.")
                     .font(NoahFont.Elder.body)
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if isFromLink {
-                    NoahNotice(kind: .warning, text: "Deze code komt uit een link. Koppel alleen als u de code van uw eigen mantelzorger heeft gekregen. Tik daarna op Koppelen.", large: true)
+                    NoahNotice(kind: .warning, text: "Deze code komt uit een link. Koppel alleen als u de code van iemand uit uw eigen familie heeft gekregen. Tik daarna op Koppelen.", large: true)
                         .accessibilityIdentifier("pairing.fromLink")
                 }
 
@@ -65,7 +65,7 @@ struct PairingView: View {
 
                 NoahCard {
                     Label {
-                        Text("De mantelzorger vindt de code in de HelloNoah-app, bij Meer → Telefoon koppelen. De code is 15 minuten geldig.")
+                        Text("Uw familielid vindt de code in de HelloNoah-app, bij Meer › Telefoon koppelen. De code is 15 minuten geldig. Na het koppelen ziet u wie er meekijkt.")
                             .font(NoahFont.Elder.label)
                             .foregroundColor(NoahColor.textSoft)
                             .fixedSize(horizontal: false, vertical: true)
@@ -81,6 +81,8 @@ struct PairingView: View {
         }
         // Like the rest of the older person's interface: no navigation bar (the root has none
         // either, so nothing animates in during the push) and a big "Terug" button instead.
+        // Audit M7: capped at accessibility size 2, the first screen a paired person sees.
+        .noahElderScreenScaling()
         .elderSubscreen()
         .onAppear {
             if let initialCode, code.isEmpty {
@@ -101,7 +103,7 @@ struct PairingView: View {
         } catch {
             let apiError = APIError.from(error)
             if case .server(_, let errorCode, _) = apiError, ["koppelcode_ongeldig", "invalid_code", "code_expired"].contains(errorCode) || apiError.status == 404 {
-                self.error = "Deze code klopt niet of is verlopen. Vraag uw mantelzorger om een nieuwe code."
+                self.error = "Deze code klopt niet of is verlopen. Vraag uw familie om een nieuwe code."
             } else {
                 self.error = apiError.elderMessage
             }

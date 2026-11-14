@@ -25,7 +25,7 @@ struct ElderRemindersView: View {
                         EmptyStateView(
                             systemImage: "bell.slash.fill",
                             title: "Geen herinneringen",
-                            message: "Er staan nu geen herinneringen klaar. U kunt \(session.noahName) vragen om u ergens aan te herinneren.",
+                            message: "Er staan nu geen herinneringen klaar. Zeg tegen \(session.noahName): \u{201C}Herinner mij aan…\u{201D}, dan zet \(session.noahName) het hier voor u klaar.",
                             large: true
                         )
                     } else {
@@ -39,6 +39,7 @@ struct ElderRemindersView: View {
             .padding(.vertical, NoahSpacing.m)
             .noahReadableWidth()
         }
+        .noahElderScreenScaling()
         .elderSubscreen()
         .task { if state.value == nil { await load() } }
         .refreshable { await load() }

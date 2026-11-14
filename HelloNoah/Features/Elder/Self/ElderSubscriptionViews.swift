@@ -56,7 +56,7 @@ struct ElderPaywallView: View {
                 .foregroundColor(NoahColor.positive)
                 .accessibilityHidden(true)
             ElderScreenTitle(title: "Noah is actief")
-            ElderText("Dank u wel. U kunt nu met \(session.noahName) praten wanneer u maar wilt.")
+            ElderText("Dank u wel. U kunt nu met \(session.noahName) praten.")
             Button("Verder", action: onDone)
                 .buttonStyle(.noah(.primary, size: .elder))
                 .accessibilityIdentifier("elderPaywall.done")
@@ -112,7 +112,7 @@ struct ElderPaywallView: View {
             }
 
             VStack(alignment: .leading, spacing: NoahSpacing.s) {
-                feature("Met Noah praten in de app, wanneer u maar wilt")
+                feature("Met Noah praten in de app")
                 feature("Noah onthoudt wat u vertelt en vraagt er later naar")
                 feature("Uw levensverhaal, om terug te lezen of door te geven")
                 feature("Een extra geheugensteuntje voor afspraken en verjaardagen")
@@ -158,8 +158,8 @@ struct ElderPaywallView: View {
                 Text("Met deze Apple ID kan er geen abonnement bij").font(NoahFont.Elder.bodyStrong).foregroundColor(NoahColor.text)
                     .fixedSize(horizontal: false, vertical: true)
                 ElderText(store.allInUseExplanation(owned: owned, targetName: session.name))
-                ElderText("Wat wel kan: iemand uit uw familie start het abonnement met een eigen Apple ID. U kunt diegene uitnodigen bij Instellingen › Familie uitnodigen. Of u belt of mailt ons, dan helpen we u graag.")
-                Link(destination: app.environment.config.supportURL) { Text("Hulp en contact") }
+                ElderText("Wat wel kan: iemand uit uw familie start het abonnement met een eigen Apple ID. U kunt diegene uitnodigen bij Instellingen › Familie uitnodigen. Vragen? Mail ons: \(SupportContact.email).")
+                Link(destination: SupportContact.mailURL) { Text("Mail ons") }
                     .font(NoahFont.Elder.bodyStrong)
                     .foregroundColor(NoahColor.accent)
                     .frame(minHeight: NoahSize.elderMinTap)
@@ -168,9 +168,11 @@ struct ElderPaywallView: View {
         case .buy?, nil:
             if let message = localError ?? store.errorMessage { NoahNotice(kind: .warning, text: message, large: true) }
             NoahAsyncButton(size: .elder, action: purchase) {
+                // Audit M15: the later price on the button too (a sixfold rise after the intro).
                 Text(store.isEligibleForIntro(productID)
-                    ? "Start voor \(store.introPriceText(for: productID)) per maand"
+                    ? "Start voor \(store.introPriceText(for: productID)) per maand (na \(store.introPeriodCount(for: productID)) maanden \(store.regularPriceText(for: productID)))"
                     : "Start voor \(store.regularPriceText(for: productID)) per maand")
+                    .multilineTextAlignment(.center)
             }
             .accessibilityIdentifier("elderPaywall.purchase")
         }
@@ -196,7 +198,7 @@ struct ElderPaywallView: View {
                 .foregroundColor(NoahColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             AdaptiveStack(spacing: NoahSpacing.l) {
-                Link("Gebruiksvoorwaarden (EULA)", destination: app.environment.config.termsURL)
+                Link("Voorwaarden", destination: app.environment.config.termsURL)
                 Link("Privacybeleid", destination: app.environment.config.privacyURL)
             }
             .font(NoahFont.Elder.bodyStrong)

@@ -1,4 +1,5 @@
 import AuthenticationServices
+import CryptoKit
 import SwiftUI
 
 /// Caregiver sign-in: Sign in with Apple or phone number + SMS code.
@@ -8,6 +9,9 @@ struct SignInView: View {
     @EnvironmentObject private var app: AppModel
     @State private var isWorking = false
     @State private var error: String?
+    /// Security audit L2: a one-time nonce; Apple puts its SHA-256 in the identity token and the
+    /// raw value goes to the backend, which can check it.
+    @State private var nonce = AppleNonce.make()
 
     var body: some View {
         ScrollView {
@@ -37,6 +41,8 @@ struct SignInView: View {
                     } else {
                         SignInWithAppleButton(.continue) { request in
                             request.requestedScopes = [.fullName, .email]
+                            nonce = AppleNonce.make()
+                            request.nonce = AppleNonce.sha256(nonce)
                         } onCompletion: { result in
                             Task { await handleApple(result) }
                         }
@@ -90,7 +96,7 @@ struct SignInView: View {
                 AppleSignInRequest.FullName(givenName: $0.givenName, familyName: $0.familyName)
             }
             let hasName = name?.givenName != nil || name?.familyName != nil
-            await signIn(AppleSignInRequest(identityToken: identityToken, authorizationCode: code, fullName: hasName ? name : nil))
+            await signIn(AppleSignInRequest(identityToken: identityToken, authorizationCode: code, fullName: hasName ? name : nil, nonce: nonce))
         }
     }
 
@@ -108,6 +114,18 @@ struct SignInView: View {
         } catch {
             self.error = APIError.from(error).userMessage
         }
+    }
+}
+
+enum AppleNonce {
+    static func make(length: Int = 32) -> String {
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var generator = SystemRandomNumberGenerator()
+        return String((0..<length).map { _ in charset.randomElement(using: &generator)! })
+    }
+
+    static func sha256(_ input: String) -> String {
+        SHA256.hash(data: Data(input.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }
 
