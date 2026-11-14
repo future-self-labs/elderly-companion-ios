@@ -41,7 +41,8 @@ struct MoodChart: View {
                 y: .value("Score", sample.value)
             )
             .foregroundStyle(by: .value("Reeks", sample.series))
-            .interpolationMethod(.monotone)
+            // Audit L17: straight lines between days never dip below the axis.
+            .interpolationMethod(.linear)
             .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
 
             if sample.series == "Stemming" {
@@ -58,6 +59,7 @@ struct MoodChart: View {
         .chartForegroundStyleScale(["Stemming": NoahColor.accent, "Helderheid": NoahColor.textSoft])
         .chartLegend(showsClarity ? .visible : .hidden)
         .chartYScale(domain: 1...5)
+        .chartPlotStyle { $0.clipped() }
         .chartYAxis {
             AxisMarks(position: .leading, values: [1, 3, 5]) { value in
                 AxisGridLine().foregroundStyle(NoahColor.divider)

@@ -125,12 +125,14 @@ struct ReminderRow: View {
                         .font(NoahFont.subheadline)
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
-                    if reminder.active, let next = reminder.nextAt {
+                    // Audit L12: a one-off reminder already names its date above.
+                    if reminder.active, let next = reminder.nextAt, reminder.schedule.kind != .eenmalig {
                         Text("Volgende: \(DutchFormat.upcoming(next).lowercased())")
                             .font(NoahFont.footnote)
                             .foregroundColor(NoahColor.accent)
                     }
-                    HStack(spacing: NoahSpacing.xs) {
+                    // Audit L7: chips wrap as a whole, never mid-word.
+                    FlowLayout {
                         NoahChip(text: reminder.delivery.shortLabel, systemImage: reminder.delivery == .bellen ? "phone.fill" : "bubble.left.fill")
                         if reminder.createdBy == .noah {
                             NoahChip(text: "Door Noah", systemImage: "sparkles")
@@ -196,7 +198,8 @@ struct ReminderEditorView: View {
     @State private var kind: ReminderSchedule.Kind = .dagelijks
     @State private var onceDate = Date().addingTimeInterval(3600)
     @State private var time = DutchFormat.date(fromTime: "08:00")
-    @State private var weekdays: Set<Int> = [1, 2, 3, 4, 5]
+    /// Audit L11: a weekly reminder starts with today only, not with every weekday ticked.
+    @State private var weekdays: Set<Int> = [Weekdays.isoWeekday(of: Date())]
     @State private var error: String?
     @State private var confirmsDelete = false
     @State private var didLoad = false
@@ -277,8 +280,13 @@ struct ReminderEditorView: View {
                         NoahOptionCard(title: "Noah belt op dat moment", subtitle: "Handig voor iets op een vast tijdstip, zoals een afspraak.", isSelected: input.delivery == .bellen) {
                             input.delivery = .bellen
                         }
-                        NoahOptionCard(title: "In het volgende gesprek", subtitle: "Noah brengt het rustig ter sprake.", isSelected: input.delivery == .inGesprek) {
+                        NoahOptionCard(title: "In het volgende gesprek", subtitle: "Noah brengt het rustig ter sprake in het eerste gesprek na het gekozen tijdstip.", isSelected: input.delivery == .inGesprek) {
                             input.delivery = .inGesprek
+                        }
+                        if input.delivery == .bellen {
+                            Text("Noah belt alleen naar een bevestigd telefoonnummer, en niet in de rusttijden.")
+                                .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }

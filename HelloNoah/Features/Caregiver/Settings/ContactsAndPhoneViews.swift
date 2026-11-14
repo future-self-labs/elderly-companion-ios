@@ -2,6 +2,14 @@ import SwiftUI
 
 // MARK: - Emergency contacts
 
+/// Audit M11: wherever emergency contacts are set, say plainly that Noah is no alarm service.
+struct EmergencyNoticeText: View {
+    var body: some View {
+        NoahNotice(kind: .info, text: "HelloNoah is geen alarmdienst en er kijkt geen mens mee. Bij direct gevaar: bel 112. Laat je noodcontacten weten dat Noah ze kan sms\u{2019}en of bellen.")
+            .accessibilityIdentifier("emergency.notice")
+    }
+}
+
 struct EmergencyContactsView: View {
     @EnvironmentObject private var session: CaregiverSession
     @State private var contacts: [EmergencyContact] = []
@@ -13,10 +21,11 @@ struct EmergencyContactsView: View {
     var body: some View {
         List {
             Section {
-                Text("Bij een noodgeval waarschuwt Noah deze mensen in deze volgorde, per sms en/of telefoon. Ze hebben de app niet nodig. Mantelzorgers met de app krijgen altijd een melding.")
+                Text("Bij een noodgeval waarschuwt Noah deze mensen in deze volgorde, per sms en/of telefoon. Ze hebben de app niet nodig. Mantelzorgers met de app krijgen een melding als meldingen aanstaan.")
                     .font(NoahFont.callout)
                     .foregroundColor(NoahColor.textSoft)
                     .listRowBackground(Color.clear)
+                EmergencyNoticeText().listRowBackground(Color.clear)
                 if !session.permissions.canEditEmergencyContacts {
                     ReadOnlyNotice().listRowBackground(Color.clear)
                 }
@@ -80,8 +89,10 @@ struct EmergencyContactsView: View {
                             withAnimation { editMode = editMode == .active ? .inactive : .active }
                         }
                     }
-                    Button { editing = .new } label: { Image(systemName: "plus") }
-                        .accessibilityLabel(Text("Noodcontact toevoegen"))
+                    if contacts.count < EmergencyContactLimit.max {
+                        Button { editing = .new } label: { Image(systemName: "plus") }
+                            .accessibilityLabel(Text("Noodcontact toevoegen"))
+                    }
                 }
             }
         }
@@ -100,7 +111,7 @@ struct EmergencyContactsView: View {
         case (true, true): return "Sms en telefoon"
         case (true, false): return "Alleen sms"
         case (false, true): return "Alleen telefoon"
-        default: return "Wordt niet gewaarschuwd"
+        default: return "Wordt nu niet gewaarschuwd: zet sms of bellen aan"
         }
     }
 
@@ -184,17 +195,23 @@ struct EmergencyContactEditorView: View {
                     Toggle(isOn: $input.notifyByCall) { Text("Waarschuwen met een telefoontje").font(NoahFont.bodyText).foregroundColor(NoahColor.text) }
                 }
                 .noahInputBox()
+                if !input.hasChannel {
+                    Text("Kies minstens één manier, anders kan Noah deze persoon niet waarschuwen.")
+                        .font(NoahFont.footnote).foregroundColor(NoahColor.dangerText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if let error { NoahNotice(kind: .error, text: error) }
             }
             .padding(NoahSpacing.screen)
         }
         .noahScreenBackground()
-        .navigationTitle(isNew ? "Noodcontact toevoegen" : "Noodcontact")
+        // Audit L9: a short title that fits.
+        .navigationTitle(isNew ? "Nieuw noodcontact" : "Noodcontact")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Annuleren") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {
-                AsyncToolbarButton(title: "Bewaar", isDisabled: input.name.trimmingCharacters(in: .whitespaces).isEmpty || phone.isEmpty) { await save() }
+                AsyncToolbarButton(title: "Bewaar", isDisabled: input.name.trimmingCharacters(in: .whitespaces).isEmpty || phone.isEmpty || !input.hasChannel) { await save() }
             }
         }
         .onAppear {
@@ -266,9 +283,9 @@ struct PhoneLineView: View {
                 }
                 NoahCard {
                     stepRow(1, "Zet het nummer in de telefoon van \(name), bijvoorbeeld onder de naam \u{201C}Noah\u{201D}.")
-                    stepRow(2, "\(name) belt het nummer, wanneer hij of zij maar wil. Ook \u{2019}s nachts.")
-                    stepRow(3, "Noah neemt meteen op als \(name) belt vanaf het nummer in het profiel. Bellen vanaf een ander nummer werkt niet.")
-                    stepRow(4, "Aan de telefoon kan Noah niet zien wie er belt. Daarom praat Noah dan niet over persoonlijke dingen zoals het levensverhaal of herinneringen. Het volledige gesprek is er in de app.")
+                    stepRow(2, "\(name) belt het nummer. Noah neemt op als \(name) belt vanaf het nummer in het profiel; vanaf een ander nummer werkt het niet.")
+                    stepRow(3, "Aan de telefoon kan Noah niet zien wie er belt. Daarom kent Noah dan alleen de voornaam: geen levensverhaal, geen herinneringen, niets van vorige gesprekken. Het volledige gesprek is er in de app.")
+                    stepRow(4, "Geen smartphone? Zet dan het ochtendgesprek aan (Noah-instellingen): als Noah zelf belt, is het wel de Noah die \(name) kent. Daarvoor moet het nummer bevestigd zijn.")
                 }
                 if session.selected?.access != .active {
                     NoahNotice(kind: .warning, text: "Het nummer werkt pas als het abonnement van \(name) actief is.")
@@ -281,7 +298,7 @@ struct PhoneLineView: View {
                     NoahButtonLabel(title: "Zet in contacten", systemImage: "person.crop.circle.badge.plus")
                 }
                 .buttonStyle(.noah(.secondary))
-                ShareLink(item: "Je kunt Noah altijd bellen op \(line.displayNumber ?? line.phoneNumber). Noah neemt meteen op.") {
+                ShareLink(item: "Je kunt Noah bellen op \(line.displayNumber ?? line.phoneNumber), vanaf je eigen telefoonnummer. Aan de telefoon kent Noah alleen je voornaam; in de app weet Noah meer.") {
                     NoahButtonLabel(title: "Stuur het nummer naar \(name)", systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.noah(.secondary))

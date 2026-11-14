@@ -8,6 +8,8 @@ struct ConversationDetailView: View {
     @EnvironmentObject private var router: CaregiverRouter
     @State private var state: Loadable<ConversationDetail> = .idle
     @State private var showsTranscript = false
+    /// v2.4: what the older person shares (to explain a missing transcript).
+    @State private var sharing: SharingLevel?
 
     var body: some View {
         NoahScrollScreen {
@@ -37,6 +39,21 @@ struct ConversationDetailView: View {
             .foregroundColor(NoahColor.textSecondary)
         }
 
+        if c.hidden {
+            NoahCard {
+                HiddenConversationText(name: session.selected?.preferredName ?? "Je naaste", sharesOnlyAlerts: sharing == .alleenMeldingen)
+                Text("Bij nood of grote zorgen krijg je altijd een melding, ook over dit gesprek.")
+                    .font(NoahFont.footnote)
+                    .foregroundColor(NoahColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            details(c)
+        }
+    }
+
+    @ViewBuilder
+    private func details(_ c: ConversationDetail) -> some View {
         if c.hasAudio {
             ConversationRecordingCard(conversationId: c.id, name: session.selected?.preferredName ?? "", api: session.api)
         }
@@ -106,7 +123,7 @@ struct ConversationDetailView: View {
             } label: {
                 NoahCard {
                     NoahRow(icon: "book.fill",
-                            title: c.lifeStoryEntryIds.count == 1 ? "1 herinnering bewaard in het levensverhaal" : "\(c.lifeStoryEntryIds.count) herinneringen bewaard in het levensverhaal",
+                            title: c.lifeStoryEntryIds.count == 1 ? "1 verhaal bewaard in het levensverhaal" : "\(c.lifeStoryEntryIds.count) verhalen bewaard in het levensverhaal",
                             subtitle: "Bekijk het levensverhaal")
                 }
             }
@@ -132,6 +149,11 @@ struct ConversationDetailView: View {
                     TranscriptView(lines: c.transcript, elderlyName: session.selected?.preferredName ?? "Oudere")
                 }
             }
+        } else if sharing == .samenvattingen {
+            Text(verbatim: SharingLevel.samenvattingen.caregiverExplanation(name: session.selected?.preferredName ?? "Je naaste"))
+                .font(NoahFont.footnote)
+                .foregroundColor(NoahColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -175,6 +197,7 @@ struct ConversationDetailView: View {
     }
 
     private func load() async {
+        if sharing == nil, let id = session.selected?.id { sharing = (try? await session.api.elderly(id: id))?.sharing }
         do {
             state = .loaded(try await session.api.conversation(id: conversationId))
         } catch {

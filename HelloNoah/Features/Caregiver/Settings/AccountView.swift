@@ -37,6 +37,10 @@ struct AccountView: View {
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("account.privacy")
+                Text(verbatim: ProductCopy.familyReads)
+                    .font(NoahFont.callout)
+                    .foregroundColor(NoahColor.textSoft)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("Je hebt altijd recht op je gegevens (AVG). De export bevat je account en alle gegevens van de profielen waarvan je beheerder bent.")
                     .font(NoahFont.callout)
                     .foregroundColor(NoahColor.textSoft)
@@ -45,9 +49,10 @@ struct AccountView: View {
                     NoahButtonLabel(title: "Mijn gegevens exporteren", systemImage: "square.and.arrow.up")
                 }
                 .accessibilityIdentifier("account.export")
-                HStack(spacing: NoahSpacing.m) {
+                FlowLayout {
                     Link("Privacybeleid", destination: app.environment.config.privacyURL)
                     Link("Voorwaarden", destination: app.environment.config.termsURL)
+                    Link("Hulp", destination: app.environment.config.supportURL)
                 }
                 .font(NoahFont.semibold(15, relativeTo: .subheadline))
                 .foregroundColor(NoahColor.accent)
@@ -92,10 +97,11 @@ struct AccountView: View {
             NavigationStack {
                 TypedConfirmationView(
                     title: "Account verwijderen",
-                    explanation: "Je account wordt verwijderd. Profielen waarvan jij de enige beheerder bent, worden helemaal verwijderd: gesprekken, levensverhaal, herinneringen en gekoppelde telefoons. Bij andere profielen verdwijn alleen jij als mantelzorger. Een abonnement stop je apart via je Apple ID.",
-                    buttonTitle: "Account definitief verwijderen"
-                ) {
-                    try await session.api.deleteMe()
+                    explanation: "Je account wordt verwijderd. Profielen die jij hebt aangemaakt en waarvan jij de enige beheerder bent, worden helemaal verwijderd: gesprekken, levensverhaal, herinneringen en gekoppelde telefoons. Profielen die je naaste zelf heeft aangemaakt blijven bestaan; je naaste regelt dan alles weer zelf. Bij andere profielen verdwijn alleen jij als mantelzorger.",
+                    buttonTitle: "Account definitief verwijderen",
+                    subscriptionWarning: "Verwijderen stopt een abonnement in de App Store niet. Zeg abonnementen die je met je Apple ID betaalt op via Abonnement beheren (of Instellingen › je naam › Abonnementen), anders loopt de betaling door."
+                ) { acknowledged in
+                    try await session.api.deleteMe(subscriptionAcknowledged: acknowledged)
                     app.accountDeleted()
                 }
             }

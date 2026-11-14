@@ -8,10 +8,13 @@ struct CaregiversView: View {
     @State private var invites = false
     @State private var error: String?
     @State private var confirmRemove: CaregiverMembership?
+    /// Audit M4: "Maak beheerder" is confirmed first.
+    @State private var confirmPromote: CaregiverMembership?
+    @State private var invitationsReload = 0
 
     var body: some View {
         NoahScrollScreen(spacing: NoahSpacing.m) {
-            Text("Zorg je samen? Nodig familie uit om mee te kijken. Een beheerder kan alles instellen, een lezer kan alleen meelezen.")
+            Text("Zorg je samen? Nodig familie uit om mee te kijken. Een beheerder kan alles instellen, een lezer kan alleen meelezen. Iedereen die meekijkt, leest de samenvattingen en de uitgeschreven gesprekken.")
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -24,6 +27,9 @@ struct CaregiversView: View {
                     }
                 }
             }
+            if let id = session.selected?.id, session.permissions.canInvite {
+                PendingInvitationsSection(elderlyId: id, reloadToken: invitationsReload)
+            }
             if session.permissions.canInvite {
                 Button { invites = true } label: {
                     NoahButtonLabel(title: "Iemand uitnodigen", systemImage: "person.badge.plus")
@@ -35,9 +41,17 @@ struct CaregiversView: View {
         .navigationTitle("Mantelzorgers")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: session.reloadKey) { await load() }
-        .sheet(isPresented: $invites) {
+        .sheet(isPresented: $invites, onDismiss: { invitationsReload += 1 }) {
             NavigationStack { InviteCaregiverView() }
                 .environmentObject(session)
+        }
+        .confirmationDialog(promoteTitle, isPresented: Binding(get: { confirmPromote != nil }, set: { if !$0 { confirmPromote = nil } }), titleVisibility: .visible) {
+            Button("Ja, maak beheerder") {
+                if let member = confirmPromote { Task { await setRole(member, .beheerder) } }
+            }
+            Button("Annuleren", role: .cancel) {}
+        } message: {
+            Text("Een beheerder kan alles: instellingen en noodcontacten wijzigen, het abonnement regelen, anderen toevoegen of verwijderen en het profiel verwijderen.")
         }
         .confirmationDialog(confirmTitle, isPresented: Binding(get: { confirmRemove != nil }, set: { if !$0 { confirmRemove = nil } }), titleVisibility: .visible) {
             Button(confirmRemove?.isMe == true ? "Stoppen met meekijken" : "Verwijderen", role: .destructive) {
@@ -45,6 +59,10 @@ struct CaregiversView: View {
             }
             Button("Annuleren", role: .cancel) {}
         }
+    }
+
+    private var promoteTitle: String {
+        "\(confirmPromote?.name ?? "Deze mantelzorger") beheerder maken?"
     }
 
     private var confirmTitle: String {
@@ -66,7 +84,11 @@ struct CaregiversView: View {
                 Menu {
                     if session.permissions.canManageCaregivers && !member.isMe {
                         Button(member.role == .beheerder ? "Maak lezer" : "Maak beheerder") {
-                            Task { await setRole(member, member.role == .beheerder ? .lezer : .beheerder) }
+                            if member.role == .beheerder {
+                                Task { await setRole(member, .lezer) }
+                            } else {
+                                confirmPromote = member
+                            }
                         }
                     }
                     Button(member.isMe ? "Stoppen met meekijken" : "Verwijderen", role: .destructive) { confirmRemove = member }
@@ -157,7 +179,8 @@ struct InviteCaregiverView: View {
                         .foregroundColor(NoahColor.textSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text("Wie nodig je uit?")
+                    // Audit L13: the screen asks for a role, so it says so.
+                    Text("Welke rol krijgt diegene?")
                         .font(NoahFont.title).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
                     NoahField(label: "Rol") {
@@ -166,6 +189,9 @@ struct InviteCaregiverView: View {
                             NoahOptionCard(title: Role.beheerder.label, subtitle: Role.beheerder.explanation, isSelected: role == .beheerder) { role = .beheerder }
                         }
                     }
+                    Text("De uitnodiging is 7 dagen geldig. Tot hij is gebruikt, kun je hem intrekken bij Mantelzorgers.")
+                        .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let error { NoahNotice(kind: .error, text: error) }
                     NoahAsyncButton("Maak uitnodiging") { await create() }
                 }
@@ -204,7 +230,7 @@ struct DevicesView: View {
             LoadableView(state: state, retry: { Task { await load() } }) { devices in
                 if devices.isEmpty {
                     EmptyStateView(systemImage: "iphone.slash", title: "Nog geen telefoon gekoppeld",
-                                   message: "Koppel de telefoon of tablet van \(session.selected?.preferredName ?? "je naaste"), dan kan hij of zij met één tik met Noah praten.")
+                                   message: "Koppel de telefoon van \(session.selected?.preferredName ?? "je naaste"), dan kan hij of zij met één tik met Noah praten.")
                 } else {
                     ForEach(devices) { device in
                         NoahCard {
@@ -218,14 +244,24 @@ struct DevicesView: View {
                                     if let seen = device.lastSeenAt {
                                         Text("Laatst gebruikt \(DutchFormat.relativeDay(seen))").font(NoahFont.footnote).foregroundColor(NoahColor.textSoft)
                                     }
+                                    if device.restricted {
+                                        Text("Nieuw aangemeld, wacht op goedkeuring").font(NoahFont.footnote).foregroundColor(NoahColor.accent)
+                                    }
                                 }
                                 Spacer()
                                 if session.permissions.canManageDevices {
-                                    Button("Ontkoppel") { confirmUnpair = device }
+                                    Button(device.restricted ? "Weiger" : "Ontkoppel") { confirmUnpair = device }
                                         .font(NoahFont.subheadline)
                                         .foregroundColor(NoahColor.dangerText)
                                         .frame(minHeight: NoahSize.minTap)
                                 }
+                            }
+                            if device.restricted, session.permissions.canManageDevices {
+                                Text("Iemand heeft zich met het nummer van \(session.selected?.preferredName ?? "je naaste") aangemeld op een nieuwe telefoon. Tot je die goedkeurt (of na 72 uur) kan daar alleen kort met Noah worden gepraat. Herken je dit niet? Weiger hem.")
+                                    .font(NoahFont.footnote).foregroundColor(NoahColor.textSoft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                NoahAsyncButton("Goedkeuren", kind: .secondary, size: .compact) { await approve(device) }
+                                    .accessibilityIdentifier("devices.approve")
                             }
                         }
                     }
@@ -262,6 +298,17 @@ struct DevicesView: View {
         }
     }
 
+    private func approve(_ device: PairedDevice) async {
+        guard let id = session.selected?.id else { return }
+        do {
+            try await session.api.approveDevice(elderlyId: id, deviceId: device.id)
+            error = nil
+            await load()
+        } catch {
+            self.error = APIError.from(error).userMessage
+        }
+    }
+
     private func unpair(_ device: PairedDevice) async {
         guard let id = session.selected?.id else { return }
         do {
@@ -286,6 +333,11 @@ struct PairDeviceView: View {
         .navigationTitle("Telefoon koppelen")
         .navigationBarTitleDisplayMode(.inline)
     }
+}
+
+/// The welcome screen's pairing choice, named exactly the same in every instruction (audit H3).
+enum PairingCopy {
+    static let welcomeButton = "Deze telefoon koppelen met een code"
 }
 
 /// Shows a fresh pairing code big, with step-by-step instructions (also used in the wizard).
@@ -340,12 +392,13 @@ struct PairingCodePanel: View {
                 }
             }
             NoahCard {
-                step(1, "Installeer HelloNoah op de telefoon of tablet van \(name), via de App Store.")
-                step(2, "Open de app en kies \u{201C}Deze telefoon is voor iemand die met Noah gaat praten\u{201D}.")
-                step(3, "Vul de koppelcode in. Klaar: \(name) hoeft nooit in te loggen.")
+                step(1, "Installeer HelloNoah op de iPhone of Android-telefoon van \(name), via de App Store of Google Play.")
+                // Audit H3: the exact name of the button on the welcome screen.
+                step(2, "Open de app en kies \u{201C}\(PairingCopy.welcomeButton)\u{201D}. Niet \u{201C}Ik wil zelf met Noah praten\u{201D}: dat maakt een tweede profiel.")
+                step(3, "Vul de koppelcode in. Klaar: \(name) hoeft nooit in te loggen. Daarna ziet \(name) eenmalig wie er meekijkt.")
             }
             if let code {
-                ShareLink(item: "Koppelcode voor HelloNoah: \(code.code). Open de app, kies \u{201C}Deze telefoon is voor iemand die met Noah gaat praten\u{201D} en vul de code in.") {
+                ShareLink(item: "Koppelcode voor HelloNoah: \(code.code). Open de app, kies \u{201C}\(PairingCopy.welcomeButton)\u{201D} en vul de code in. De code is 15 minuten geldig.") {
                     NoahButtonLabel(title: "Stuur de code", systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.noah(.secondary))

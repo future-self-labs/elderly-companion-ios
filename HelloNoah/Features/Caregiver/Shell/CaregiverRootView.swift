@@ -30,6 +30,9 @@ struct CaregiverRootView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             if !reachability.isOnline { OfflineBanner() }
         }
+        // Audit M7: beyond accessibility size 2, long Dutch words ("geheugensteuntje",
+        // "Meldingen") break mid-word in cards and chips. Text stays at twice the default size.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .task { if session.me == nil, !session.isLoadingMe { await session.reloadMe() } }
         .onChange(of: reachability.isOnline) { online in
             if online { Task { await session.reloadMe() } }
@@ -141,7 +144,9 @@ struct CaregiverRootView: View {
         case "emergencyContacts": router.show(.emergencyContacts, in: .more)
         case "phoneLine": router.show(.phoneLine, in: .more)
         case "caregivers": router.show(.caregivers, in: .more)
-        case "devices": router.show(.devices, in: .more)
+        case "devices":
+            (session.api as? MockNoahAPI)?.seedPendingRequestsForWim()
+            router.show(.devices, in: .more)
         case "pairDevice": router.show(.pairDevice, in: .more)
         case "subscription": router.show(.subscription, in: .more)
         case "account": router.show(.account, in: .more)
@@ -149,6 +154,7 @@ struct CaregiverRootView: View {
         case "paywall": router.present(.paywall(elderlyId: MockIDs.wim))
         case "wizard": router.present(.wizard)
         case "acceptInvite": router.present(.acceptInvitation(code: nil))
+        case "tellElderly": router.show(.tellElderly, in: .overview)
         case "riet":
             if let riet = session.elderly.first(where: { $0.id == MockIDs.riet }) { session.select(riet.id) }
         default: break
@@ -189,6 +195,7 @@ struct CaregiverDestinationView: View {
         case .subscription: SubscriptionView()
         case .account: AccountView()
         case .elderlyList: ElderlyListView()
+        case .tellElderly: TellElderlyView()
         }
     }
 }

@@ -13,7 +13,9 @@ struct NoahChip: View {
                 Image(systemName: systemImage).accessibilityHidden(true)
             }
             Text(verbatim: text)
+                .lineLimit(1)
         }
+        .fixedSize()
         .font(NoahFont.subheadline)
         .foregroundColor(isSelected ? NoahColor.onAccent : tint)
         .padding(.horizontal, NoahSpacing.s)

@@ -39,16 +39,26 @@ struct ProfilePhoneField: View {
     let name: String
 
     var body: some View {
-        NoahTextField(label: "Mobiel of vast nummer van \(name.isEmpty ? "je naaste" : name)", text: $phone, prompt: "06 12345678",
+        NoahTextField(label: "Mobiel of vast nummer van \(name.isEmpty ? "je naaste" : name)", text: $phone, prompt: phone.isEmpty ? "Nog geen telefoonnummer" : "06 12345678",
                       footnote: "Noah belt naar dit nummer voor herinneringen en het ochtendgesprek, zodra het nummer is bevestigd. Alleen Nederlandse en Belgische nummers.",
                       error: error, keyboard: .phonePad, contentType: .telephoneNumber, autocapitalization: .never)
             .accessibilityIdentifier("profile.phone")
     }
 }
 
+enum BirthYear {
+    static var range: ClosedRange<Int> { 1900...DutchFormat.calendar.component(.year, from: Date()) }
+}
+
 struct ProfileAboutFields: View {
     @Binding var input: ElderlyProfileInput
     @State private var birthYearText = ""
+
+    private var birthYearError: String? {
+        let digits = birthYearText.filter(\.isNumber)
+        guard input.birthYear == nil, digits.count == 4 else { return nil }
+        return "Vul een geboortejaar in tussen 1900 en \(BirthYear.range.upperBound)."
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoahSpacing.l) {
@@ -57,9 +67,14 @@ struct ProfileAboutFields: View {
                 set: { value in
                     birthYearText = value
                     let digits = value.filter(\.isNumber)
-                    input.birthYear = digits.count == 4 ? Int(digits) : nil
+                    // Audit L4: like the backend, 1900 up to this year.
+                    if digits.count == 4, let year = Int(digits), BirthYear.range.contains(year) {
+                        input.birthYear = year
+                    } else {
+                        input.birthYear = nil
+                    }
                 }
-            ), prompt: "1941", keyboard: .numberPad)
+            ), prompt: "1941", error: birthYearError, keyboard: .numberPad)
             NoahTextField(label: "Woonplaats", text: Binding(get: { input.city ?? "" }, set: { input.city = $0 }), prompt: "Haarlem", autocapitalization: .words)
             NoahField(label: "Woonsituatie") {
                 FlowLayout {
@@ -101,6 +116,7 @@ struct ProfilePreferenceFields: View {
 
 struct ElderlyProfileView: View {
     @EnvironmentObject private var session: CaregiverSession
+    @EnvironmentObject private var router: CaregiverRouter
     @EnvironmentObject private var app: AppModel
     @State private var state: Loadable<ElderlyProfile> = .idle
     @State private var input = ElderlyProfileInput()
@@ -110,17 +126,31 @@ struct ElderlyProfileView: View {
     @State private var message: (text: String, isError: Bool)?
     @State private var share: ShareItem?
     @State private var showsDelete = false
+    @State private var tagDrafts = PendingTagDrafts()
 
     var body: some View {
         NoahScrollScreen {
             if !session.permissions.canEditProfile { ReadOnlyNotice() }
             LoadableView(state: state, retry: { Task { await load() } }) { profile in
+                if session.permissions.canEditProfile, profile.needsTellingElderly {
+                    NoahNotice(kind: .info, text: "Heb je \(profile.preferredName) al verteld dat je de gesprekken kunt teruglezen?",
+                               actionTitle: "Vertel het \(profile.preferredName)") { router.show(.tellElderly, in: .more) }
+                        .accessibilityIdentifier("profile.tellReminder")
+                }
+                if let sharing = profile.sharing, sharing != .alles {
+                    NoahNotice(kind: .info, text: sharing.caregiverExplanation(name: profile.preferredName))
+                }
                 VStack(alignment: .leading, spacing: NoahSpacing.xl) {
                     section("Naam en aanspreekvorm") { ProfileNameFields(input: $input) }
                     section("Telefoonnummer") {
                         ProfilePhoneField(phone: $phone, error: phoneError, name: input.preferredName)
+                        if !profile.hasPhoneNumber {
+                            Text("\(profile.preferredName) heeft nog geen telefoonnummer. Noah kan dan niet bellen; praten in de app kan wel.")
+                                .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         // v2.2: Noah only calls a confirmed number (shown for the saved number only).
-                        if session.permissions.canEditProfile, phone == PhoneNumberFormat.display(profile.phoneNumber) {
+                        if session.permissions.canEditProfile, profile.hasPhoneNumber, phone == PhoneNumberFormat.display(profile.phoneNumber) {
                             if profile.needsPhoneConfirmation {
                                 PhoneConfirmationCard(profile: profile) { updated in
                                     state = .loaded(updated)
@@ -138,12 +168,13 @@ struct ElderlyProfileView: View {
                     section("Voorkeuren") { ProfilePreferenceFields(input: $input) }
                 }
                 .disabled(!session.permissions.canEditProfile)
+                .environment(\.pendingTagDrafts, tagDrafts)
 
                 if let message { NoahNotice(kind: message.isError ? .error : .success, text: message.text) }
 
                 if session.permissions.canEditProfile {
-                    NoahAsyncButton("Bewaar profiel") { await save(profile) }
-                        .disabled(input == original && phone == PhoneNumberFormat.display(profile.phoneNumber))
+                    NoahAsyncButton("Bewaar profiel") { _ = await save(profile) }
+                        .disabled(!hasChanges(profile))
                 }
 
                 if session.permissions.canExportProfile {
@@ -163,6 +194,10 @@ struct ElderlyProfileView: View {
         }
         .navigationTitle("Profiel")
         .navigationBarTitleDisplayMode(.inline)
+        .unsavedChangesGuard(hasChanges: session.permissions.canEditProfile && state.value.map(hasChanges) == true) {
+            guard let profile = state.value else { return true }
+            return await save(profile)
+        }
         .task(id: session.reloadKey) { await load() }
         .sheet(item: $share, onDismiss: ExportFile.removeAll) { item in ActivityView(items: item.items) }
         .sheet(isPresented: $showsDelete) {
@@ -170,10 +205,11 @@ struct ElderlyProfileView: View {
                 NavigationStack {
                     TypedConfirmationView(
                         title: "\(profile.preferredName) verwijderen",
-                        explanation: "Alles van \(profile.preferredName) wordt definitief verwijderd: het profiel, alle gesprekken, het levensverhaal, herinneringen en gekoppelde telefoons. Het abonnement stop je apart via je Apple ID. Dit kan niet ongedaan worden gemaakt.",
-                        buttonTitle: "Definitief verwijderen"
-                    ) {
-                        try await session.api.deleteElderly(id: profile.id)
+                        explanation: "Alles van \(profile.preferredName) wordt definitief verwijderd: het profiel, alle gesprekken, het levensverhaal, herinneringen en gekoppelde telefoons. Dit kan niet ongedaan worden gemaakt.",
+                        buttonTitle: "Definitief verwijderen",
+                        subscriptionWarning: "Verwijderen stopt een abonnement in de App Store niet. Zeg het op via Abonnement beheren (of Instellingen › je naam › Abonnementen), anders loopt de betaling door."
+                    ) { acknowledged in
+                        try await session.api.deleteElderly(id: profile.id, subscriptionAcknowledged: acknowledged)
                         await session.reloadMe()
                         session.dataChanged()
                     }
@@ -206,27 +242,43 @@ struct ElderlyProfileView: View {
         }
     }
 
-    private func save(_ profile: ElderlyProfile) async {
+    private func hasChanges(_ profile: ElderlyProfile) -> Bool {
+        input != original || phone != PhoneNumberFormat.display(profile.phoneNumber)
+    }
+
+    /// - Returns: true when saved.
+    private func save(_ profile: ElderlyProfile) async -> Bool {
         phoneError = nil
-        guard let e164 = PhoneNumberFormat.e164(phone) else {
-            phoneError = PhoneNumberFormat.invalidMessage
-            return
+        // Audit M1: text typed in a "Toevoegen" field is kept.
+        tagDrafts.commitAll()
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespaces)
+        if trimmedPhone.isEmpty {
+            // v2.4: a profile may have no number; never send an empty one.
+            input.phoneNumber = ""
+        } else {
+            guard let e164 = PhoneNumberFormat.e164(phone) else {
+                phoneError = PhoneNumberFormat.invalidMessage
+                return false
+            }
+            input.phoneNumber = e164
         }
         guard !input.firstName.trimmingCharacters(in: .whitespaces).isEmpty, !input.preferredName.trimmingCharacters(in: .whitespaces).isEmpty else {
             message = ("Vul de voornaam en de roepnaam in.", true)
-            return
+            return false
         }
-        input.phoneNumber = e164
         do {
             let updated = try await session.api.updateElderly(id: profile.id, input)
             input = ElderlyProfileInput(profile: updated)
             original = input
+            phone = PhoneNumberFormat.display(updated.phoneNumber)
             state = .loaded(updated)
             message = ("Opgeslagen.", false)
             await session.reloadMe()
+            return true
         } catch {
             let apiError = APIError.from(error)
             if apiError.code == "phone_number_taken" { phoneError = apiError.userMessage } else { message = (apiError.userMessage, true) }
+            return false
         }
     }
 
@@ -327,11 +379,18 @@ struct TypedConfirmationView: View {
     let title: String
     let explanation: String
     let buttonTitle: LocalizedStringKey
-    let action: () async throws -> Void
+    /// Audit M10: a deletion never stops the store subscription; shown as its own card.
+    var subscriptionWarning: String?
+    /// - Parameter acknowledged: v2.4 `subscriptionAcknowledged` (after `409 abonnement_actief`).
+    let action: (_ acknowledged: Bool) async throws -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var app: AppModel
     @State private var typed = ""
     @State private var error: String?
+    /// The server said a subscription still runs: confirm once more (v2.4).
+    @State private var needsAck = false
+    @State private var acknowledged = false
 
     private let word = "VERWIJDER"
 
@@ -349,12 +408,29 @@ struct TypedConfirmationView: View {
                     .font(NoahFont.bodyText)
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)
+                if let subscriptionWarning {
+                    SubscriptionWarningCard(text: subscriptionWarning)
+                }
                 NoahTextField(label: "Typ VERWIJDER om te bevestigen", text: $typed, prompt: "VERWIJDER", autocapitalization: .characters)
                     .accessibilityIdentifier("confirm.typed")
+                if needsAck {
+                    NoahNotice(kind: .warning, text: "Er loopt nog een abonnement in de App Store. Dat stopt niet als je verwijdert.")
+                    Toggle(isOn: $acknowledged) {
+                        Text("Ik weet dat ik het abonnement zelf moet opzeggen").font(NoahFont.bodyStrong).foregroundColor(NoahColor.text)
+                    }
+                    .noahInputBox()
+                    .accessibilityIdentifier("confirm.subscriptionAck")
+                }
                 if let error { NoahNotice(kind: .error, text: error) }
                 NoahAsyncButton(kind: .destructive, action: run) { Text(buttonTitle) }
-                    .disabled(typed.trimmingCharacters(in: .whitespaces) != word)
+                    .disabled(typed.trimmingCharacters(in: .whitespaces) != word || (needsAck && !acknowledged))
                     .accessibilityIdentifier("confirm.delete")
+                Link(destination: app.environment.config.accountDeletionURL) {
+                    Text("Meer over verwijderen: hellonoah.ai/account-verwijderen")
+                }
+                .font(NoahFont.footnote)
+                .foregroundColor(NoahColor.accent)
+                .frame(minHeight: NoahSize.minTap)
             }
             .padding(NoahSpacing.screen)
             .noahReadableWidth()
@@ -367,11 +443,17 @@ struct TypedConfirmationView: View {
     }
 
     private func run() async {
+        error = nil
         do {
-            try await action()
+            try await action(needsAck && acknowledged)
             dismiss()
         } catch {
-            self.error = APIError.from(error).userMessage
+            let apiError = APIError.from(error)
+            if apiError.isSubscriptionStillActive {
+                needsAck = true
+            } else {
+                self.error = apiError.userMessage
+            }
         }
     }
 }

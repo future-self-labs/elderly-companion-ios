@@ -17,7 +17,7 @@ struct NoahSettingsView: View {
                     .disabled(!session.permissions.canEditSettings)
                 if let message { NoahNotice(kind: message.isError ? .error : .success, text: message.text) }
                 if session.permissions.canEditSettings {
-                    NoahAsyncButton("Bewaar instellingen") { await save() }
+                    NoahAsyncButton("Bewaar instellingen") { _ = await save() }
                         .disabled(draft == saved)
                         .accessibilityIdentifier("settings.save")
                 }
@@ -25,6 +25,7 @@ struct NoahSettingsView: View {
         }
         .navigationTitle("Noah-instellingen")
         .navigationBarTitleDisplayMode(.inline)
+        .unsavedChangesGuard(hasChanges: saved != nil && draft != saved && session.permissions.canEditSettings) { await save() }
         .task(id: session.reloadKey) { await load() }
     }
 
@@ -42,15 +43,18 @@ struct NoahSettingsView: View {
         }
     }
 
-    private func save() async {
-        guard let id = session.selected?.id else { return }
+    /// - Returns: true when everything was saved.
+    @discardableResult
+    private func save() async -> Bool {
+        guard let id = session.selected?.id else { return false }
         let patch = NoahSettingsPatch(from: saved, to: draft)
-        guard !patch.isEmpty else { return }
+        guard !patch.isEmpty else { return true }
         do {
             let settings = try await session.api.updateSettings(elderlyId: id, patch)
             saved = settings
             draft = settings
             message = ("Opgeslagen. Noah gebruikt de nieuwe instellingen vanaf het volgende gesprek.", false)
+            return true
         } catch {
             let apiError = APIError.from(error)
             // Recording needs EU storage on the server; the server changed nothing. Save the rest.
@@ -67,9 +71,10 @@ struct NoahSettingsView: View {
                 } catch {
                     message = (APIError.from(error).userMessage, true)
                 }
-                return
+                return false
             }
             message = (apiError.userMessage, true)
+            return false
         }
     }
 }
@@ -131,6 +136,8 @@ struct NoahSettingsForm: View {
                     Toggle(isOn: $settings.morningCall.enabled) {
                         Text("Noah belt elke ochtend").font(NoahFont.bodyText).foregroundColor(NoahColor.text)
                     }
+                    Text("Alleen naar een bevestigd telefoonnummer.")
+                        .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
                     if settings.morningCall.enabled {
                         TimeField(title: "Tijd", time: $settings.morningCall.time)
                         FlowLayout {

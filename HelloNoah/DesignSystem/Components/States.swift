@@ -150,3 +150,49 @@ struct LoadableView<Value, Content: View>: View {
         }
     }
 }
+
+// MARK: - Unsaved changes
+
+/// Audit M3: leaving a form with changes asks first ("Wijzigingen bewaren?") instead of silently
+/// dropping them. The system back button is replaced only while there are changes.
+struct UnsavedChangesGuard: ViewModifier {
+    let hasChanges: Bool
+    /// Saves; returns true when it worked (then the screen closes).
+    let save: () async -> Bool
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var asks = false
+
+    func body(content: Content) -> some View {
+        content
+            .navigationBarBackButtonHidden(hasChanges)
+            .toolbar {
+                if hasChanges {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button { asks = true } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left").font(.body.weight(.semibold))
+                                Text("Terug")
+                            }
+                        }
+                        .accessibilityIdentifier("unsaved.back")
+                    }
+                }
+            }
+            .confirmationDialog("Wijzigingen bewaren?", isPresented: $asks, titleVisibility: .visible) {
+                Button("Bewaren") {
+                    Task { if await save() { dismiss() } }
+                }
+                Button("Niet bewaren", role: .destructive) { dismiss() }
+                Button("Annuleren", role: .cancel) {}
+            } message: {
+                Text("Je hebt iets veranderd dat nog niet is bewaard.")
+            }
+    }
+}
+
+extension View {
+    func unsavedChangesGuard(hasChanges: Bool, save: @escaping () async -> Bool) -> some View {
+        modifier(UnsavedChangesGuard(hasChanges: hasChanges, save: save))
+    }
+}

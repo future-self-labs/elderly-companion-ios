@@ -20,9 +20,10 @@ struct CaregiverStartView: View {
                     .foregroundColor(NoahColor.textSoft)
                     .fixedSize(horizontal: false, vertical: true)
 
-                if (session.caregiver?.name).nilIfBlank == nil {
+                if needsName {
                     NoahTextField(label: "Hoe heet je?", text: $name, prompt: "Anna de Vries",
-                                  footnote: "Zo weten familieleden en Noah wie je bent.", contentType: .name, autocapitalization: .words)
+                                  footnote: "Zo weten familieleden en Noah wie je bent. Je naaste ziet deze naam bij \u{201C}Wie kijkt er mee\u{201D}.", contentType: .name, autocapitalization: .words)
+                        .accessibilityIdentifier("start.name")
                 }
 
                 WelcomeChoiceCard(systemImage: "person.crop.circle.badge.plus",
@@ -31,6 +32,8 @@ struct CaregiverStartView: View {
                     saveNameIfNeeded()
                     router.present(.wizard)
                 }
+                .disabled(needsName && name.trimmingCharacters(in: .whitespaces).isEmpty)
+                .opacity(needsName && name.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
                 .accessibilityIdentifier("start.wizard")
 
                 WelcomeChoiceCard(systemImage: "envelope.open.fill",
@@ -39,6 +42,8 @@ struct CaregiverStartView: View {
                     saveNameIfNeeded()
                     router.present(.acceptInvitation(code: nil))
                 }
+                .disabled(needsName && name.trimmingCharacters(in: .whitespaces).isEmpty)
+                .opacity(needsName && name.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
                 .accessibilityIdentifier("start.invitation")
 
                 Button("Uitloggen") { confirmsSignOut = true }
@@ -61,6 +66,9 @@ struct CaregiverStartView: View {
             }
         }
     }
+
+    /// Audit L3: a caregiver without a name continues only after filling it in.
+    private var needsName: Bool { (session.caregiver?.name).nilIfBlank == nil }
 
     private func saveNameIfNeeded() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -89,7 +97,24 @@ struct AcceptInvitationView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NoahSpacing.l) {
-                if let accepted {
+                if let accepted, accepted.isWaitingForApproval {
+                    // v2.4: the older person first approves a "helpen beheren" invitation on their phone.
+                    Image(systemName: "hourglass")
+                        .font(.system(size: 56))
+                        .foregroundColor(NoahColor.accent)
+                        .accessibilityHidden(true)
+                    Text("Nog even wachten op \(accepted.elderly.preferredName)")
+                        .font(NoahFont.title).noahTitleScaling()
+                        .foregroundColor(NoahColor.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("\(accepted.elderly.preferredName) krijgt op de eigen telefoon de vraag of je mag helpen beheren. Zodra \(accepted.elderly.preferredName) ja zegt, zie je het profiel hier in de app.")
+                        .font(NoahFont.bodyText)
+                        .foregroundColor(NoahColor.textSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("invite.waiting")
+                    Button("Sluiten") { dismiss() }
+                        .buttonStyle(.noah(.primary))
+                } else if let accepted {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 56))
                         .foregroundColor(NoahColor.positive)
@@ -151,7 +176,11 @@ struct AcceptInvitationView: View {
         }
         do {
             let response = try await session.api.acceptInvitation(code: cleaned)
-            await session.didAddElderly(id: response.elderly.id)
+            if response.isWaitingForApproval {
+                await session.reloadMe()
+            } else {
+                await session.didAddElderly(id: response.elderly.id)
+            }
             accepted = response
         } catch {
             self.error = APIError.from(error).userMessage

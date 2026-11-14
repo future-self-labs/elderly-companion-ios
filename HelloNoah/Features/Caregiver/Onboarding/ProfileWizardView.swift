@@ -5,19 +5,26 @@ import SwiftUI
 @MainActor
 final class ProfileWizardModel: ObservableObject {
     enum Step: Int, CaseIterable {
-        case name, phone, about, people, preferences, noah, contacts, pair, subscription
+        case name, phone, confirmPhone, about, people, preferences, noah, contacts, pair, tellElderly, subscription
 
-        var title: LocalizedStringKey {
+        func title(name: String) -> String {
+            let who = name.isEmpty ? "je naaste" : name
             switch self {
             case .name: return "Wie gaat er met Noah praten?"
             case .phone: return "Telefoonnummer"
+            // Audit H1: confirming is part of setting up, not a hidden card on the profile.
+            case .confirmPhone: return "Bevestig het nummer"
             case .about: return "Vertel iets meer"
             case .people: return "Belangrijke mensen"
-            case .preferences: return "Waar praat Noah graag over?"
+            // Audit L5: it is about the older person, not about Noah.
+            case .preferences: return "Waar praat \(who) graag over?"
             case .noah: return "Noah instellen"
             case .contacts: return "Noodcontacten"
             case .pair: return "Telefoon koppelen"
-            case .subscription: return LocalizedStringKey(Plan.displayName)
+            // v2.4: tell the older person that family reads along.
+            case .tellElderly: return "Vertel het \(who)"
+            // Audit L6: the plan name already heads the paywall below.
+            case .subscription: return "Abonnement"
             }
         }
 
@@ -99,7 +106,7 @@ final class ProfileWizardModel: ObservableObject {
                         savedSettings = settings
                     }
                 }
-            case .people, .contacts, .pair, .subscription:
+            case .confirmPhone, .people, .contacts, .pair, .tellElderly, .subscription:
                 break
             }
             advance()
@@ -142,6 +149,11 @@ final class ProfileWizardModel: ObservableObject {
         guard let id = profile?.id else { return }
         if let updated = try? await api.elderly(id: id) { profile = updated }
         subscription = try? await api.subscription(elderlyId: id)
+    }
+
+    /// The number was confirmed in the wizard (audit H1).
+    func didConfirmPhone(_ updated: ElderlyProfile) {
+        profile = updated
     }
 }
 
@@ -195,13 +207,15 @@ private struct WizardBody: View {
     @Binding var addsContact: Bool
 
     @EnvironmentObject private var session: CaregiverSession
+    /// Audit M1: text typed in a "Toevoegen" field but not added yet is added when saving.
+    @State private var tagDrafts = PendingTagDrafts()
 
     var body: some View {
         VStack(spacing: 0) {
             header
             ScrollView {
                 VStack(alignment: .leading, spacing: NoahSpacing.l) {
-                    Text(model.step.title)
+                    Text(verbatim: model.step.title(name: model.name))
                         .font(NoahFont.largeTitle).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
                         .fixedSize(horizontal: false, vertical: true)
@@ -213,7 +227,10 @@ private struct WizardBody: View {
                 .padding(.vertical, NoahSpacing.l)
                 .noahReadableWidth()
             }
+            // Audit M2: every step starts at the top (a new scroll view per step).
+            .id(model.step)
             .scrollDismissesKeyboard(.interactively)
+            .environment(\.pendingTagDrafts, tagDrafts)
             if model.step != .subscription { footer }
         }
         .noahScreenBackground()
@@ -255,6 +272,8 @@ private struct WizardBody: View {
             ProfileNameFields(input: $model.input)
         case .phone:
             ProfilePhoneField(phone: $model.phone, error: model.phoneError, name: model.name)
+        case .confirmPhone:
+            confirmPhoneStep
         case .about:
             ProfileAboutFields(input: $model.input)
         case .people:
@@ -274,6 +293,7 @@ private struct WizardBody: View {
         case .contacts:
             Text("Wie moet Noah waarschuwen bij een noodgeval? Zet ze op volgorde: de eerste wordt als eerste gebeld.")
                 .font(NoahFont.callout).foregroundColor(NoahColor.textSoft).fixedSize(horizontal: false, vertical: true)
+            EmergencyNoticeText()
             ForEach(Array(model.contacts.enumerated()), id: \.element.id) { index, contact in
                 NoahCard {
                     NoahRow(icon: "\(index + 1).circle.fill", title: contact.name,
@@ -283,11 +303,38 @@ private struct WizardBody: View {
             Button { addsContact = true } label: { NoahButtonLabel(title: "Noodcontact toevoegen", systemImage: "plus") }
                 .buttonStyle(.noah(.secondary))
         case .pair:
+            NoahNotice(kind: .info, text: "Doe dit het liefst als je bij \(model.name) bent: de code is 15 minuten geldig en moet op de telefoon van \(model.name) worden ingevuld. Later kan ook, via Meer › Telefoon koppelen.")
             if let profile = model.profile {
                 PairingCodePanel(elderlyId: profile.id, name: model.name, showsTitle: false)
             }
+        case .tellElderly:
+            if let profile = model.profile {
+                TellElderlyPanel(elderlyId: profile.id, name: model.name, addressForm: model.input.addressForm) { model.skip() }
+            }
         case .subscription:
             subscriptionStep
+        }
+    }
+
+    @ViewBuilder
+    private var confirmPhoneStep: some View {
+        Text("Noah belt alleen naar een bevestigd nummer, zodat Noah nooit iemand anders belt. Tot het nummer van \(model.name) is bevestigd, werken het ochtendgesprek, herinneringen waarbij Noah belt en \u{201C}Laat Noah nu bellen\u{201D} niet. In de app met Noah praten kan wel meteen.")
+            .font(NoahFont.callout).foregroundColor(NoahColor.textSoft).fixedSize(horizontal: false, vertical: true)
+        if let profile = model.profile {
+            if profile.phoneVerified == true {
+                Label("Het nummer van \(model.name) is bevestigd. Noah kan bellen.", systemImage: "checkmark.seal.fill")
+                    .font(NoahFont.bodyStrong)
+                    .foregroundColor(NoahColor.positive)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("wizard.phoneConfirmed")
+            } else if profile.phoneVerified == false {
+                PhoneConfirmationCard(profile: profile) { model.didConfirmPhone($0) }
+                Text("Ben je nu niet bij \(model.name)? Sla dit over; op het overzicht blijft het als volgende stap staan.")
+                    .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary).fixedSize(horizontal: false, vertical: true)
+            } else {
+                // Older backend without confirmation: nothing to do.
+                Text("Je kunt verder.").font(NoahFont.callout).foregroundColor(NoahColor.textSoft)
+            }
         }
     }
 
@@ -300,10 +347,13 @@ private struct WizardBody: View {
                         .accessibilityHidden(true)
                     Text(profile.isBeta ? "\(model.name) doet mee aan de bètatest: Noah is gratis en meteen actief." : "Noah is actief voor \(model.name).")
                         .font(NoahFont.title3).foregroundColor(NoahColor.text).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: PaywallView.activeText(name: model.name, phoneConfirmed: profile.phoneVerified))
+                        .font(NoahFont.callout).foregroundColor(NoahColor.textSoft).fixedSize(horizontal: false, vertical: true)
                     Button("Klaar", action: onFinish).buttonStyle(.noah(.primary))
                 }
             } else {
-                PaywallView(elderlyId: profile.id, elderlyName: model.name, showsLater: true, embedded: true, onDone: onFinish)
+                PaywallView(elderlyId: profile.id, elderlyName: model.name, showsLater: true, embedded: true,
+                            phoneConfirmed: profile.phoneVerified, onDone: onFinish)
             }
         }
     }
@@ -312,13 +362,14 @@ private struct WizardBody: View {
         VStack(spacing: NoahSpacing.xs) {
             Button {
                 guard !model.isWorking else { return }
+                tagDrafts.commitAll()
                 Task {
                     await model.next()
                     if model.step == .subscription { await model.refreshProfile() }
                 }
             } label: {
                 ZStack {
-                    Text(model.step == .pair ? "Volgende" : "Opslaan en verder").opacity(model.isWorking ? 0 : 1)
+                    Text([.pair, .confirmPhone, .tellElderly].contains(model.step) ? "Volgende" : "Opslaan en verder").opacity(model.isWorking ? 0 : 1)
                     if model.isWorking { ProgressView().tint(NoahColor.onAccent) }
                 }
             }
@@ -337,7 +388,7 @@ private struct WizardBody: View {
                 }
                 Spacer(minLength: NoahSpacing.s)
                 if model.step.isOptional && model.step != .pair {
-                    Button("Overslaan") { model.skip() }
+                    Button(model.step == .confirmPhone || model.step == .tellElderly ? "Later" : "Overslaan") { model.skip() }
                         .lineLimit(1)
                         .buttonStyle(.noah(.quiet, size: .compact, fullWidth: false))
                 }

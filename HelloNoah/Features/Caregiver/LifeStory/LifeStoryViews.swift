@@ -38,10 +38,11 @@ struct LifeStoryListView: View {
                     LoadableView(state: state, retry: { Task { await load() } }) { _ in
                         EmptyStateView(systemImage: "book.closed",
                                        title: filter == nil ? "Het levensverhaal is nog leeg" : "Nog niets over \(filter!.label.lowercased())",
-                                       message: "Tijdens de gesprekken bewaart Noah mooie herinneringen. Je kunt ook zelf een herinnering toevoegen.")
+                                       message: "Tijdens de gesprekken bewaart Noah mooie verhalen. Je kunt ook zelf een verhaal toevoegen.")
                     }
                 } else {
-                    Text(entries.count == 1 ? "1 herinnering" : "\(entries.count) herinneringen")
+                    // Audit M6: "verhalen" here; "herinneringen" are the memory aids.
+                    Text(entries.count == 1 ? "1 verhaal" : "\(entries.count) verhalen")
                         .font(NoahFont.footnote)
                         .foregroundColor(NoahColor.textSecondary)
                     switch mode {
@@ -61,7 +62,7 @@ struct LifeStoryListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel(Text("Herinnering toevoegen"))
+                    .accessibilityLabel(Text("Verhaal toevoegen"))
                 }
             }
         }
@@ -150,7 +151,7 @@ struct LifeStoryRow: View {
         NoahCard {
             HStack(alignment: .firstTextBaseline, spacing: NoahSpacing.xs) {
                 (Text(verbatim: showsYear ? entry.year.map { "\($0) · " } ?? "" : "").font(NoahFont.captionStrong).foregroundColor(NoahColor.accent)
-                    + Text(verbatim: entry.category.label + (entry.createdBy == .noah ? " · door Noah" : "")).font(NoahFont.caption).foregroundColor(NoahColor.textSecondary))
+                    + Text(verbatim: entry.category.label + (entry.createdBy == .noah ? " · door Noah" : " · door de familie")).font(NoahFont.caption).foregroundColor(NoahColor.textSecondary))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if entry.audio != nil {
@@ -252,7 +253,7 @@ struct LifeStoryEntryView: View {
             }
             .environmentObject(session)
         }
-        .confirmationDialog("Deze herinnering verwijderen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+        .confirmationDialog("Dit verhaal verwijderen?", isPresented: $confirmsDelete, titleVisibility: .visible) {
             Button("Verwijderen", role: .destructive) { Task { await delete() } }
             Button("Annuleren", role: .cancel) {}
         } message: {
@@ -319,6 +320,7 @@ struct LifeStoryEditorView: View {
     @State private var yearText = ""
     @State private var error: String?
     @State private var didLoad = false
+    @State private var tagDrafts = PendingTagDrafts()
 
     var body: some View {
         ScrollView {
@@ -344,8 +346,9 @@ struct LifeStoryEditorView: View {
             .noahReadableWidth()
         }
         .scrollDismissesKeyboard(.interactively)
+        .environment(\.pendingTagDrafts, tagDrafts)
         .noahScreenBackground()
-        .navigationTitle(isNew ? "Nieuwe herinnering" : "Herinnering bewerken")
+        .navigationTitle(isNew ? "Nieuw verhaal" : "Verhaal bewerken")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Annuleren") { dismiss() } }
@@ -375,6 +378,8 @@ struct LifeStoryEditorView: View {
 
     private func save() async {
         error = nil
+        // Audit M1: a name typed at "Mensen" without tapping "Toevoegen" is kept.
+        tagDrafts.commitAll()
         let year = Int(yearText.filter(\.isNumber))
         if let year, !(1900...2100).contains(year) {
             error = "Vul een jaartal in tussen 1900 en 2100, of laat het veld leeg."

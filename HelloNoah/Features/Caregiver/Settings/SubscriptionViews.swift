@@ -36,7 +36,8 @@ struct SubscriptionView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if subscription.paidByMe == false, subscription.status != .beta, subscription.status.grantsAccess {
-                        Text("Een andere mantelzorger betaalt dit abonnement.")
+                        // Audit L27: since v2.3 the older person may pay themselves.
+                        Text("Dit abonnement wordt niet met jouw Apple ID betaald, maar door \(name) zelf of door iemand anders in de familie.")
                             .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
                     }
                     if subscription.platform == "google_play" {
@@ -145,7 +146,19 @@ struct PaywallView: View {
     var showsLater = false
     /// Inside another scroll view (the wizard): no own ScrollView, no extra padding.
     var embedded = false
+    /// Whether Noah can call the older person yet (v2.2): the success text only promises the
+    /// phone when the number is confirmed (audit H1). nil = unknown.
+    var phoneConfirmed: Bool?
     let onDone: () -> Void
+
+    /// "… kan nu met Noah praten …", honest about the phone (audit H1).
+    static func activeText(name: String, phoneConfirmed: Bool?) -> String {
+        switch phoneConfirmed {
+        case true?: return "\(name) kan nu met Noah praten, in de app en aan de telefoon. Noah kan \(name) ook bellen."
+        case false?: return "\(name) kan nu met Noah praten in de app. Noah belt \(name) pas als het telefoonnummer is bevestigd (Meer › Profiel)."
+        case nil: return "\(name) kan nu met Noah praten in de app. Noah belt alleen naar een bevestigd telefoonnummer."
+        }
+    }
 
     @EnvironmentObject private var session: CaregiverSession
     @EnvironmentObject private var store: SubscriptionStore
@@ -154,6 +167,8 @@ struct PaywallView: View {
     @State private var trial: Subscription?
     /// v2.3: which of the three products this Apple ID can still buy for this profile.
     @State private var choice: ProductChoice?
+    /// Audit M12: this Apple ID still pays for a profile this account doesn't know (anymore).
+    @State private var orphaned: [OwnedSubscription] = []
 
     private var productID: String? { choice?.productID }
 
@@ -181,6 +196,7 @@ struct PaywallView: View {
         async let products: Void = store.loadProducts()
         trial = try? await session.api.subscription(elderlyId: elderlyId)
         choice = await store.choice(for: elderlyId)
+        orphaned = await store.orphanedSubscriptions()
         await products
     }
 
@@ -203,7 +219,7 @@ struct PaywallView: View {
             Text("Noah is actief voor \(name)")
                 .font(NoahFont.largeTitle).noahTitleScaling()
                 .foregroundColor(NoahColor.text)
-            Text("\(name) kan nu met Noah praten, via de app en via het telefoonnummer.")
+            Text(verbatim: Self.activeText(name: name, phoneConfirmed: phoneConfirmed))
                 .font(NoahFont.bodyText)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
@@ -262,13 +278,17 @@ struct PaywallView: View {
             }
 
             VStack(alignment: .leading, spacing: NoahSpacing.s) {
-                feature("Praten met Noah via de app en via een gewoon telefoonnummer")
+                feature("Praten met Noah in de app; Noah kan ook bellen naar een bevestigd nummer")
                 feature("Samenvattingen, stemming en meldingen voor jou en je familie")
-                feature("Het levensverhaal, en als jij dat aanzet ook de eigen stem")
-                feature("Een extra geheugensteuntje voor afspraken, verjaardagen en medicijnen")
+                feature("Het levensverhaal, om terug te lezen en door te geven")
+                feature("Een extra geheugensteuntje voor afspraken en verjaardagen")
                 feature("Gesprekken en gegevens versleuteld opgeslagen in de EU. Voor het gesprek zelf gebruikt Noah gespecialiseerde spraak- en AI-diensten.")
             }
 
+
+            if !orphaned.isEmpty, case .buy? = choice {
+                orphanedCard
+            }
 
             switch choice {
             case .alreadyForThisProfile?:
@@ -279,7 +299,11 @@ struct PaywallView: View {
                 if let error = store.errorMessage { NoahNotice(kind: .warning, text: error) }
 
                 NoahAsyncButton(kind: .primary, action: purchase) {
-                    Text(store.isEligibleForIntro(productID) ? "Start voor \(store.introPriceText(for: productID)) per maand" : "Start voor \(store.regularPriceText(for: productID)) per maand")
+                    // Audit M15: the later price on the button itself, not only in small print.
+                    Text(store.isEligibleForIntro(productID)
+                         ? "Start voor \(store.introPriceText(for: productID)) per maand (na \(store.introPeriodCount(for: productID)) maanden \(store.regularPriceText(for: productID)))"
+                         : "Start voor \(store.regularPriceText(for: productID)) per maand")
+                        .multilineTextAlignment(.center)
                 }
                 .accessibilityIdentifier("paywall.purchase")
             }
@@ -324,6 +348,31 @@ struct PaywallView: View {
         }
     }
 
+    /// Audit M12: e.g. a deleted profile whose App Store subscription still runs.
+    private var orphanedCard: some View {
+        NoahCard(padding: NoahSpacing.l, border: NoahColor.accent.opacity(0.7)) {
+            Label {
+                Text(orphaned.count == 1 ? "Deze Apple ID betaalt nog voor een ander profiel" : "Deze Apple ID betaalt nog voor \(orphaned.count) andere profielen")
+                    .font(NoahFont.headline)
+                    .foregroundColor(NoahColor.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "info.circle.fill").foregroundColor(NoahColor.accent)
+            }
+            Text("Bijvoorbeeld voor een profiel dat is verwijderd, of waar je niet meer bij meekijkt. Dat abonnement loopt door tot je het stopt. Een nieuw abonnement voor \(name) komt daar los bij. Heb je het oude niet meer nodig? Stop het via Abonnement beheren.")
+                .font(NoahFont.callout)
+                .foregroundColor(NoahColor.textSoft)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                Task { await SubscriptionWarningCard.manageSubscriptions() }
+            } label: {
+                NoahButtonLabel(title: "Abonnement beheren", systemImage: "gearshape")
+            }
+            .buttonStyle(.noah(.secondary))
+        }
+        .accessibilityIdentifier("paywall.orphaned")
+    }
+
     /// A fourth profile on the same Apple ID (v2.3: at most three, one per subscription group).
     private func allInUseCard(_ owned: [OwnedSubscription]) -> some View {
         NoahCard(padding: NoahSpacing.l) {
@@ -339,12 +388,12 @@ struct PaywallView: View {
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Wat wel kan: een andere mantelzorger van \(name) wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Of stop een abonnement dat je niet meer nodig hebt via Instellingen › je naam › Abonnementen. Vragen? Ons supportteam helpt je graag.")
+            Text("Wat wel kan: een andere mantelzorger van \(name) wordt beheerder en start het abonnement met een eigen Apple ID. Nodig diegene uit via Meer › Mantelzorgers. Of stop een abonnement dat je niet meer nodig hebt via Instellingen › je naam › Abonnementen. Vragen? \(SupportContact.line).")
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
-            Link(destination: app.environment.config.supportURL) {
-                Text("Hulp en contact")
+            Link(destination: SupportContact.mailURL) {
+                Text(verbatim: SupportContact.email)
             }
             .font(NoahFont.semibold(15, relativeTo: .subheadline))
             .foregroundColor(NoahColor.accent)
@@ -368,7 +417,7 @@ struct PaywallView: View {
                 .foregroundColor(NoahColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: NoahSpacing.m) {
-                Link("Gebruiksvoorwaarden (EULA)", destination: app.environment.config.termsURL)
+                Link("Voorwaarden", destination: app.environment.config.termsURL)
                 Link("Privacybeleid", destination: app.environment.config.privacyURL)
             }
             .font(NoahFont.semibold(13, relativeTo: .footnote))

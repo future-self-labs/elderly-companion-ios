@@ -10,6 +10,12 @@ struct DashboardView: View {
     @State private var callResult: (text: String, isError: Bool)?
     @State private var callMode: ConversationMode = .gesprek
     @State private var subscription: Subscription?
+    /// For "volgende stappen" and the call card (beheerder only).
+    @State private var profile: ElderlyProfile?
+    @State private var hasDevice: Bool?
+    @State private var hasEmergencyContact: Bool?
+    /// Audit L10: Noah really calls; one more tap first.
+    @State private var confirmsCall = false
 
     var body: some View {
         NoahScrollScreen {
@@ -23,6 +29,18 @@ struct DashboardView: View {
                         .foregroundColor(NoahColor.text)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
+                }
+
+                if let notice = session.notice {
+                    NoahNotice(kind: .info, text: notice, actionTitle: "Oké") { session.notice = nil }
+                }
+
+                if let profile, profile.id == selected.id, profile.outboundPaused == true {
+                    OutboundPausedNotice(profile: profile) { self.profile = $0 }
+                }
+
+                if session.permissions.isBeheerder, let profile, profile.id == selected.id {
+                    NextStepsCard(profile: profile, hasDevice: hasDevice, hasEmergencyContact: hasEmergencyContact)
                 }
 
                 if selected.access == .inactive {
@@ -117,7 +135,8 @@ struct DashboardView: View {
                     Text(verbatim: "\(dashboard.lifeStory.entries)")
                         .font(NoahFont.statNumber).noahTitleScaling()
                         .foregroundColor(NoahColor.text)
-                    Text(dashboard.lifeStory.entries == 1 ? "herinnering bewaard" : "herinneringen bewaard")
+                    // Audit M6: life-story items are "verhalen"; "herinnering" is a memory aid.
+                    Text(dashboard.lifeStory.entries == 1 ? "verhaal bewaard" : "verhalen bewaard")
                         .font(NoahFont.callout)
                         .foregroundColor(NoahColor.textSecondary)
                 }
@@ -138,7 +157,19 @@ struct DashboardView: View {
 
     @ViewBuilder
     private func latestConversation(_ dashboard: Dashboard) -> some View {
-        if let conversation = dashboard.latestConversation {
+        if let conversation = dashboard.latestConversation, conversation.hidden {
+            NavigationLink(value: CaregiverRoute.conversation(id: conversation.id)) {
+                NoahCard {
+                    NoahEyebrow(text: "Laatste gesprek")
+                    Text(verbatim: "\(DutchFormat.dayAndTime(conversation.startedAt).capitalizedFirst) · \(DutchFormat.duration(seconds: conversation.durationSeconds)) · \(conversation.channel.label)")
+                        .font(NoahFont.footnote)
+                        .foregroundColor(NoahColor.textSecondary)
+                    HiddenConversationText(name: dashboard.elderly.preferredName, sharesOnlyAlerts: profile?.sharing == .alleenMeldingen)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("dashboard.latestConversation")
+        } else if let conversation = dashboard.latestConversation {
             NavigationLink(value: CaregiverRoute.conversation(id: conversation.id)) {
                 NoahCard {
                     HStack {
@@ -203,12 +234,20 @@ struct DashboardView: View {
     }
 
     private func callNowCard(name: String) -> some View {
-        NoahCard {
+        let cannotCall = profile.map { !$0.hasPhoneNumber || $0.needsPhoneConfirmation } ?? false
+        return NoahCard {
             NoahEyebrow(text: "Even contact")
             Text("Laat Noah \(name) nu bellen, bijvoorbeeld als je weet dat het een stille dag is.")
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)
+            if cannotCall {
+                // Audit H1/L10: say it before the tap, not after.
+                NoahNotice(kind: .warning, text: profile?.hasPhoneNumber == false
+                           ? "\(name) heeft nog geen telefoonnummer. Voeg het toe bij Meer › Profiel."
+                           : "Noah belt pas als het nummer van \(name) is bevestigd.",
+                           actionTitle: "Naar het profiel") { router.show(.profile, in: .overview) }
+            }
             VStack(spacing: NoahSpacing.s) {
                 NoahOptionCard(title: ConversationMode.gesprek.label, subtitle: "Een praatje over de dag.",
                                isSelected: callMode == .gesprek) { callMode = .gesprek }
@@ -216,12 +255,21 @@ struct DashboardView: View {
                                isSelected: callMode == .levensverhaal) { callMode = .levensverhaal }
                     .accessibilityIdentifier("dashboard.callStory")
             }
-            NoahAsyncButton(kind: .primary, action: callNow) {
+            if let callResult {
+                // Above the button, so it is never hidden behind the tab bar (audit L10).
+                NoahNotice(kind: callResult.isError ? .warning : .success, text: callResult.text)
+            }
+            Button { confirmsCall = true } label: {
                 NoahButtonLabel(title: "Laat Noah nu bellen", systemImage: "phone.arrow.up.right.fill")
             }
+            .buttonStyle(.noah(.primary))
+            .disabled(cannotCall)
             .accessibilityIdentifier("dashboard.callNow")
-            if let callResult {
-                NoahNotice(kind: callResult.isError ? .warning : .success, text: callResult.text)
+            .confirmationDialog("Noah belt \(name) nu op. Doorgaan?", isPresented: $confirmsCall, titleVisibility: .visible) {
+                Button("Ja, laat Noah nu bellen") { Task { await callNow() } }
+                Button("Annuleren", role: .cancel) {}
+            } message: {
+                Text(callMode == .levensverhaal ? "Een verhaal-gesprek: Noah vraagt naar herinneringen van vroeger." : "Een gewoon praatje over de dag.")
             }
         }
     }
@@ -235,6 +283,16 @@ struct DashboardView: View {
             subscription = try? await session.api.subscription(elderlyId: id)
         } else {
             subscription = nil
+        }
+        if session.permissions.isBeheerder {
+            async let loadedProfile = try? session.api.elderly(id: id)
+            async let devices = try? session.api.devices(elderlyId: id)
+            async let contacts = try? session.api.emergencyContacts(elderlyId: id)
+            profile = await loadedProfile
+            hasDevice = await devices.map { !$0.isEmpty }
+            hasEmergencyContact = await contacts.map { list in list.contains { $0.isReachable } }
+        } else {
+            profile = nil
         }
         do {
             state = .loaded(try await session.api.dashboard(elderlyId: id))
@@ -258,6 +316,25 @@ struct DashboardView: View {
         } catch {
             callResult = (APIError.from(error).userMessage, true)
         }
+    }
+}
+
+/// v2.4: the older person kept a conversation to themselves.
+struct HiddenConversationText: View {
+    let name: String
+    /// The older person shares only alerts (v2.4 `alleen_meldingen`), not this one conversation.
+    var sharesOnlyAlerts = false
+
+    var body: some View {
+        Label {
+            Text(sharesOnlyAlerts ? "\(name) heeft gekozen dat de familie alleen ziet dát er gepraat is." : "\(name) wilde dit gesprek voor zichzelf houden.")
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "lock.fill")
+        }
+        .font(NoahFont.callout)
+        .foregroundColor(NoahColor.textSoft)
+        .accessibilityIdentifier("conversation.hidden")
     }
 }
 
@@ -290,7 +367,7 @@ struct PushPromptCard: View {
             Label("Meldingen aanzetten?", systemImage: "bell.badge.fill")
                 .font(NoahFont.headline)
                 .foregroundColor(NoahColor.text)
-            Text("Krijg een seintje als Noah zich zorgen maakt over \(name), of als \(name) om hulp vraagt. Je krijgt geen reclame.")
+            Text("Krijg een melding bij een noodgeval of hulpvraag van \(name), en bij andere zorgen (een paar per week op z\u{2019}n hoogst). Zonder meldingen zie je het pas als je de app opent. Je krijgt geen reclame.")
                 .font(NoahFont.callout)
                 .foregroundColor(NoahColor.textSoft)
                 .fixedSize(horizontal: false, vertical: true)

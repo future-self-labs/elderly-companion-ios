@@ -118,7 +118,7 @@ struct ConversationRow: View {
                 .font(NoahFont.bodyStrong)
                 .foregroundColor(NoahColor.text)
                 Spacer(minLength: NoahSpacing.xs)
-                NoahMoodBadge(score: conversation.moodScore, showsLabel: false)
+                if !conversation.hidden { NoahMoodBadge(score: conversation.moodScore, showsLabel: false) }
             }
             Text(verbatim: "\(conversation.channel.label) · \(DutchFormat.duration(seconds: conversation.durationSeconds))")
                 .font(NoahFont.footnote)
@@ -126,7 +126,9 @@ struct ConversationRow: View {
             if conversation.mode == .levensverhaal {
                 NoahChip(text: ConversationMode.levensverhaal.label, systemImage: "quote.bubble.fill", tint: NoahColor.accent)
             }
-            if let summary = conversation.summary {
+            if conversation.hidden {
+                HiddenConversationText(name: session.selected?.preferredName ?? "Je naaste")
+            } else if let summary = conversation.summary {
                 Text(verbatim: summary)
                     .font(NoahFont.callout)
                     .foregroundColor(NoahColor.textSoft)

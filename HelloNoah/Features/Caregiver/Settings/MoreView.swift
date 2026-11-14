@@ -48,6 +48,9 @@ struct MoreView: View {
                     if permissions.canViewEmergencyContacts {
                         link(.emergencyContacts, icon: "staroflife.fill", title: "Noodcontacten", subtitle: "Wie Noah waarschuwt, in welke volgorde")
                     }
+                    if permissions.isBeheerder {
+                        link(.tellElderly, icon: "text.bubble.fill", title: "Vertel het \(selected.preferredName)", subtitle: "Wie er meeleest, om voor te lezen")
+                    }
                     link(.phoneLine, icon: "phone.fill", title: "Telefoonnummer van Noah", subtitle: "Bellen zonder app")
                 }
 
@@ -84,7 +87,12 @@ struct MoreView: View {
                 }
                 .buttonStyle(.plain)
                 Link(destination: app.environment.config.supportURL) {
-                    NoahRow(icon: "questionmark.circle.fill", title: "Hulp en contact", subtitle: "Vragen? Ons supportteam helpt je graag.")
+                    NoahRow(icon: "questionmark.circle.fill", title: "Hulp", subtitle: "Veelgestelde vragen op hellonoah.ai/hulp")
+                }
+                .buttonStyle(.plain)
+                // No "supportteam" promise: one honest channel (audit 2026-11-14 §1.11).
+                Link(destination: SupportContact.mailURL) {
+                    NoahRow(icon: "envelope.fill", title: "Mail ons", subtitle: SupportContact.email)
                 }
                 .buttonStyle(.plain)
             }

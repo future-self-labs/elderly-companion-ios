@@ -210,6 +210,27 @@ struct NoahSingleLineField: UIViewRepresentable {
     }
 }
 
+/// Text typed in a tag field but not added yet (audit M1). A screen that saves calls `commitAll()`
+/// first, so "Tante Bep" is never lost because "Toevoegen" wasn't tapped.
+final class PendingTagDrafts {
+    private var commits: [UUID: () -> Void] = [:]
+
+    func register(_ id: UUID, commit: @escaping () -> Void) { commits[id] = commit }
+    func unregister(_ id: UUID) { commits[id] = nil }
+    func commitAll() { commits.values.forEach { $0() } }
+}
+
+private struct PendingTagDraftsKey: EnvironmentKey {
+    static let defaultValue: PendingTagDrafts? = nil
+}
+
+extension EnvironmentValues {
+    var pendingTagDrafts: PendingTagDrafts? {
+        get { self[PendingTagDraftsKey.self] }
+        set { self[PendingTagDraftsKey.self] = newValue }
+    }
+}
+
 /// Edits a list of short strings (likes, topics, people's names) as removable chips.
 struct NoahTagEditor: View {
     let label: LocalizedStringKey
@@ -218,7 +239,9 @@ struct NoahTagEditor: View {
     var footnote: LocalizedStringKey?
 
     @State private var draft = ""
+    @State private var draftID = UUID()
     @FocusState private var focused: Bool
+    @Environment(\.pendingTagDrafts) private var pendingDrafts
 
     var body: some View {
         NoahField(label: label, footnote: footnote) {
@@ -260,6 +283,10 @@ struct NoahTagEditor: View {
                 }
             }
         }
+        // Leaving the field adds what was typed; saving the screen does too (PendingTagDrafts).
+        .onChange(of: focused) { isFocused in if !isFocused { add() } }
+        .onAppear { pendingDrafts?.register(draftID) { add() } }
+        .onDisappear { pendingDrafts?.unregister(draftID) }
     }
 
     private func add() {

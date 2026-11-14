@@ -190,16 +190,32 @@ struct AlertDetailView: View {
             }
         }
 
-        NoahCard {
-            NoahRow(icon: alert.status == .afgehandeld ? "checkmark.circle.fill" : (alert.status == .gezien ? "eye.fill" : "circle.dotted"),
-                    iconTint: alert.status == .afgehandeld ? NoahColor.positive : NoahColor.accent,
-                    title: alert.status.label,
-                    subtitle: alert.acknowledgedBy.map { "Door \($0)" },
-                    showsChevron: false)
+        // Audit L15: a plain status line, not something that looks like a button.
+        Label {
+            Text(verbatim: "Status: \(alert.status.label.lowercased())" + (alert.acknowledgedBy.map { ", door \($0)" } ?? ""))
+        } icon: {
+            Image(systemName: alert.status == .afgehandeld ? "checkmark.circle.fill" : (alert.status == .gezien ? "eye.fill" : "circle.dotted"))
+                .foregroundColor(alert.status == .afgehandeld ? NoahColor.positive : NoahColor.accent)
+        }
+        .font(NoahFont.subheadline)
+        .foregroundColor(NoahColor.textSoft)
+        .accessibilityIdentifier("alert.status")
+
+        if let delivery = alert.delivery {
+            // v2.4: what really went out, so nobody assumes others were told.
+            Label {
+                Text(verbatim: delivery.caregiverText).fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: delivery.reachedNobody ? "bell.slash.fill" : "paperplane.fill")
+                    .foregroundColor(delivery.reachedNobody ? NoahColor.accent : NoahColor.textSoft)
+            }
+            .font(NoahFont.subheadline)
+            .foregroundColor(NoahColor.textSoft)
+            .accessibilityIdentifier("alert.delivery")
         }
 
         if alert.severity == .nood || alert.type == .noodgeval {
-            NoahNotice(kind: .error, text: "Is er direct gevaar? Bel 112. HelloNoah is geen alarmdienst. Bij een noodgeval krijgen alle mantelzorgers een melding, en sturen en bellen we de noodcontacten één voor één, tot iemand reageert.")
+            NoahNotice(kind: .error, text: "Is er direct gevaar? Bel 112. HelloNoah is geen alarmdienst en er kijkt geen mens mee. Bij een noodgeval krijgen mantelzorgers met meldingen aan een melding, en sturen en bellen we de noodcontacten één voor één, tot iemand reageert.")
             if let url = URL(string: "tel://112") {
                 Link(destination: url) { NoahButtonLabel(title: "Bel 112", systemImage: "phone.fill") }
                     .buttonStyle(.noah(.destructive))
@@ -300,6 +316,9 @@ struct ResolveAlertView: View {
                 .accessibilityIdentifier("alert.falseAlarm")
                 NoahTextField(label: "Notitie (optioneel)", text: $note, prompt: "Bijvoorbeeld: ik heb gebeld, alles is goed", multiline: true)
                 if let error { NoahNotice(kind: .error, text: error) }
+                Text("Afhandelen kan niet ongedaan worden gemaakt. De melding blijft wel zichtbaar bij Alle meldingen.")
+                    .font(NoahFont.footnote).foregroundColor(NoahColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 NoahAsyncButton("Afhandelen") { await resolve() }
             }
             .padding(NoahSpacing.screen)
